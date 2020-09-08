@@ -1,0 +1,65 @@
+(in-package #:org.shirakumo.feedback.client)
+
+(defun run (program &rest args)
+  (handler-case
+      (uiop:run-program (list* program args) :output :string)
+    (error ()
+      "unknown (error running ~a)" program)))
+
+(defun file (path)
+  (with-open-file (stream path)
+    (let ((string (make-string (file-length stream))))
+      (loop for i = 0 then read
+            for read = (read-sequence string stream :start i)
+            until (= i read))
+      string)))
+
+(defun match (string &rest candidates)
+  (loop for candidate in candidates
+        thereis (search candidate string :test #'char-equal)))
+
+(defun determine-os ()
+  #+windows
+  (values :windows (run "C:/Windows/System32/systeminfo.exe"))
+  #+linux
+  (values :linux (run "/usr/bin/env" "uname" "-a"))
+  #+darwin
+  (values :macos (run "sysctl" "kern.version"))
+  #+freebsd
+  (values :freebsd (run "/usr/bin/env" "uname" "-a"))
+  #-(or windows linux darwin freebsd)
+  (values :unknown "unknown"))
+
+(defun determine-cpu ()
+  (values #+x86-64 :amd64
+          #+x86 :i686
+          #+arm64 :arm64
+          #+armv7l :armv7l
+          #-(or x86-64 x86 arm64 armv7l) :unknown
+          #+windows
+          (run "C:/Windows/System32/Wbem/wmic.exe" "cpu" "list" "full")
+          #+linux
+          (file "/proc/cpuinfo")
+          #+darwin
+          (run "/bin/sh" "-c" "sysctl -a | grep machdep.cpu")
+          #-(or windows linux darwin)
+          "unknown"))
+
+(defun determine-gpu ()
+  (flet ((search-vendor (string)
+           (cond ((match string "nvidia" "geforce") :nvidia)
+                 ((match string "amd" "ati" "radeon") :amd)
+                 ((match string "intel") :intel)
+                 ((match string "vmware") :vmware)
+                 ((match string "virtualbox" "vbox" "virtual box") :virtualbox))))
+    #+windows
+    (let ((info (run "C:/Windows/System32/Wbem/wmic.exe" "PATH" "Win32_VideoController" "get" "/format:list")))
+      (values (search-vendor info) info))
+    #+linux
+    (let ((info (run "/bin/sh" "-c" "lspci | grep ' VGA ' | cut -d' ' -f 1 | xargs -i lspci -v -s {}")))
+      (values (search-vendor info) info))
+    #+darwin
+    (let ((info (run "/usr/sbin/system_profiler" "SPDisplaysDataType")))
+      (values (search-vendor info) info))
+    #+-(or windows linux darwin)
+    (values :unknown "unknown")))
