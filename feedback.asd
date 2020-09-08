@@ -9,6 +9,7 @@
                (:file "api"))
   :depends-on ((:interface :relational-database)
                (:interface :auth)
+               (:interface :mail)
                :r-data-model
                :r-oauth
                :r-clip
