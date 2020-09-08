@@ -4,7 +4,7 @@
   (etypecase id
     (db:id id)
     (dm:data-model (dm:id id))
-    (string (db:parse-id id))))
+    (string (db:ensure-id id))))
 
 (defmacro setf-dm-fields (model &rest vars)
   (let ((modelg (gensym "MODEL")))

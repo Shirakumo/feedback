@@ -69,7 +69,7 @@
 
 (defun project-directory (project)
   (merge-pathnames
-   (make-pathname :directory `(:relative ,(princ-to-string (dm:field entry "project"))))
+   (make-pathname :directory `(:relative ,(princ-to-string (dm:id project))))
    (environment-module-pathname #.*package* :data "attachments/")))
 
 (defun entry-directory (entry)
@@ -97,7 +97,7 @@
   (dm:get-one 'project (db:query (:= 'name name))))
 
 (defun list-projects ()
-  (dm:get 'project))
+  (dm:get 'project (db:query :all)))
 
 (defun make-project (name &key description attachments)
   (db:with-transaction ()
@@ -123,11 +123,11 @@
                 for entry = (find name existing :key (lambda (n) (dm:field n "name"))
                                                 :test #'string-equal)
                 do (cond (entry
-                          (setf (dm:field sub "type") (attachment-type->id type))
+                          (setf (dm:field entry "type") (attachment-type->id type))
                           (setf existing (delete entry existing)))
                          (T
                           (let ((sub (dm:hull 'attachment)))
-                            (setf-dm-fields sub (model "project") name)
+                            (setf-dm-fields sub (project "project") name)
                             (setf (dm:field sub "type") (attachment-type->id type))
                             (dm:insert sub)))))
           (dolist (attachment existing)

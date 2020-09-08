@@ -7,7 +7,7 @@
                (:file "db")
                (:file "front")
                (:file "api"))
-  :depends-on ((:interface :relational-database)
+  :depends-on ((:interface :database)
                (:interface :auth)
                (:interface :mail)
                :r-data-model

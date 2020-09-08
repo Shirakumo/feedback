@@ -1,9 +1,9 @@
 (in-package #:modularize-user)
-(define-module #:kandria-feedback
+(define-module #:feedback
   (:use #:cl #:radiance)
   (:export)
   (:local-nicknames))
-(in-package #:kandria-feedback)
+(in-package #:feedback)
 
 (define-trigger startup ()
   (defaulted-config (make-random-string 32) :private-key)

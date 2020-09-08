@@ -1,8 +1,8 @@
 (in-package #:feedback)
 
 (defun output (object message url-format &rest args)
-  (let ((target (url> (apply #'format NIL url-format args)
-                      :query `(("message" . ,message)))))
+  (let ((target (uri-to-url (apply #'format NIL url-format args)
+                            :representation :external :query `(("message" . ,message)))))
     (if (string= "true" (post/get "browser"))
         (redirect target)
         (api-output object :message message :target target))))
