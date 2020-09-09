@@ -3,12 +3,14 @@
 (define-trigger db:connected ()
   (db:create 'project
              '((name (:varchar 32))
-               (description :text)))
+               (description :text))
+             :indices '(name))
   
   (db:create 'attachment
              '((project (:id project))
                (name (:varchar 32))
-               (type (:integer 1))))
+               (type (:integer 1)))
+             :indices '(project))
 
   (db:create 'entry
              '((project (:id project))
@@ -20,7 +22,8 @@
                (os-info :text)
                (cpu-info :text)
                (gpu-info :text)
-               (description :text))))
+               (description :text))
+             :indices '(project user-id os-type cpu-type gpu-type)))
 
 (defmacro define-mapping ((a b) &body mappings)
   `(progn
@@ -97,7 +100,7 @@
   (dm:get-one 'project (db:query (:= 'name name))))
 
 (defun list-projects ()
-  (dm:get 'project (db:query :all)))
+  (dm:get 'project (db:query :all) :sort '(("name" :asc))))
 
 (defun make-project (name &key description attachments)
   (db:with-transaction ()
@@ -142,7 +145,7 @@
       (delete-directory (project-directory project)))))
 
 (defun list-attachments (project)
-  (dm:get 'attachment (db:query (:= 'project (ensure-id project)))))
+  (dm:get 'attachment (db:query (:= 'project (ensure-id project))) :sort '(("name" :asc))))
 
 (defun ensure-entry (entry-ish)
   (etypecase entry-ish
@@ -152,8 +155,11 @@
     (T
      (dm:get-one 'project (db:query (:= '_id (ensure-id entry-ish)))))))
 
-(defun list-entries (project)
-  (dm:get 'entry (db:query (:= 'project (ensure-id project)))))
+(defun list-entries (&optional project)
+  (dm:get 'entry (if project
+                     (db:query (:= 'project (ensure-id project)))
+                     (db:query :all))
+          :sort '(("time" :desc))))
 
 (defun make-entry (project &key (time (get-universal-time)) user-id
                                 os-type os-info
