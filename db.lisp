@@ -14,6 +14,7 @@
 
   (db:create 'entry
              '((project (:id project))
+               (version (:varchar 32))
                (user-id (:varchar 64))
                (time (:integer 5))
                (os-type (:integer 1))
@@ -211,10 +212,10 @@
                                 os-type os-info
                                 cpu-type cpu-info
                                 gpu-type gpu-info
-                                description)
+                                version description)
   (let ((project (ensure-project project))
         (model (dm:hull 'entry)))
-    (setf-dm-fields model project time user-id os-info cpu-info gpu-info description)
+    (setf-dm-fields model project version time user-id os-info cpu-info gpu-info description)
     (setf (dm:field model "os-type") (os-type->id os-type))
     (setf (dm:field model "cpu-type") (cpu-type->id cpu-type))
     (setf (dm:field model "gpu-type") (gpu-type->id gpu-type))
