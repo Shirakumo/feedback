@@ -87,6 +87,19 @@
     ((:ios 6) "fa-app-store-ios")
     (T "fa-question-circle")))
 
+(defun attachment-type-content-type (attachment-type)
+  (case attachment-type
+    ((:png 1) "image/png")
+    ((:jpg 2) "image/jpeg")
+    ((:txt 3) "text/plain")
+    ((:log 4) "text/plain")
+    ((:zip 5) "application/zip")
+    ((:sig 6) "application/pgp-signature")
+    ((:csv 7) "text/csv")
+    ((:json 8) "application/json")
+    ((:xml 9) "application/xml")
+    (T "application/octet-stream")))
+
 (defun project-directory (project)
   (merge-pathnames
    (make-pathname :directory `(:relative ,(princ-to-string (dm:id project))))
@@ -129,6 +142,7 @@
       (dm:insert model)
       (loop for (name type) in attachments
             for sub = (dm:hull 'attachment)
+            when (or* name)
             do (setf-dm-fields sub (model "project") name)
                (setf (dm:field sub "type") (attachment-type->id type))
                (dm:insert sub))
@@ -146,7 +160,7 @@
                 do (cond (entry
                           (setf (dm:field entry "type") (attachment-type->id type))
                           (setf existing (delete entry existing)))
-                         (T
+                         ((or* name)
                           (let ((sub (dm:hull 'attachment)))
                             (setf-dm-fields sub (project "project") name)
                             (setf (dm:field sub "type") (attachment-type->id type))
@@ -162,8 +176,21 @@
       (dm:delete project)
       (delete-directory (project-directory project)))))
 
-(defun list-attachments (project)
-  (dm:get 'attachment (db:query (:= 'project (ensure-id project))) :sort '(("name" :asc))))
+(defun list-attachments (thing)
+  (cond ((or (typep thing 'db:id) (eql 'project (dm:collection thing)))
+         (dm:get 'attachment (db:query (:= 'project (ensure-id thing))) :sort '(("name" :asc))))
+        ((eql 'entry (dm:collection thing))
+         (let ((types (list-attachments (dm:field thing "project"))))
+           (loop for type in types
+                 when (probe-file (attachment-pathname thing type))
+                 collect type)))
+        (T
+         (error "Don't know wtf to do with~%  ~a" thing))))
+
+(defun ensure-attachment (project name)
+  (or (dm:get-one 'attachment (db:query (:and (:= 'project (ensure-id project))
+                                              (:= 'name name))))
+      (error 'request-not-found :message "Could not find the requested attachment.")))
 
 (defun ensure-entry (entry-ish)
   (etypecase entry-ish
@@ -174,19 +201,11 @@
      (or (dm:get-one 'entry (db:query (:= '_id (ensure-id entry-ish))))
          (error 'request-not-found :message "Could not find the requested entry.")))))
 
-(defun list-entries (&optional thing &key (skip 0) (amount 50))
-  (cond ((null thing)
-         (dm:get 'entry (db:query :all)
-                 :skip skip :amount amount :sort '(("time" :desc))))
-        ((or (typep thing 'db:id) (eql 'project (dm:collection thing)))
-         (dm:get 'entry (db:query (:= 'project (ensure-id thing)))
-                 :skip skip :amount amount :sort '(("time" :desc))))
-        ((eql 'entry (dm:collection thing))
-         (let ((types (list-entries (dm:field thing "project"))))
-           (loop for type in types
-                 when (probe-file (attachment-pathname thing type))
-                 collect type)))
-        (T (error "Don't know wtf to do with~%  ~a" thing))))
+(defun list-entries (&optional project &key (skip 0) (amount 50))
+  (dm:get 'entry (if project
+                     (db:query (:= 'project (ensure-id project)))
+                     (db:query :all))
+          :skip skip :amount amount :sort '(("time" :desc))))
 
 (defun make-entry (project &key (time (get-universal-time)) user-id
                                 os-type os-info

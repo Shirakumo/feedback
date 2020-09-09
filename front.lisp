@@ -58,3 +58,11 @@
                  :project project
                  :entry entry
                  :attachments (list-attachments entry))))
+
+(define-page attachment "feedback/^([^/]+)/entry/([^/]+)/([^/]+)$" (:uri-groups (project entry attachment) :access (perm feedback entry))
+  (let* ((type (ensure-attachment (find-project project) attachment))
+         (entry (ensure-entry entry))
+         (path (attachment-pathname entry type))
+         (filename (format NIL "~a ~a.~(~a~)" (dm:id entry) (dm:field type "name") (id->attachment-type (dm:field type "type")))))
+    (setf (header "Content-Disposition") (format NIL "inline; filename=~s" filename))
+    (serve-file path (attachment-type-content-type (dm:field type "type")))))
