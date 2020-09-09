@@ -27,12 +27,19 @@
 
 (defmacro define-mapping ((a b) &body mappings)
   `(progn
+     (defun ,(intern (format NIL "~a~a" (string a) (string 's))) ()
+       ',(mapcar #'first mappings))
      (defun ,(intern (format NIL "~a->~a" (string a) (string b))) (thing)
        (cond ,@(loop for (a b) in mappings
-                     collect `((string-equal thing ,(string a)) ,b))))
+                     collect `((equal thing ,(string a)) ,b))
+             (T (ecase thing
+                  ,@(loop for (a b) in mappings
+                          collect (list b b))))))
      (defun ,(intern (format NIL "~a->~a" (string b) (string a))) (thing)
        (ecase thing
-         ,@(mapcar #'reverse mappings)))))
+         ,@(mapcar #'reverse mappings)
+         ,@(loop for (a b) in mappings
+                 collect (list a a))))))
 
 (define-mapping (os-type id)
   (:unknown 0)
@@ -70,6 +77,16 @@
   (:json 8)
   (:xml 9))
 
+(defun os-type-icon (os-type)
+  (case os-type
+    ((:windows 1) "fa-windows")
+    ((:linux 2) "fa-linux")
+    ((:macos 3) "fa-apple")
+    ((:freebsd 4) "fa-freebsd")
+    ((:android 5) "fa-android")
+    ((:ios 6) "fa-app-store-ios")
+    (T "fa-question-circle")))
+
 (defun project-directory (project)
   (merge-pathnames
    (make-pathname :directory `(:relative ,(princ-to-string (dm:id project))))
@@ -94,7 +111,8 @@
        ((attachment entry)
         (dm:get-one 'project (db:query (:= '_id (dm:field project-ish "project")))))))
     (T
-     (dm:get-one 'project (db:query (:= '_id (ensure-id project-ish)))))))
+     (or (dm:get-one 'project (db:query (:= '_id (ensure-id project-ish))))
+         (error 'request-not-found :message "Could not find the requested project.")))))
 
 (defun find-project (name)
   (dm:get-one 'project (db:query (:= 'name name))))
@@ -153,21 +171,34 @@
      (ecase (dm:collection entry-ish)
        (entry entry-ish)))
     (T
-     (dm:get-one 'project (db:query (:= '_id (ensure-id entry-ish)))))))
+     (or (dm:get-one 'entry (db:query (:= '_id (ensure-id entry-ish))))
+         (error 'request-not-found :message "Could not find the requested entry.")))))
 
-(defun list-entries (&optional project)
-  (dm:get 'entry (if project
-                     (db:query (:= 'project (ensure-id project)))
-                     (db:query :all))
-          :sort '(("time" :desc))))
+(defun list-entries (&optional thing &key (skip 0) (amount 50))
+  (cond ((null thing)
+         (dm:get 'entry (db:query :all)
+                 :skip skip :amount amount :sort '(("time" :desc))))
+        ((or (typep thing 'db:id) (eql 'project (dm:collection thing)))
+         (dm:get 'entry (db:query (:= 'project (ensure-id thing)))
+                 :skip skip :amount amount :sort '(("time" :desc))))
+        ((eql 'entry (dm:collection thing))
+         (let ((types (list-entries (dm:field thing "project"))))
+           (loop for type in types
+                 when (probe-file (attachment-pathname thing type))
+                 collect type)))
+        (T (error "Don't know wtf to do with~%  ~a" thing))))
 
 (defun make-entry (project &key (time (get-universal-time)) user-id
                                 os-type os-info
                                 cpu-type cpu-info
                                 gpu-type gpu-info
                                 description)
-  (let ((model (dm:hull 'entry)))
-    (setf-dm-fields model project time user-id os-type os-info cpu-type cpu-info gpu-type gpu-info description)
+  (let ((project (ensure-project project))
+        (model (dm:hull 'entry)))
+    (setf-dm-fields model project time user-id os-info cpu-info gpu-info description)
+    (setf (dm:field model "os-type") (os-type->id os-type))
+    (setf (dm:field model "cpu-type") (cpu-type->id cpu-type))
+    (setf (dm:field model "gpu-type") (gpu-type->id gpu-type))
     (dm:insert model)))
 
 (defun delete-entry (entry)

@@ -1,0 +1,41 @@
+<article class="project view">
+  <c:using value="project">
+    <p lquery='(text (or description "No description provided."))'></p>
+    <nav>
+      <a @href="feedback/{0}/edit name" class="button">
+        <i class="fas fa-edit"></i>
+        Edit
+      </a>
+    </nav>
+  </c:using>
+  <table class="entries">
+    <thead>
+      <tr>
+        <th class="id">Id</th>
+        <th class="description">Description</th>
+        <th class="os">OS</th>
+        <th class="cpu">CPU</th>
+        <th class="gpu">GPU</th>
+        <th class="time">Time</th>
+        <th class="actions">Actions</th>
+      </tr>
+    </thead>
+    <tbody iterate="entries">
+      <tr>
+        <td class="id"><a lquery="(text _id) (attr :href (feedback::entry-url *))"></a></td>
+        <td class="description" lquery="(text (feedback::shorten description))"></td>
+        <td class="os">
+          <i class="fab" lquery="(add-class (feedback::os-type-icon os-type))"></i>
+        </td>
+        <td class="cpu" lquery="(text (feedback::id->cpu-type cpu-type))"></td>
+        <td class="gpu" lquery="(text (feedback::id->gpu-type gpu-type))"></td>
+        <td class="time"><time lquery="(time time)"></time></td>
+        <td class="actions">
+          <a @href="feedback/api/feedback/entry/delete?entry={0} _id" class="button">
+            <i class="fas fa-trash"></i>
+          </a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</article>

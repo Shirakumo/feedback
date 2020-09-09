@@ -12,19 +12,13 @@
   </head>
   <body>
     <header>
-      <h1><a href="#" @href="courier/" lquery="(text title)">Courier Mailing</a></h1>
+      <h1><a href="#" @href="feedback/">Feedback</a></h1>
       <h2>
         <c:when test="up">
           <a lquery="(attr :href up) (text up-text)"></a>
         </c:when>
         <c:splice lquery="(text page)"/>
       </h2>
-      <div class="profile menu">
-        <a href="#" @href="feedback/" class="label">
-          Dashboard
-          <i class="fas fa-fw fa-tachometer-alt"></i>
-        </a>
-      </div>
     </header>
     <main>
       <div class="box info" lquery='(text (post/get "message"))'></div>
@@ -33,7 +27,7 @@
       <script @src="/static/feedback/feedback.js"></script>
     </main>
     <footer>
-      &copy; <time lquery="(time T)">2019</time> Shirakumo<br/>
+      &copy; <time lquery="(time T :year)">2019</time> Shirakumo<br/>
       Running on <a href="https://shirakumo.org/projects/feedback">Feedback <c:splice lquery="(text version)">0.0.0</c:splice></a>
     </footer>
   </body>

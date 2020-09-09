@@ -58,7 +58,7 @@ Please do not respond to this."
                                       :gpu-type gpu-type
                                       :gpu-info gpu-info
                                       :description description))
-           (url (format NIL "feedback/~a/entry/~a" project-name (dm:id entry))))
+           (url (entry-url entry)))
       (loop for type in types
             for file = (post-var (dm:field type "name"))
             do (when file
@@ -72,4 +72,4 @@ Please do not respond to this."
 (define-api feedback/entry/delete (entry) (:access (perm feedback entry delete))
   (let ((entry (ensure-entry entry)))
     (delete-entry entry)
-    (output NIL "Entry deleted." (format NIL "feedback/~a/" (dm:field (ensure-project entry) "name")))))
+    (output NIL "Entry deleted." (project-url entry))))

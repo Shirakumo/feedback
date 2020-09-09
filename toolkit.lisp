@@ -21,3 +21,8 @@
 
 (defun delete-directory (directory)
   (uiop:delete-directory-tree directory :validate (constantly T) :if-does-not-exist :ignore))
+
+(defun shorten (text &key (limit 50))
+  (if (<= (length text) limit)
+      text
+      (format NIL "~a..." (subseq text 0 (- limit 3)))))

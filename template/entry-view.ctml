@@ -1,3 +1,42 @@
 <article class="entry view">
-  
+  <c:using value="entry">
+    <div class="row">
+      <label>User ID:</label>
+      <span class="short" lquery="(text user-id)"></span>
+    </div>
+    <div class="row">
+      <label>Time:</label>
+      <time class="short" lquery="(time time)"></time>
+    </div>
+    <div class="row os">
+      <label>OS:</label>
+      <span class="short" lquery="(text (feedback::id->os-type os-type))"></span>
+      <input type="checkbox" class="expand" title="Expand long log" />
+      <span class="long extra" lquery="(text os-info)"></span>
+    </div>
+    <div class="row cpu">
+      <label>CPU:</label>
+      <span class="short" lquery="(text (feedback::id->cpu-type cpu-type))"></span>
+      <input type="checkbox" class="expand" title="Expand long log" />
+      <span class="long extra" lquery="(text os-info)"></span>
+    </div>
+    <div class="row gpu">
+      <label>GPU:</label>
+      <span class="short" lquery="(text (feedback::id->gpu-type gpu-type))"></span>
+      <input type="checkbox" class="expand" title="Expand long log" />
+      <span class="long extra" lquery="(text os-info)"></span>
+    </div>
+    <div class="row">
+      <label>Attachments:</label>
+      <ul class="long" iterate="(** :attachments)">
+        <li>
+          <a lquery="(text name) (attr :href (feedback::attachment-url ** *))"></a>
+        </li>
+      </ul>
+    </div>
+    <div class="row">
+      <label>Description:</label>
+      <span class="long" lquery="(text description)"></span>
+    </div>
+  </c:using>
 </article>

@@ -1,3 +1,47 @@
-<article class="project edit">
-
-</article>
+<form class="project edit">
+  <c:using value="project">
+    <div class="row">
+      <label for="name">Name:</label>
+      <input type="text" name="name" id="name" placeholder="Name" minlength="1" maxlength="32" required
+             lquery="(val name)"/>
+    </div>
+    <div class="row">
+      <label for="description">Description:</label>
+      <textarea name="description" id="description" lquery="(text description)"></textarea>
+    </div>
+    <div class="row">
+      <label for="attachments">Attachments:</label>
+      <div class="attachments">
+        <ul id="attachments" iterate="(list* NIL (** :attachments))">
+          <li>
+            <input type="text" name="attachment-name[]" placeholder="name" minlength="1" maxlength="32"
+                   lquery="(val name) (attr :readonly (not (null name)))"/>
+            <select name="attachment-type[]" iterate="(feedback::attachment-types)" lquery="(select type)">
+              <option lquery="(text *) (attr :value *)"/>
+            </select>
+            <a href="#" class="button">
+              <i class="fas fa-trash"></i>
+            </a>
+          </li>
+        </ul>
+        <a href="#" class="button">
+          <i class="fas fa-plus-circle"></i>
+          Add Attachment
+        </a>
+      </div>
+    </div>
+    <div class="actions">
+      <input type="hidden" name="browser" value="true" />
+      <c:if test="_id">
+        <c:then>
+          <input type="hidden" name="project" lquery="(val _id)"/>
+          <input type="submit" value="Edit" @formaction="feedback/api/feedback/project/edit"/>
+          <input type="submit" value="Delete" @formaction="feedback/api/feedback/project/delete"/>
+        </c:then>
+        <c:else>
+          <input type="submit" value="Create" @formaction="feedback/api/feedback/project/new"/>
+        </c:else>
+      </c:if>
+    </div>
+  </c:using>
+</form>

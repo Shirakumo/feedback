@@ -1,3 +1,5 @@
 (defpackage #:org.shirakumo.feedback.client
   (:use #:cl)
-  (:export #:submit))
+  (:export
+   #:client
+   #:submit))

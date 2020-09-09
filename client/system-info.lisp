@@ -8,11 +8,11 @@
 
 (defun file (path)
   (with-open-file (stream path)
-    (let ((string (make-string (file-length stream))))
-      (loop for i = 0 then read
-            for read = (read-sequence string stream :start i)
-            until (= i read))
-      string)))
+    (with-output-to-string (out)
+      (loop with buffer = (make-array 4096 :element-type 'character)
+            for read = (read-sequence buffer stream)
+            while (< 0 read)
+            do (write-string buffer out :end read)))))
 
 (defun match (string &rest candidates)
   (loop for candidate in candidates
@@ -48,10 +48,11 @@
 (defun determine-gpu ()
   (flet ((search-vendor (string)
            (cond ((match string "nvidia" "geforce") :nvidia)
-                 ((match string "amd" "ati" "radeon") :amd)
-                 ((match string "intel") :intel)
                  ((match string "vmware") :vmware)
-                 ((match string "virtualbox" "vbox" "virtual box") :virtualbox))))
+                 ((match string "virtualbox" "vbox" "virtual box") :virtualbox)
+                 ((match string "intel") :intel)
+                 ((or (search "AMD" string) (search "ATI" string) (match string "radeon")) :amd)
+                 (T :unknown))))
     #+windows
     (let ((info (run "C:/Windows/System32/Wbem/wmic.exe" "PATH" "Win32_VideoController" "get" "/format:list")))
       (values (search-vendor info) info))
@@ -61,5 +62,5 @@
     #+darwin
     (let ((info (run "/usr/sbin/system_profiler" "SPDisplaysDataType")))
       (values (search-vendor info) info))
-    #+-(or windows linux darwin)
+    #-(or windows linux darwin)
     (values :unknown "unknown")))

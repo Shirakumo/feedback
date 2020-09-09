@@ -1,3 +1,40 @@
 <article class="dashboard">
-
+  <h3>Projects</h3>
+  <table class="projects">
+    <thead>
+      <tr>
+        <th class="name">Name</th>
+        <th class="description">Description</th>
+      </tr>
+    </thead>
+    <tbody iterate="projects">
+      <tr>
+        <td class="name"><a lquery="(text name) (attr :href (feedback::project-url *))"></a></td>
+        <td class="description" lquery="(text description)"></td>
+      </tr>
+    </tbody>
+  </table>
+  <a @href="feedback/new" class="button">
+    <i class="fas fa-plus-circle"></i>
+    New Project
+  </a>
+  <h3>Recent Entries</h3>
+  <table class="entries">
+    <thead>
+      <tr>
+        <th class="project">Project</th>
+        <th class="id">Id</th>
+        <th class="description">Description</th>
+        <th class="time">Time</th>
+      </tr>
+    </thead>
+    <tbody iterate="entries">
+      <tr>
+        <td class="project"><a lquery="(text (clip (feedback::ensure-project *) :name)) (attr :href (feedback::project-url *))"></a></td>
+        <td class="id"><a lquery="(text _id) (attr :href (feedback::entry-url *))"></a></td>
+        <td class="description" lquery="(text (feedback::shorten description))"></td>
+        <td class="time"><time lquery="(time time)"></time></td>
+      </tr>
+    </tbody>
+  </table>
 </article>
