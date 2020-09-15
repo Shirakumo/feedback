@@ -59,6 +59,15 @@
                  :entry entry
                  :attachments (list-attachments entry))))
 
+(define-page entry-edit ("feedback/^([^/]+)/entry/([^/]+)/edit$" 1) (:uri-groups (project entry) :access (perm feedback entry edit))
+  (let ((project (or (find-project project)
+                     (ensure-project project)))
+        (entry (ensure-entry entry)))
+    (render-page (princ-to-string (dm:id entry)) (@template "entry-edit.ctml")
+                 :up (uri-to-url (format NIL "feedback/~a" (dm:field project "name")) :representation :external)
+                 :up-text (dm:field project "name")
+                 :entry entry)))
+
 (define-page attachment "feedback/^([^/]+)/entry/([^/]+)/([^/]+)$" (:uri-groups (project entry attachment) :access (perm feedback entry))
   (let* ((type (ensure-attachment (find-project project) attachment))
          (entry (ensure-entry entry))

@@ -41,6 +41,14 @@
    (north:make-signed-data-request client (format NIL "~a/~a" (api-base client) endpoint)
                                    data :params parameters)))
 
+(defun login (key secret &key (api-base "https://feedback.tymoon.eu/api/"))
+  (let* ((client (make-instance 'client :api-base api-base :key key :secret secret))
+         (url (north:initiate-authentication client)))
+    (format *query-io* "~&> ~a~%Token: " url)
+    (finish-output *query-io*)
+    (north:complete-authentication client (read-line *query-io*))
+    (values client (north:token client) (north:token-secret client))))
+
 (defun gather-system-info ()
   (multiple-value-bind (os-type os-info) (determine-os)
     (multiple-value-bind (cpu-type cpu-info) (determine-cpu)

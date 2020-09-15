@@ -22,6 +22,7 @@
   <table class="entries">
     <thead>
       <tr>
+        <th class="status"></th>
         <th class="project">Project</th>
         <th class="id">Id</th>
         <th class="description">Description</th>
@@ -30,6 +31,7 @@
     </thead>
     <tbody iterate="entries">
       <tr>
+        <th class="status"><i class="fas" lquery="(add-class (feedback::status-icon status))" /></th>
         <td class="project"><a lquery="(text (clip (feedback::ensure-project *) :name)) (attr :href (feedback::project-url *))"></a></td>
         <td class="id"><a lquery="(text _id) (attr :href (feedback::entry-url *))"></a></td>
         <td class="description" lquery="(text (feedback::shorten description))"></td>

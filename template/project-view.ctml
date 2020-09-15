@@ -11,6 +11,7 @@
   <table class="entries">
     <thead>
       <tr>
+        <th class="status"></th>
         <th class="id">Id</th>
         <th class="description">Description</th>
         <th class="os">OS</th>
@@ -22,6 +23,7 @@
     </thead>
     <tbody iterate="entries">
       <tr>
+        <th class="status"><i class="fas" lquery="(add-class (feedback::status-icon status))" /></th>
         <td class="id"><a lquery="(text _id) (attr :href (feedback::entry-url *))"></a></td>
         <td class="description" lquery="(text (feedback::shorten description))"></td>
         <td class="os">
@@ -31,7 +33,7 @@
         <td class="gpu" lquery="(text (feedback::id->gpu-type gpu-type))"></td>
         <td class="time"><time lquery="(time time)"></time></td>
         <td class="actions">
-          <a @href="feedback/api/feedback/entry/delete?entry={0} _id" class="button">
+          <a @href="feedback/api/feedback/entry/delete?entry={0}&browser=true _id" class="button">
             <i class="fas fa-trash"></i>
           </a>
         </td>

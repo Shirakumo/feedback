@@ -1,0 +1,34 @@
+<form class="project edit">
+  <c:using value="entry">
+    <div class="row">
+      <label for="status">Status:</label>
+      <select name="status" id="status" lquery="(select (feedback::id->status status))">
+        <option name="new">new</option>
+        <option name="triaged">triaged</option>
+        <option name="resolved">resolved</option>
+        <option name="wontfix">wontfix</option>
+      </select>
+    </div>
+    <div class="row">
+      <label for="description">Description:</label>
+      <textarea name="description" id="description" lquery="(text description)"></textarea>
+    </div>
+    <div class="row">
+      <label for="comment">Comment:</label>
+      <textarea name="comment" id="comment" lquery="(text comment)"></textarea>
+    </div>
+    <div class="actions">
+      <input type="hidden" name="browser" value="true" />
+      <c:if test="_id">
+        <c:then>
+          <input type="hidden" name="entry" lquery="(val _id)"/>
+          <input type="submit" value="Edit" @formaction="feedback/api/feedback/entry/edit"/>
+          <input type="submit" value="Delete" @formaction="feedback/api/feedback/entry/delete"/>
+        </c:then>
+        <c:else>
+          <input type="submit" value="Create" @formaction="feedback/api/feedback/entry/new"/>
+        </c:else>
+      </c:if>
+    </div>
+  </c:using>
+</form>

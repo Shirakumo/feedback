@@ -14,6 +14,7 @@
 
   (db:create 'entry
              '((project (:id project))
+               (status (:integer 1))
                (version (:varchar 32))
                (user-id (:varchar 64))
                (time (:integer 5))
@@ -23,7 +24,8 @@
                (os-info :text)
                (cpu-info :text)
                (gpu-info :text)
-               (description :text))
+               (description :text)
+               (comment :text))
              :indices '(project user-id os-type cpu-type gpu-type)))
 
 (defmacro define-mapping ((a b) &body mappings)
@@ -35,7 +37,7 @@
                      collect `((equal thing ,(string a)) ,b))
              (T (ecase thing
                   ,@(loop for (a b) in mappings
-                          collect (list b b))))))
+                          collect `((,a ,b) ,b))))))
      (defun ,(intern (format NIL "~a->~a" (string b) (string a))) (thing)
        (ecase thing
          ,@(mapcar #'reverse mappings)
@@ -78,6 +80,12 @@
   (:json 8)
   (:xml 9))
 
+(define-mapping (status id)
+  (:new 0)
+  (:triaged 1)
+  (:resolved 2)
+  (:wontfix 3))
+
 (defun os-type-icon (os-type)
   (case os-type
     ((:windows 1) "fa-windows")
@@ -87,6 +95,13 @@
     ((:android 5) "fa-android")
     ((:ios 6) "fa-app-store-ios")
     (T "fa-question-circle")))
+
+(defun status-icon (status)
+  (case status
+    ((:new 0) "fa-exclamation-circle")
+    ((:resolved 2) "fa-check-circle")
+    ((:wontfix 3) "fa-ban")
+    (T "fa-ellipsis-h")))
 
 (defun attachment-type-content-type (attachment-type)
   (case attachment-type
@@ -100,6 +115,10 @@
     ((:json 8) "application/json")
     ((:xml 9) "application/xml")
     (T "application/octet-stream")))
+
+(defun attachment-image-p (attachment-type)
+  (case attachment-type
+    ((:png 1 :jpg 2) T)))
 
 (defun project-directory (project)
   (merge-pathnames
@@ -153,6 +172,7 @@
   (db:with-transaction ()
     (let ((project (ensure-project project)))
       (setf-dm-fields project name description)
+      (dm:save project)
       (when attachments-p
         (let ((existing (list-attachments project)))
           (loop for (name type) in attachments
@@ -216,10 +236,18 @@
   (let ((project (ensure-project project))
         (model (dm:hull 'entry)))
     (setf-dm-fields model project version time user-id os-info cpu-info gpu-info description)
+    (setf (dm:field model "status") (status->id :new))
     (setf (dm:field model "os-type") (os-type->id os-type))
     (setf (dm:field model "cpu-type") (cpu-type->id cpu-type))
     (setf (dm:field model "gpu-type") (gpu-type->id gpu-type))
     (dm:insert model)))
+
+(defun edit-entry (entry &key user-id description comment status)
+  (let ((entry (ensure-entry entry)))
+    (setf-dm-fields entry user-id description comment)
+    (setf (dm:field entry "status") (status->id status))
+    (dm:save entry)
+    entry))
 
 (defun delete-entry (entry)
   (db:with-transaction ()

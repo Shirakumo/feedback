@@ -47,7 +47,8 @@ Please do not respond to this."
 
 (define-api feedback/entry/new (project user-id os-type cpu-type gpu-type &optional version os-info cpu-info gpu-info description) (:access (perm feedback entry new))
   (db:with-transaction ()
-    (let* ((project (ensure-project project))
+    (let* ((project (or (find-project project)
+                        (ensure-project project)))
            (project-name (dm:field project "name"))
            (types (list-attachments project))
            (entry (make-entry project :version version
@@ -63,12 +64,20 @@ Please do not respond to this."
       (loop for type in types
             for file = (post-var (dm:field type "name"))
             do (when file
-                 (uiop:copy-file file (attachment-pathname entry type))))
+                 (ensure-directories-exist (attachment-pathname entry type))
+                 (uiop:copy-file (first file) (attachment-pathname entry type))))
       (when (config :recipient)
         (mail:send (config :recipient)
                    (format NIL "New feedback for ~a" project-name)
                    (feedback-mail project-name (uri-to-url url :representation :external) description)))
       (output entry "Feedback submitted." url))))
+
+(define-api feedback/entry/edit (entry &optional comment description status) (:access (perm feedback entry edit))
+  (db:with-transaction ()
+    (let* ((entry (ensure-entry entry))
+           (project (ensure-project entry)))
+      (edit-entry entry :description description :comment comment :status status)
+      (output entry "Entry updated." (format NIL "feedback/~a/entry/~a" (dm:field project "name") (dm:id entry))))))
 
 (define-api feedback/entry/delete (entry) (:access (perm feedback entry delete))
   (let ((entry (ensure-entry entry)))

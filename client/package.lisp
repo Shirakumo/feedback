@@ -2,4 +2,5 @@
   (:use #:cl)
   (:export
    #:client
+   #:login
    #:submit))

@@ -1,6 +1,10 @@
 <article class="entry view">
   <c:using value="entry">
     <div class="row">
+      <label>Status:</label>
+      <span class="status" lquery="(text (feedback::id->status status))"></span>
+    </div>
+    <div class="row">
       <label>User ID:</label>
       <span class="short" lquery="(text user-id)"></span>
     </div>
@@ -12,31 +16,39 @@
       <label>OS:</label>
       <span class="short" lquery="(text (feedback::id->os-type os-type))"></span>
       <input type="checkbox" class="expand" title="Expand long log" />
-      <span class="long extra" lquery="(text os-info)"></span>
+      <pre class="long extra" lquery="(text os-info)"></pre>
     </div>
     <div class="row cpu">
       <label>CPU:</label>
       <span class="short" lquery="(text (feedback::id->cpu-type cpu-type))"></span>
       <input type="checkbox" class="expand" title="Expand long log" />
-      <span class="long extra" lquery="(text os-info)"></span>
+      <pre class="long extra" lquery="(text cpu-info)"></pre>
     </div>
     <div class="row gpu">
       <label>GPU:</label>
       <span class="short" lquery="(text (feedback::id->gpu-type gpu-type))"></span>
       <input type="checkbox" class="expand" title="Expand long log" />
-      <span class="long extra" lquery="(text os-info)"></span>
-    </div>
-    <div class="row">
-      <label>Attachments:</label>
-      <ul class="long" iterate="(** :attachments)">
-        <li>
-          <a lquery="(text name) (attr :href (feedback::attachment-url ** *))"></a>
-        </li>
-      </ul>
+      <pre class="long extra" lquery="(text gpu-info)"></pre>
     </div>
     <div class="row">
       <label>Description:</label>
       <span class="long" lquery="(text description)"></span>
+    </div>
+    <div class="row">
+      <label>Comment: <a @href="feedback/{0}/entry/{1}/edit project _id"><i class="fas fa-edit"/></a></label>
+      <span class="long" lquery="(text comment)"></span>
+    </div>
+    <div class="row">
+      <label>Attachments:</label>
+      <ul class="long" iterate="(** :attachments)">
+        <li class="attachment">
+          <a lquery="(text name) (attr :href (feedback::attachment-url ** *))">
+            <c:when test="(feedback::attachment-image-p type)">
+              <img alt="image" class="full" lquery="(attr :src (feedback::attachment-url ** *))"/>
+            </c:when>
+          </a>
+        </li>
+      </ul>
     </div>
   </c:using>
 </article>

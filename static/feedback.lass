@@ -130,6 +130,12 @@
   :display block
   :width 11em
   :text-align right)
+ (.status
+  :width 1em
+  (.fa-ellipsis-h :color (hex 505050))
+  (.fa-exclamation-circle :color (hex 88000))
+  (.fa-check-circle :color (hex 008800))
+  (.fa-ban :color (hex A0A0A0)))
  ((:or .os .cpu .gpu) :text-align center)
  (.os :width 2em)
  ((:or .cpu .gpu) :width 4em)
@@ -157,7 +163,13 @@
    :width 100%
    :border 1px solid (hex E0E0E0))
   (ul.long
-   :margin 0.2em 1em :padding 0))
+   :margin 0.2em 1em :padding 0)
+  (.attachment
+   :margin 0.5em
+   (.full
+    :display block
+    :max-width 100%
+    :max-height 50vh)))
  ((:or .os .cpu .gpu)
   (.long
    :font-family monospace)))
