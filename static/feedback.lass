@@ -134,6 +134,7 @@
   :white-space nowrap
   :text-overflow ellipsis
   :overflow hidden
+  :min-width 4em
   :max-width 4em)
  (.status
   :width 1em
