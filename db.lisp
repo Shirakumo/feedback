@@ -15,7 +15,7 @@
   (db:create 'entry
              '((project (:id project))
                (status (:integer 1))
-               (version (:varchar 32))
+               (version (:varchar 64))
                (user-id (:varchar 64))
                (time (:integer 5))
                (os-type (:integer 1))
