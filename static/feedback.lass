@@ -130,6 +130,9 @@
   :display block
   :width 11em
   :text-align right)
+ (.version
+  :white-space nowrap
+  :text-overflow ellipsis)
  (.status
   :width 1em
   (.fa-ellipsis-h :color (hex 505050))
