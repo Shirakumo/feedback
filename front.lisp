@@ -39,7 +39,7 @@
                  :project project
                  :entries (list-entries project :skip skip :amount amount))))
 
-(define-page project-new "feedback/^new$" (:access (perm feedback project new))
+(define-page project-new ("feedback/^new$" 1) (:access (perm feedback project new))
   (render-page "New project" (@template "project-edit.ctml")
                :project (dm:hull 'project)))
 
