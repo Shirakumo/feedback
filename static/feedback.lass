@@ -132,7 +132,9 @@
   :text-align right)
  (.version
   :white-space nowrap
-  :text-overflow ellipsis)
+  :text-overflow ellipsis
+  :overflow hidden
+  :max-width 4em)
  (.status
   :width 1em
   (.fa-ellipsis-h :color (hex 505050))
