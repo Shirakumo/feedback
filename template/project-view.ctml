@@ -13,6 +13,7 @@
       <tr>
         <th class="status"></th>
         <th class="id">Id</th>
+        <th class="version">Version</th>
         <th class="description">Description</th>
         <th class="os">OS</th>
         <th class="cpu">CPU</th>
@@ -25,6 +26,7 @@
       <tr>
         <th class="status"><i class="fas" lquery="(add-class (feedback::status-icon status))" /></th>
         <td class="id"><a lquery="(text _id) (attr :href (feedback::entry-url *))"></a></td>
+        <td class="version" lquery="(text version)"></td>
         <td class="description" lquery="(text (feedback::shorten description))"></td>
         <td class="os">
           <i class="fab" lquery="(add-class (feedback::os-type-icon os-type))"></i>

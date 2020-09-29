@@ -89,7 +89,7 @@
    :border 1px solid (hex A00000)
    :max-width 5em)))
 ((:or .project.view .entry.view .dashboard)
- :max-width 800px
+ :max-width 1000px
  :margin 0 auto
  :padding 1em)
 (.project.edit

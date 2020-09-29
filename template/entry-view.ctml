@@ -5,6 +5,10 @@
       <span class="status" lquery="(text (feedback::id->status status))"></span>
     </div>
     <div class="row">
+      <label>Version:</label>
+      <span class="version" lquery="(text version)"></span>
+    </div>
+    <div class="row">
       <label>User ID:</label>
       <span class="short" lquery="(text user-id)"></span>
     </div>
