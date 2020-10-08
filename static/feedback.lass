@@ -139,7 +139,7 @@
  (.status
   :width 1em
   (.fa-ellipsis-h :color (hex 505050))
-  (.fa-exclamation-circle :color (hex 88000))
+  (.fa-exclamation-circle :color (hex 880000))
   (.fa-check-circle :color (hex 008800))
   (.fa-ban :color (hex A0A0A0)))
  ((:or .os .cpu .gpu) :text-align center)
