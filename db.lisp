@@ -34,7 +34,7 @@
        ',(mapcar #'first mappings))
      (defun ,(intern (format NIL "~a->~a" (string a) (string b))) (thing)
        (cond ,@(loop for (a b) in mappings
-                     collect `((equal thing ,(string a)) ,b))
+                     collect `((equalp thing ,(string a)) ,b))
              (T (ecase thing
                   ,@(loop for (a b) in mappings
                           collect `((,a ,b) ,b))))))
