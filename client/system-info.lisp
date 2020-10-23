@@ -2,9 +2,11 @@
 
 (defun run (program &rest args)
   (handler-case
-      (uiop:run-program (list* program args) :output :string)
-    (error ()
-      "unknown (error running ~a)" program)))
+      #-sbcl (uiop:run-program (list* program args) :output :string)
+      #+sbcl (with-output-to-string (stream)
+               (sb-ext:run-program program args :output stream #+win32 :window #+win32 :hide))
+      (error ()
+        "unknown (error running ~a)" program)))
 
 (defun file (path)
   (with-open-file (stream path)
