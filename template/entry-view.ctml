@@ -2,45 +2,45 @@
   <c:using value="entry">
     <div class="row">
       <label>Status:</label>
-      <span class="status" lquery="(text (feedback::id->status status))"></span>
+      <span class="short status" lquery="(text (feedback::id->status status))"></span>
     </div>
     <div class="row">
       <label>Version:</label>
-      <span class="version" lquery="(text version)"></span>
+      <span class="short version" lquery="(text version)"></span>
     </div>
     <div class="row">
       <label>User ID:</label>
-      <span class="short" lquery="(text user-id)"></span>
+      <span class="short user" lquery="(text user-id)"></span>
     </div>
     <div class="row">
       <label>Time:</label>
-      <time class="short" lquery="(time time)"></time>
+      <time class="short time" lquery="(time time)"></time>
     </div>
     <div class="row os">
       <label>OS:</label>
       <span class="short" lquery="(text (feedback::id->os-type os-type))"></span>
       <input type="checkbox" class="expand" title="Expand long log" />
-      <pre class="long extra" lquery="(text os-info)"></pre>
+      <pre class="long extra os" lquery="(text os-info)"></pre>
     </div>
     <div class="row cpu">
       <label>CPU:</label>
       <span class="short" lquery="(text (feedback::id->cpu-type cpu-type))"></span>
       <input type="checkbox" class="expand" title="Expand long log" />
-      <pre class="long extra" lquery="(text cpu-info)"></pre>
+      <pre class="long extra cpu" lquery="(text cpu-info)"></pre>
     </div>
     <div class="row gpu">
       <label>GPU:</label>
       <span class="short" lquery="(text (feedback::id->gpu-type gpu-type))"></span>
       <input type="checkbox" class="expand" title="Expand long log" />
-      <pre class="long extra" lquery="(text gpu-info)"></pre>
+      <pre class="long extra gpu" lquery="(text gpu-info)"></pre>
     </div>
     <div class="row">
       <label>Description:</label>
-      <span class="long" lquery="(text description)"></span>
+      <span class="long description" lquery="(text description)"></span>
     </div>
     <div class="row">
       <label>Comment: <a @href="feedback/{0}/entry/{1}/edit project _id"><i class="fas fa-edit"/></a></label>
-      <span class="long" lquery="(text comment)"></span>
+      <span class="long comment" lquery="(text comment)"></span>
     </div>
     <div class="row">
       <label>Attachments:</label>
