@@ -177,7 +177,13 @@
    (.full
     :display block
     :max-width 100%
-    :max-height 50vh))
+    :max-height 50vh)
+   (.log
+    :font-family monospace
+    :overflow-y auto
+    :max-height 10em
+    :margin 0
+    :max-width fit-content))
   ((:or .description .comment .log)
    :white-space pre-wrap))
  ((:or .os .cpu .gpu)

@@ -47,12 +47,14 @@
       <ul class="long" iterate="(** :attachments)">
         <li class="attachment">
           <a lquery="(text name) (attr :href (feedback::attachment-url ** *))">
-            <c:when test="(feedback::attachment-image-p type)">
-              <img alt="image" class="full" lquery="(attr :src (feedback::attachment-url ** *))"/>
-            </c:when>
-            <c:when test="(feedback::attachment-text-p type)">
-              <iframe class="long log" lquery="(attr :src (feedback::attachment-url ** *))"></span>
-            </c:when>
+            <c:if test="(feedback::attachment-image-p type)">
+              <c:then>
+                <img alt="image" class="full" lquery="(attr :src (feedback::attachment-url ** *))"/>
+              </c:then>
+              <c:elseif test="(feedback::attachment-text-p type)">
+                <div class="long log" lquery="(text (alexandria:read-file-into-string (feedback::attachment-pathname ** *)))"></div>
+              </c:elseif>
+            </c:if>
           </a>
         </li>
       </ul>
