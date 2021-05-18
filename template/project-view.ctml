@@ -35,7 +35,12 @@
         <td class="gpu" lquery="(text (feedback::id->gpu-type gpu-type))"></td>
         <td class="time"><time lquery="(time time)"></time></td>
         <td class="actions">
-          <a @href="feedback/api/feedback/entry/delete?entry={0}&browser=true _id" class="button">
+          <a @href="feedback/api/feedback/entry/edit?entry={0}&status=resolved&browser=true _id" class="button"
+             title="Mark as resolved">
+            <i class="fas fa-check-square"></i>
+          </a>
+          <a @href="feedback/api/feedback/entry/delete?entry={0}&browser=true _id" class="button"
+             title="Delete">
             <i class="fas fa-trash"></i>
           </a>
         </td>
