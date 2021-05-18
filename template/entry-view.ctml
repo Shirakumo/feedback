@@ -50,6 +50,9 @@
             <c:when test="(feedback::attachment-image-p type)">
               <img alt="image" class="full" lquery="(attr :src (feedback::attachment-url ** *))"/>
             </c:when>
+            <c:when test="(feedback::attachment-text-p type)">
+              <iframe class="long log" lquery="(attr :src (feedback::attachment-url ** *))"></span>
+            </c:when>
           </a>
         </li>
       </ul>

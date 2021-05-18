@@ -120,6 +120,10 @@
   (case attachment-type
     ((:png 1 :jpg 2) T)))
 
+(defun attachment-text-p (attachment-type)
+  (case attachment-type
+    ((:txt 3 :log 4) T)))
+
 (defun project-directory (project)
   (merge-pathnames
    (make-pathname :directory `(:relative ,(princ-to-string (dm:id project))))
