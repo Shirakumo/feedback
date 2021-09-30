@@ -1,0 +1,31 @@
+<article class="snapshot view">
+  <c:using value="snapshot">
+    <div class="row">
+      <label>Version:</label>
+      <span class="short version" lquery="(text version)"></span>
+    </div>
+    <div class="row">
+      <label>User ID:</label>
+      <span class="short user" lquery="(text user-id)"></span>
+    </div>
+    <div class="row">
+      <label>Session ID:</label>
+      <span class="short session" lquery="(text session-id)"></span>
+    </div>
+    <div class="row">
+      <label>Session Duration:</label>
+      <span class="short session-duration" lquery="(text session-duration)"></span>
+    </div>
+    <div class="row">
+      <label>Snapshot Duration:</label>
+      <span class="short snapshot-duration" lquery="(text snapshot-duration)"></span>
+    </div>
+    <div class="row">
+      <label>Time:</label>
+      <time class="short time" lquery="(time time)"></time>
+    </div>
+  </c:using>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/heatmap.js/2.0.0/heatmap.min.js" integrity="sha512-FpvmtV53P/z7yzv1TAIVH7PNz94EKXs5aV6ts/Zi+B/VeGU5Xwo6KIbwpTgKc0d4urD/BtkK50IC9785y68/AA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <div class="trace" lquery="(data :type (feedback::id->trace-data-type (clip project :trace-data-type)) :url (trace-url snapshot))">
+  </div>
+</article>

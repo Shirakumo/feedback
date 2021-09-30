@@ -3,7 +3,8 @@
 (define-trigger db:connected ()
   (db:create 'project
              '((name (:varchar 32))
-               (description :text))
+               (description :text)
+               (trace-data-type (:integer 1)))
              :indices '(name))
   
   (db:create 'attachment
@@ -96,6 +97,11 @@
   (:resolved 2)
   (:wontfix 3))
 
+(define-mapping (trace-data-type id)
+  (:none 0)
+  (:2d-points 1)
+  (:3d-points 2))
+
 (defun os-type-icon (os-type)
   (case os-type
     ((:windows 1) "fa-windows")
@@ -145,6 +151,12 @@
                                          ,(princ-to-string (dm:id entry))))
    (environment-module-pathname #.*package* :data "attachments/")))
 
+(defun snapshot-directory (snapshot)
+  (merge-pathnames
+   (make-pathname :directory `(:relative ,(princ-to-string (dm:field snapshot "project"))
+                                         ,(princ-to-string (dm:id snapshot))))
+   (environment-module-pathname #.*package* :data "snapshots/")))
+
 (defun attachment-pathname (entry type)
   (make-pathname :name (dm:field type "name")
                  :type (string-downcase (id->attachment-type (dm:field type "type")))
@@ -155,7 +167,7 @@
     (dm:data-model
      (ecase (dm:collection project-ish)
        (project project-ish)
-       ((attachment entry)
+       ((attachment entry snapshot)
         (dm:get-one 'project (db:query (:= '_id (dm:field project-ish "project")))))))
     (T
      (or (dm:get-one 'project (db:query (:= '_id (ensure-id project-ish))))
@@ -167,12 +179,13 @@
 (defun list-projects ()
   (dm:get 'project (db:query :all) :sort '(("name" :asc))))
 
-(defun make-project (name &key description attachments)
+(defun make-project (name &key description trace-data-type attachments)
   (db:with-transaction ()
     (when (find-project name)
       (error "Project named ~s already exists" name))
     (let ((model (dm:hull 'project)))
       (setf-dm-fields model name description)
+      (setf (dm:field project "trace-data-type") (trace-data-type->id trace-data-type))
       (dm:insert model)
       (loop for (name type) in attachments
             for sub = (dm:hull 'attachment)
@@ -182,10 +195,11 @@
                (dm:insert sub))
       model)))
 
-(defun edit-project (project &key name description (attachments NIL attachments-p))
+(defun edit-project (project &key name description trace-data-type (attachments NIL attachments-p))
   (db:with-transaction ()
     (let ((project (ensure-project project)))
       (setf-dm-fields project name description)
+      (setf (dm:field project "trace-data-type") (trace-data-type->id trace-data-type))
       (dm:save project)
       (when attachments-p
         (let ((existing (list-attachments project)))
@@ -268,3 +282,34 @@
     (let ((entry (ensure-entry entry)))
       (delete-directory (entry-directory entry))
       (dm:delete entry))))
+
+(defun ensure-snapshot (snapshot-ish)
+  (etypecase snapshot-ish
+    (dm:data-model
+     (ecase (dm:collection snapshot-ish)
+       (snapshot snapshot-ish)))
+    (T
+     (or (dm:get-one 'snapshot (db:query (:= '_id (ensure-id snapshot-ish))))
+         (error 'request-not-found :message "Could not find the requested snapshot.")))))
+
+(defun list-snapshots (project &key user-id session-id (skip 0) (amount 50))
+  (dm:get 'snashpot (cond (user-id (db:query (:and (:= 'project (ensure-id project))
+                                                   (:= 'user-id user-id))))
+                          (session-id (db:query (:and (:= 'project (ensure-id project))
+                                                      (:= 'session-id session-id))))
+                          (T (db:query (:= 'project (ensure-id project)))))
+          :skip skip :amount amount :sort '(("time" :desc))))
+
+(defun make-snapshot (project &key (time (get-universal-time))
+                                   user-id session-id session-duration
+                                   snapshot-duration version)
+  (let ((project (ensure-project project))
+        (model (dm:hull 'snapshot)))
+    (setf-dm-fields model project time user-id session-id session-duration snapshot-duration version)
+    (dm:insert model)))
+
+(defun delete-snapshot (snapshot)
+  (db:with-transaction ()
+    (let ((entry (ensure-snapshot snapshot)))
+      (delete-directory (snapshot-directory snapshot))
+      (dm:delete snapshot))))

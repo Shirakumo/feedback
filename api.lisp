@@ -10,16 +10,18 @@
 (define-api feedback/project/list () (:access (perm feedback project list))
   (api-output (list-projects)))
 
-(define-api feedback/project/new (name &optional description attachment-name[] attachment-type[]) (:access (perm feedback project new))
+(define-api feedback/project/new (name &optional trace-data-type description attachment-name[] attachment-type[]) (:access (perm feedback project new))
   (output (make-project name :description description
+                             :trace-data-type trace-data-type
                              :attachments (loop for name in attachment-name[]
                                                 for type in attachment-type[]
                                                 collect (list name type)))
           "Project created." (format NIL "feedback/~a/" name)))
 
-(define-api feedback/project/edit (project &optional name description attachment-name[] attachment-type[]) (:access (perm feedback project edit))
+(define-api feedback/project/edit (project &optional name trace-data-type description attachment-name[] attachment-type[]) (:access (perm feedback project edit))
   (output (edit-project project :name name
                                 :description description
+                                :trace-data-type trace-data-type
                                 :attachments (loop for name in attachment-name[]
                                                    for type in attachment-type[]
                                                    collect (list name type)))
@@ -83,3 +85,24 @@ Please do not respond to this."
   (let ((entry (ensure-entry entry)))
     (delete-entry entry)
     (output NIL "Entry deleted." (format NIL "feedback/~a/" (dm:field (ensure-project entry) "name")))))
+
+(define-api feedback/snapshot/new (project user-id session-id session-duration snapshot-duration &optional version trace) (:access (perm feedback entry new))
+  (db:with-transaction ()
+    (let* ((project (or (find-project project)
+                        (ensure-project project)))
+           (snapshot (make-snapshot project :version version
+                                            :user-id user-id
+                                            :session-id session-id
+                                            :session-duration session-duration
+                                            :snapshot-duration snapshot-duration
+                                            :version version)))
+      (when trace
+        (let ((path (make-pathname :name "trace" :type "dat" :defaults (snapshot-directory snapshot))))
+          (ensure-directories-exist path)
+          (uiop:copy-file (first trace) path)))
+      (output entry "Snapshot submitted." (format NIL "feedback/~a/snapshot/~a" (dm:field project "name") (dm:id snapshot))))))
+
+(define-api feedback/snapshot/delete (snapshot) (:access (perm feedback entry delete))
+  (let ((snapshot (ensure-snapshot snapshot)))
+    (delete-snapshot snapshot)
+    (output NIL "Snapshot deleted." (format NIL "feedback/~a/" (dm:field (ensure-project snapshot) "name")))))

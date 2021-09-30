@@ -1,0 +1,36 @@
+<article class="snapshot list">
+  <c:using value="project">
+    <p lquery='(text (or description "No description provided."))'></p>
+    <nav>
+      <a @href="feedback/{0}/edit name" class="button">
+        <i class="fas fa-edit"></i>
+        Edit
+      </a>
+    </nav>
+  </c:using>
+  <table class="snapshots">
+    <thead>
+      <tr>
+        <th class="id">Id</th>
+        <th class="user">User</th>
+        <th class="session">Session</th>
+        <th class="time">Time</th>
+        <th class="actions">Actions</th>
+      </tr>
+    </thead>
+    <tbody iterate="snapshots">
+      <tr>
+        <td class="id"><a lquery="(text _id) (attr :href (feedback::snapshot-url *))"></a></td>
+        <td class="user"><a lquery='(text user-id) (attr :href (format NIL "?user=~a" user-id))'></a></td>
+        <td class="session"><a lquery='(text session-id) (attr :href (format NIL "?session=~a" session-id))'></a></td>
+        <td class="time"><time lquery="(time time)"></time></td>
+        <td class="actions">
+          <a @href="feedback/api/feedback/snapshot/delete?entry={0}&browser=true _id" class="button"
+             title="Delete">
+            <i class="fas fa-trash"></i>
+          </a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</article>

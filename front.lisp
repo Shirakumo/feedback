@@ -11,6 +11,18 @@
                       (ensure-id entry))
               :representation :external))
 
+(defun snapshot-url (snapshot)
+  (uri-to-url (format NIL "feedback/~a/snapshot/~a"
+                      (dm:field (ensure-project snapshot) "name")
+                      (ensure-id snapshot))
+              :representation :external))
+
+(defun trace-url (snapshot)
+  (uri-to-url (format NIL "feedback/~a/snapshot/~a/trace"
+                      (dm:field (ensure-project snapshot) "name")
+                      (ensure-id snapshot))
+              :representation :external))
+
 (defun attachment-url (entry type)
   (uri-to-url (format NIL "feedback/~a/entry/~a/~a"
                       (dm:field (ensure-project entry) "name")
@@ -74,4 +86,35 @@
          (path (attachment-pathname entry type))
          (filename (format NIL "~a ~a.~(~a~)" (dm:id entry) (dm:field type "name") (id->attachment-type (dm:field type "type")))))
     (setf (header "Content-Disposition") (format NIL "inline; filename=~s" filename))
+    (setf (header "Cache-Control") "public, max-age=31536000")
+    (setf (header "Access-Control-Allow-Origin") "*")
     (serve-file path (attachment-type-content-type (dm:field type "type")))))
+
+(define-page snapshots "feedback/^([^/]+)/snapshot/$" (:uri-groups (project snapshot) :access (perm feedback snapshot))
+  (let* ((project (find-project project))
+         (amount 50)
+         (skip (* amount (max 0 (1- (parse-integer (or* (post/get "page") "1")))))))
+    (render-page (dm:field project "name") (@template "snapshot-list.ctml")
+                 :project project
+                 :snapshot (list-snapshots project :user-id (or* (post/get "user"))
+                                                   :session-id (or* (post/get "session"))
+                                                   :skip skip
+                                                   :amount amount))))
+
+(define-page snapshot "feedback/^([^/]+)/snapshot/([^/]+)$" (:uri-groups (project snapshot) :access (perm feedback snapshot))
+  (let ((project (find-project project))
+        (snapshot (ensure-snapshot snapshot)))
+    (render-page (princ-to-string (dm:id snapshot)) (@template "snapshot-view.ctml")
+                 :up (uri-to-url (format NIL "feedback/~a" (dm:field project "name")) :representation :external)
+                 :up-text (dm:field project "name")
+                 :project project
+                 :snapshot snapshot)))
+
+(define-page trace-file "feedback/^([^/]+)/snapshot/([^/]+)/trace$" (:uri-groups (project snapshot) :access (perm feedback snapshot))
+  (let* ((snapshot (ensure-snapshot snapshot))
+         (path (make-pathname :name "trace" :type "dat" :defaults (snapshot-directory snapshot)))
+         (filename (format NIL "~a.dat" (dm:id snapshot))))
+    (setf (header "Content-Disposition") (format NIL "inline; filename=~s" filename))
+    (setf (header "Cache-Control") "public, max-age=31536000")
+    (setf (header "Access-Control-Allow-Origin") "*")
+    (serve-file path "application/octet-stream")))
