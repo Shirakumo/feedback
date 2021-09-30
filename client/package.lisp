@@ -3,4 +3,5 @@
   (:export
    #:client
    #:login
-   #:submit))
+   #:submit
+   #:submit-snapshot))
