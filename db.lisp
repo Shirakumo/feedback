@@ -293,7 +293,7 @@
          (error 'request-not-found :message "Could not find the requested snapshot.")))))
 
 (defun list-snapshots (project &key user-id session-id (skip 0) (amount 50))
-  (dm:get 'snashpot (cond (user-id (db:query (:and (:= 'project (ensure-id project))
+  (dm:get 'snapshot (cond (user-id (db:query (:and (:= 'project (ensure-id project))
                                                    (:= 'user-id user-id))))
                           (session-id (db:query (:and (:= 'project (ensure-id project))
                                                       (:= 'session-id session-id))))

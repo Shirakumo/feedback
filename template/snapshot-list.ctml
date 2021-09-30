@@ -6,6 +6,10 @@
         <i class="fas fa-edit"></i>
         Edit
       </a>
+      <a @href="feedback/{0}/" class="button">
+        <i class="fas fa-list"></i>
+        Entries
+      </a>
     </nav>
   </c:using>
   <table class="snapshots">

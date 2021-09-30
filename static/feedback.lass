@@ -24,6 +24,7 @@
 (a.button
  :border-radius 2px
  :padding 0.1em 0.3em
+ :margin 0.1em 0.3em
  :background (hex F0F0F0)
  :border 1px solid (hex E0E0E0)
  :color (hex 303030)
@@ -88,7 +89,7 @@
    :background (hex D00000)
    :border 1px solid (hex A00000)
    :max-width 5em)))
-((:or .project.view .entry.view .dashboard)
+((:or .project.view .entry.view .dashboard .snapshot.list .snapshot.view)
  :max-width 1000px
  :margin 0 auto
  :padding 1em)
@@ -104,6 +105,10 @@
     (>*
      :margin 0 0.1em)
     (input :flex-grow 1)))))
+(.snapshot.view
+ (.trace
+  :width 100%
+  :min-height 30em))
 (table
  :display block
  :margin 1em 0
@@ -151,7 +156,7 @@
   :text-align right
   :width 5em
   (a :display inline)))
-(.entry.view
+((:or .entry.view .snapshot.view)
  (.row
   :display flex
   :flex-wrap wrap

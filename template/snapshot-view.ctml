@@ -26,6 +26,6 @@
     </div>
   </c:using>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/heatmap.js/2.0.0/heatmap.min.js" integrity="sha512-FpvmtV53P/z7yzv1TAIVH7PNz94EKXs5aV6ts/Zi+B/VeGU5Xwo6KIbwpTgKc0d4urD/BtkK50IC9785y68/AA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <div class="trace" lquery="(data :type (feedback::id->trace-data-type (clip project :trace-data-type)) :url (trace-url snapshot))">
+  <div class="trace" lquery="(data :type (feedback::id->trace-data-type (clip project :trace-data-type)) :url (feedback::trace-url snapshot))">
   </div>
 </article>

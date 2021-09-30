@@ -11,7 +11,7 @@
     </div>
     <div class="row">
       <label for="trace-data-type">Trace data type:</label>
-      <select name="trace-data-type" id="trace-data-type" lquery="(select (feedback::id->trace-data-type (or trace-data-type 0)))">
+      <select name="trace-data-type" id="trace-data-type" iterate="(feedback::trace-data-types)" lquery="(select (feedback::id->trace-data-type (or trace-data-type 0)))">
         <option lquery="(text *) (attr :value *)"/>
       </select>
     </div>

@@ -90,16 +90,16 @@
     (setf (header "Access-Control-Allow-Origin") "*")
     (serve-file path (attachment-type-content-type (dm:field type "type")))))
 
-(define-page snapshots "feedback/^([^/]+)/snapshot/$" (:uri-groups (project snapshot) :access (perm feedback snapshot))
+(define-page snapshots "feedback/^([^/]+)/snapshot/$" (:uri-groups (project) :access (perm feedback snapshot))
   (let* ((project (find-project project))
          (amount 50)
          (skip (* amount (max 0 (1- (parse-integer (or* (post/get "page") "1")))))))
     (render-page (dm:field project "name") (@template "snapshot-list.ctml")
                  :project project
-                 :snapshot (list-snapshots project :user-id (or* (post/get "user"))
-                                                   :session-id (or* (post/get "session"))
-                                                   :skip skip
-                                                   :amount amount))))
+                 :snapshots (list-snapshots project :user-id (or* (post/get "user"))
+                                                    :session-id (or* (post/get "session"))
+                                                    :skip skip
+                                                    :amount amount))))
 
 (define-page snapshot "feedback/^([^/]+)/snapshot/([^/]+)$" (:uri-groups (project snapshot) :access (perm feedback snapshot))
   (let ((project (find-project project))
