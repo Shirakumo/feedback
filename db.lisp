@@ -26,7 +26,17 @@
                (gpu-info :text)
                (description :text)
                (comment :text))
-             :indices '(project user-id os-type cpu-type gpu-type)))
+             :indices '(project user-id os-type cpu-type gpu-type))
+
+  (db:create 'snapshot
+             '((project (:id project))
+               (version (:varchar 64))
+               (user-id (:varchar 64))
+               (session-id (:varchar 64))
+               (session-duration (:integer 4))
+               (snapshot-duration (:integer 4))
+               (time (:integer 5)))
+             :indices '(project user-id session-id)))
 
 (defmacro define-mapping ((a b) &body mappings)
   `(progn
