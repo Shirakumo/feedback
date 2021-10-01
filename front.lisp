@@ -111,6 +111,7 @@
                  :snapshot snapshot)))
 
 (define-page trace-file "feedback/^([^/]+)/snapshot/([^/]+)/trace$" (:uri-groups (project snapshot) :access (perm feedback snapshot))
+  (declare (ignore project))
   (let* ((snapshot (ensure-snapshot snapshot))
          (path (make-pathname :name "trace" :type "dat" :defaults (snapshot-directory snapshot)))
          (filename (format NIL "~a.dat" (dm:id snapshot))))

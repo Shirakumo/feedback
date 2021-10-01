@@ -100,7 +100,7 @@ Please do not respond to this."
         (let ((path (make-pathname :name "trace" :type "dat" :defaults (snapshot-directory snapshot))))
           (ensure-directories-exist path)
           (uiop:copy-file (first trace) path)))
-      (output entry "Snapshot submitted." (format NIL "feedback/~a/snapshot/~a" (dm:field project "name") (dm:id snapshot))))))
+      (output snapshot "Snapshot submitted." (format NIL "feedback/~a/snapshot/~a" (dm:field project "name") (dm:id snapshot))))))
 
 (define-api feedback/snapshot/delete (snapshot) (:access (perm feedback entry delete))
   (let ((snapshot (ensure-snapshot snapshot)))

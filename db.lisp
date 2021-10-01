@@ -185,7 +185,7 @@
       (error "Project named ~s already exists" name))
     (let ((model (dm:hull 'project)))
       (setf-dm-fields model name description)
-      (setf (dm:field project "trace-data-type") (trace-data-type->id trace-data-type))
+      (setf (dm:field model "trace-data-type") (trace-data-type->id trace-data-type))
       (dm:insert model)
       (loop for (name type) in attachments
             for sub = (dm:hull 'attachment)
@@ -222,6 +222,7 @@
   (db:with-transaction ()
     (let ((project (ensure-project project)))
       (mapc #'delete-entry (list-entries project))
+      (mapc #'delete-snapshot (list-snapshots project))
       (dm:delete project)
       (delete-directory (project-directory project)))))
 
@@ -310,6 +311,6 @@
 
 (defun delete-snapshot (snapshot)
   (db:with-transaction ()
-    (let ((entry (ensure-snapshot snapshot)))
+    (let ((snapshot (ensure-snapshot snapshot)))
       (delete-directory (snapshot-directory snapshot))
       (dm:delete snapshot))))
