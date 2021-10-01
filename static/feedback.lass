@@ -137,17 +137,18 @@
   :display block
   :width 11em
   :text-align right)
- (.version
-  :white-space nowrap
-  :text-overflow ellipsis
-  :overflow hidden
-  :min-width 4em
-  :max-width 4em)
- (.session
-  :flex-grow 1
+ ((:or .version .user .session)
   :white-space nowrap
   :text-overflow ellipsis
   :overflow hidden)
+ (.version
+  :min-width 4em
+  :max-width 4em)
+ (.user
+  :min-width 4em
+  :max-width 4em)
+ (.session
+  :flex-grow 1)
  (.status
   :width 1em
   (.fa-ellipsis-h :color (hex 505050))
