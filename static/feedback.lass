@@ -143,6 +143,11 @@
   :overflow hidden
   :min-width 4em
   :max-width 4em)
+ (.session
+  :flex-grow 1
+  :white-space nowrap
+  :text-overflow ellipsis
+  :overflow hidden)
  (.status
   :width 1em
   (.fa-ellipsis-h :color (hex 505050))
