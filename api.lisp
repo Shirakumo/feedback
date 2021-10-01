@@ -93,8 +93,8 @@ Please do not respond to this."
            (snapshot (make-snapshot project :version version
                                             :user-id user-id
                                             :session-id session-id
-                                            :session-duration session-duration
-                                            :snapshot-duration snapshot-duration
+                                            :session-duration (parse-integer session-duration)
+                                            :snapshot-duration (parse-integer snapshot-duration)
                                             :version version)))
       (when trace
         (let ((path (make-pathname :name "trace" :type "dat" :defaults (snapshot-directory snapshot))))
