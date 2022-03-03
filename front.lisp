@@ -46,8 +46,10 @@
 (define-page project "feedback/^([^/]+)(?:/(\\d+)?)?$" (:uri-groups (project page) :access (perm feedback project))
   (let* ((project (find-project project))
          (amount 50)
-         (skip (* amount (max 0 (1- (parse-integer (or* page "1")))))))
+         (page (parse-integer (or* page "1")))
+         (skip (* amount (max 0 (1- page)))))
     (render-page (dm:field project "name") (@template "project-view.ctml")
+                 :page-idx page
                  :project project
                  :entries (list-entries project :skip skip :amount amount))))
 

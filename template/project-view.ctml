@@ -10,6 +10,16 @@
         <i class="fas fa-camera"></i>
         Snapshots
       </a>
+      <c:when test="(< 1 (** :page-idx))">
+        <a @href="feedback/{0}/{1} name (1- (** :page-idx))" class="button">
+          <i class="fas fa-arrow-left"></i>
+          Previous Page
+        </a>
+      </c:when>
+      <a @href="feedback/{0}/{1} name (1+ (** :page-idx))" class="button">
+        <i class="fas fa-arrow-right"></i>
+        Next Page
+      </a>
     </nav>
   </c:using>
   <table class="entries">
