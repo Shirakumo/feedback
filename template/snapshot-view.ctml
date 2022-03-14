@@ -14,11 +14,11 @@
     </div>
     <div class="row">
       <label>Session Duration:</label>
-      <span class="short session-duration" lquery="(text session-duration)"></span>
+      <span class="short session-duration" lquery="(time session-duration :clock)"></span>
     </div>
     <div class="row">
       <label>Snapshot Duration:</label>
-      <span class="short snapshot-duration" lquery="(text snapshot-duration)"></span>
+      <span class="short snapshot-duration" lquery="(time snapshot-duration :clock)"></span>
     </div>
     <div class="row">
       <label>Time:</label>
