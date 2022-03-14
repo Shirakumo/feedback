@@ -192,7 +192,7 @@
    (.log
     :font-family monospace
     :overflow-y auto
-    :max-height 10em
+    :max-height 50em
     :margin 0
     :max-width fit-content))
   ((:or .description .comment .log)
