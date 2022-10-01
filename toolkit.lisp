@@ -15,6 +15,8 @@
                             (null)
                             (dm:data-model
                              (setf (dm:field ,modelg ,field) (dm:id ,var)))
+                            (user:user
+                             (setf (dm:field ,modelg ,field) (user:id ,var)))
                             (T
                              (setf (dm:field ,modelg ,field) ,var)))))
        ,modelg)))

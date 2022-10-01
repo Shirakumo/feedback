@@ -23,6 +23,7 @@
     </nav>
   </c:using>
   <form @action="feedback/api/feedback/entry/new" method="POST">
+    <input type="hidden" name="browser" value="true">
     <input type="hidden" name="project" lquery="(val (dm:id project))">
     <input type="hidden" name="user-id" lquery="(val (user:username (auth:current)))">
     <div class="entries">
@@ -34,7 +35,9 @@
       <th class="actions">Actions</th>
       <c:splice iterate="entries">
         <td class="status"><i class="fas" lquery="(add-class (feedback::status-icon status))" /></td>
-        <td class="user assigned"><a lquery="(text (when assigned-to (user:username assigned-to)))"></a></td>
+        <td class="user assigned"><select name="assigned-to" iterate="(list* NIL (feedback::list-members project))" lquery="(select (when assigned-to (user:username assigned-to)))">
+          <option lquery="(val (when *(user:username *))) (text (when * (user:username *)))"></option>
+        </select></td>
         <td class="description" lquery="(text (feedback::shorten description))"></td>
         <td class="user reporter" lquery="(text user-id)"></td>
         <td class="notes" lquery="(text notes)"></td>
@@ -50,7 +53,9 @@
         </td>
       </c:splice>
       <td class="status"><i class="fas fa-question-circle"></i></td>
-      <td class="user assigned"><select name="assigned-to"></select></td>
+      <td class="user assigned"><select name="assigned-to" iterate="(list* NIL (feedback::list-members project))">
+        <option lquery="(val (when *(user:username *))) (text (when * (user:username *)))"></option>
+      </select></td>
       <td class="description"><textarea name="description"></textarea></td>
       <td class="user reporter" lquery="(text (user:username (auth:current)))"></td>
       <td class="notes"></td>
