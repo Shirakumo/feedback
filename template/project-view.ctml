@@ -22,32 +22,22 @@
       </a>
     </nav>
   </c:using>
-  <table class="entries">
-    <thead>
-      <tr>
-        <th class="status"></th>
-        <th class="id">Id</th>
-        <th class="version">Version</th>
-        <th class="description">Description</th>
-        <th class="os">OS</th>
-        <th class="cpu">CPU</th>
-        <th class="gpu">GPU</th>
-        <th class="time">Time</th>
-        <th class="actions">Actions</th>
-      </tr>
-    </thead>
-    <tbody iterate="entries">
-      <tr>
-        <th class="status"><i class="fas" lquery="(add-class (feedback::status-icon status))" /></th>
-        <td class="id"><a lquery="(text _id) (attr :href (feedback::entry-url *))"></a></td>
-        <td class="version" lquery="(text version)"></td>
+  <form @action="feedback/api/feedback/entry/new" method="POST">
+    <input type="hidden" name="project" lquery="(val (dm:id project))">
+    <input type="hidden" name="user-id" lquery="(val (user:username (auth:current)))">
+    <div class="entries">
+      <th class="status"></th>
+      <th class="user assigned">Assigned</th>
+      <th class="description">Description</th>
+      <th class="user reporter">Reporter</th>
+      <th class="notes">Notes</th>
+      <th class="actions">Actions</th>
+      <c:splice iterate="entries">
+        <td class="status"><i class="fas" lquery="(add-class (feedback::status-icon status))" /></td>
+        <td class="user assigned"><a lquery="(text (when assigned-to (user:username assigned-to)))"></a></td>
         <td class="description" lquery="(text (feedback::shorten description))"></td>
-        <td class="os">
-          <i class="fab" lquery="(add-class (feedback::os-type-icon os-type))"></i>
-        </td>
-        <td class="cpu" lquery="(text (feedback::id->cpu-type cpu-type))"></td>
-        <td class="gpu" lquery="(text (feedback::id->gpu-type gpu-type))"></td>
-        <td class="time"><time lquery="(time time)"></time></td>
+        <td class="user reporter" lquery="(text user-id)"></td>
+        <td class="notes" lquery="(text notes)"></td>
         <td class="actions">
           <a @href="feedback/api/feedback/entry/edit?entry={0}&status=resolved&browser=true _id" class="button"
              title="Mark as resolved">
@@ -58,7 +48,13 @@
             <i class="fas fa-trash"></i>
           </a>
         </td>
-      </tr>
-    </tbody>
-  </table>
+      </c:splice>
+      <td class="status"><i class="fas fa-question-circle"></i></td>
+      <td class="user assigned"><select name="assigned-to"></select></td>
+      <td class="description"><textarea name="description"></textarea></td>
+      <td class="user reporter" lquery="(text (user:username (auth:current)))"></td>
+      <td class="notes"></td>
+      <td class="actions"><input type="submit" value="Submit"></td>
+    </div>
+  </form>
 </article>

@@ -35,7 +35,7 @@
  :border-color (hex D0D0D0))
 (main
  :background (hex FFFFFF)
- :min-height 200px)
+ :min-height 100vh)
 (footer
  :padding 1em 1em
  :color (hex A0A0A0)
@@ -90,8 +90,6 @@
    :border 1px solid (hex A00000)
    :max-width 5em)))
 ((:or .project.view .entry.view .dashboard .snapshot.list .snapshot.view)
- :max-width 1000px
- :margin 0 auto
  :padding 1em)
 (.project.edit
  (.attachments
@@ -109,48 +107,31 @@
  (.trace
   :width 100%
   :min-height 30em))
-(table
- :display block
+(.entries
+ :display grid
+ :grid-template-columns 2em min-content auto min-content min-content max-content
+ :grid-auto-rows auto
+ :row-gap 0.2em
  :margin 1em 0
  :border 1px solid (hex E0E0E0)
  :width 100%
- (thead
-  :position sticky
-  :background (hex F0F0F0)
-  (th :text-align left))
- ((:or tbody thead)
-  :display flex
-  :flex-direction column)
- (tr
-  :display flex
-  :flex-grow 1
-  :padding 0.2em)
- (td>* :display block)
- ((:or .name .project .id)
-  :display block
-  :width 7em)
+ (>* :border-bottom 1px solid (hex 505050))
+ (th
+  :text-align left
+  :background (hex E0E0E0))
  (.description
-  :flex-grow 1
-  :white-space nowrap
-  :text-overflow ellipsis)
- ((:or time .time)
-  :display block
-  :width 11em
-  :text-align right)
+  (textarea
+   :width 100%
+   :box-sizing border-box))
  ((:or .version .user .session)
   :white-space nowrap
   :text-overflow ellipsis
   :overflow hidden)
- (.version
-  :min-width 4em
-  :max-width 4em)
  (.user
-  :min-width 4em
-  :max-width 4em)
- (.session
-  :flex-grow 1)
+  (select
+   :width 100%))
  (.status
-  :width 1em
+  :text-align center
   (.fa-ellipsis-h :color (hex 505050))
   (.fa-exclamation-circle :color (hex 880000))
   (.fa-check-circle :color (hex 008800))
@@ -160,7 +141,6 @@
  ((:or .cpu .gpu) :width 4em)
  (.actions
   :text-align right
-  :width 5em
   (a :display inline)))
 ((:or .entry.view .snapshot.view)
  (.row

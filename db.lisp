@@ -13,6 +13,11 @@
                (type (:integer 1)))
              :indices '(project))
 
+  (db:create 'member
+             '((project (:id project))
+               (user :id))
+             :indices '(project user))
+
   (db:create 'entry
              '((project (:id project))
                (status (:integer 1))
@@ -26,9 +31,12 @@
                (cpu-info :text)
                (gpu-info :text)
                (description :text)
-               (comment :text))
-             :indices '(project user-id os-type cpu-type gpu-type))
-
+               (comment :text)
+               (assigned-to :id)
+               (severity (:integer 1))
+               (relates-to (:id entry)))
+             :indices '(project assigned-to severity user-id os-type cpu-type gpu-type))
+  
   (db:create 'snapshot
              '((project (:id project))
                (version (:varchar 64))
@@ -37,7 +45,14 @@
                (session-duration (:integer 4))
                (snapshot-duration (:integer 4))
                (time (:integer 5)))
-             :indices '(project user-id session-id)))
+             :indices '(project user-id session-id))
+
+  (db:create 'note
+             '((entry (:id entry))
+               (author :id)
+               (time (:integer 5))
+               (text :text))
+             :indices '(entry)))
 
 (defmacro define-mapping ((a b) &body mappings)
   `(progn
@@ -95,7 +110,11 @@
   (:new 0)
   (:triaged 1)
   (:resolved 2)
-  (:wontfix 3))
+  (:wontfix 3)
+  (:invalid 4)
+  (:duplicate 5)
+  (:unclear 6)
+  (:deleted 7))
 
 (define-mapping (trace-data-type id)
   (:none 0)
@@ -117,6 +136,10 @@
     ((:new 0) "fa-exclamation-circle")
     ((:resolved 2) "fa-check-circle")
     ((:wontfix 3) "fa-ban")
+    ((:invalid 4) "fa-xmark")
+    ((:duplicate 5) "fa-copy")
+    ((:unclear 6) "fa-question-circle")
+    ((:deleted 7) "fa-trash")
     (T "fa-ellipsis-h")))
 
 (defun attachment-type-content-type (attachment-type)
@@ -167,7 +190,7 @@
     (dm:data-model
      (ecase (dm:collection project-ish)
        (project project-ish)
-       ((attachment entry snapshot)
+       ((attachment entry note snapshot member)
         (dm:get-one 'project (db:query (:= '_id (dm:field project-ish "project")))))))
     (T
      (or (dm:get-one 'project (db:query (:= '_id (ensure-id project-ish))))
@@ -176,16 +199,18 @@
 (defun find-project (name)
   (dm:get-one 'project (db:query (:= 'name name))))
 
-(defun list-projects ()
-  (dm:get 'project (db:query :all) :sort '(("name" :asc))))
+(defun list-projects (&optional (member (auth:current NIL)))
+  (if member
+      (mapcar #'ensure-project (dm:get 'member (db:query (:= 'user (user:id member)))))
+      (dm:get 'project (db:query :all))))
 
-(defun make-project (name &key description trace-data-type attachments)
+(defun make-project (name &key description trace-data-type attachments (author (auth:current)))
   (db:with-transaction ()
     (when (find-project name)
       (error "Project named ~s already exists" name))
     (let ((model (dm:hull 'project)))
       (setf-dm-fields model name description)
-      (setf (dm:field model "trace-data-type") (trace-data-type->id trace-data-type))
+      (setf (dm:field model "trace-data-type") (trace-data-type->id (or trace-data-type :none)))
       (dm:insert model)
       (loop for (name type) in attachments
             for sub = (dm:hull 'attachment)
@@ -193,13 +218,15 @@
             do (setf-dm-fields sub (model "project") name)
                (setf (dm:field sub "type") (attachment-type->id type))
                (dm:insert sub))
+      (db:insert 'member `(("project" . ,(dm:id model)) ("user" . ,(user:id author))))
       model)))
 
-(defun edit-project (project &key name description trace-data-type (attachments NIL attachments-p))
+(defun edit-project (project &key name description trace-data-type (attachments NIL attachments-p) members)
   (db:with-transaction ()
     (let ((project (ensure-project project)))
       (setf-dm-fields project name description)
-      (setf (dm:field project "trace-data-type") (trace-data-type->id trace-data-type))
+      (when trace-data-type
+        (setf (dm:field project "trace-data-type") (trace-data-type->id trace-data-type)))
       (dm:save project)
       (when attachments-p
         (let ((existing (list-attachments project)))
@@ -216,6 +243,10 @@
                             (dm:insert sub)))))
           (dolist (attachment existing)
             (dm:delete attachment))))
+      (when members
+        (db:remove 'member (db:query (:= 'project (dm:id project))))
+        (dolist (member members)
+          (db:insert 'member `(("project" . ,(dm:id project)) ("user" . ,(user:id member))))))
       project)))
 
 (defun delete-project (project)
@@ -261,19 +292,21 @@
                                 os-type os-info
                                 cpu-type cpu-info
                                 gpu-type gpu-info
-                                version description)
+                                version description
+                                assigned-to severity
+                                relates-to)
   (let ((project (ensure-project project))
         (model (dm:hull 'entry)))
-    (setf-dm-fields model project version time user-id os-info cpu-info gpu-info description)
+    (setf-dm-fields model project version time user-id os-info cpu-info gpu-info description assigned-to severity relates-to)
     (setf (dm:field model "status") (status->id :new))
-    (setf (dm:field model "os-type") (os-type->id os-type))
-    (setf (dm:field model "cpu-type") (cpu-type->id cpu-type))
-    (setf (dm:field model "gpu-type") (gpu-type->id gpu-type))
+    (setf (dm:field model "os-type") (os-type->id (or os-type :unknown)))
+    (setf (dm:field model "cpu-type") (cpu-type->id (or cpu-type :unknown)))
+    (setf (dm:field model "gpu-type") (gpu-type->id (or gpu-type :unknown)))
     (dm:insert model)))
 
-(defun edit-entry (entry &key user-id description comment status)
+(defun edit-entry (entry &key user-id description comment status assigned-to severity relates-to)
   (let ((entry (ensure-entry entry)))
-    (setf-dm-fields entry user-id description comment)
+    (setf-dm-fields entry user-id description comment assigned-to severity relates-to)
     (setf (dm:field entry "status") (status->id status))
     (dm:save entry)
     entry))
@@ -282,7 +315,41 @@
   (db:with-transaction ()
     (let ((entry (ensure-entry entry)))
       (delete-directory (entry-directory entry))
+      (db:remove 'note (db:query (:= 'entry (dm:id entry))))
       (dm:delete entry))))
+
+(defun list-related (entry)
+  (dm:get 'entry (db:query (:= 'relates-to (dm:id entry)))))
+
+(defun list-notes (entry &key (skip 0) (amount 100))
+  (dm:get 'note (db:query (:= 'entry (dm:id entry)))
+          :skip skip :amount amount :sort '(("time" :asc))))
+
+(defun make-note (entry text &key (author (auth:current)) (time (get-universal-time)))
+  (let ((entry (ensure-entry entry))
+        (model (dm:hull 'note)))
+    (setf-dm-fields model entry text time)
+    (setf (dm:field model "author") (user:id author))
+    (dm:insert model)))
+
+(defun ensure-note (note-ish)
+  (etypecase note-ish
+    (dm:data-model
+     (ecase (dm:collection note-ish)
+       (note note-ish)))
+    (T
+     (or (dm:get-one 'note (db:query (:= '_id (ensure-id note-ish))))
+         (error 'request-not-found :message "Could not find the requested note.")))))
+
+(defun edit-note (note &key text)
+  (let ((note (ensure-note note)))
+    (setf-dm-fields note text)
+    (dm:save note)
+    note))
+
+(defun delete-note (note)
+  (db:with-transaction ()
+    (dm:delete note)))
 
 (defun ensure-snapshot (snapshot-ish)
   (etypecase snapshot-ish

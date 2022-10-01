@@ -17,6 +17,12 @@
                       (ensure-id snapshot))
               :representation :external))
 
+(defun note-url (note)
+  (uri-to-url (format NIL "feedback/~a/entry/~a"
+                      (dm:field (ensure-project note) "name")
+                      (dm:field note "entry"))
+              :representation :external :fragment (format NIL "note-~a" (dm:id note))))
+
 (defun trace-url (snapshot)
   (uri-to-url (format NIL "feedback/~a/snapshot/~a/trace"
                       (dm:field (ensure-project snapshot) "name")
@@ -71,6 +77,7 @@
                  :up-text (dm:field project "name")
                  :project project
                  :entry entry
+                 :notes (list-notes entry)
                  :attachments (list-attachments entry))))
 
 (define-page entry-edit ("feedback/^([^/]+)/entry/([^/]+)/edit$" 1) (:uri-groups (project entry) :access (perm feedback entry edit))
