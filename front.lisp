@@ -67,6 +67,7 @@
   (let ((project (find-project project)))
     (render-page (dm:field project "name") (@template "project-edit.ctml")
                  :project project
+                 :members (list-members project)
                  :attachments (list-attachments project))))
 
 (define-page entry "feedback/^([^/]+)/entry/([^/]+)$" (:uri-groups (project entry) :access (perm feedback entry))

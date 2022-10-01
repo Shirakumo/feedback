@@ -92,7 +92,7 @@
 ((:or .project.view .entry.view .dashboard .snapshot.list .snapshot.view)
  :padding 1em)
 (.project.edit
- (.attachments
+ ((:or .attachments .members)
   :flex-grow 1
   (ul
    :margin 0 :padding 0

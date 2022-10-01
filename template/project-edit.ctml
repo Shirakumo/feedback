@@ -36,6 +36,25 @@
         </a>
       </div>
     </div>
+    <div class="row">
+      <label for="members">Members:</label>
+      <div class="members">
+        <ul id="users" iterate="(** :members)">
+          <li class="member">
+            <select name="member[]" iterate="(user:list)" lquery="(select (user:username *))">
+              <option lquery="(text (user:username *)) (val (user:username *))"/>
+            </select>
+            <a href="#" class="button delete">
+              <i class="fas fa-trash"></i>
+            </a>
+          </li>
+        </ul>
+        <a href="#" class="button add">
+          <i class="fas fa-plus-circle"></i>
+          Add Member
+        </a>
+      </div>
+    </div>
     <div class="actions">
       <input type="hidden" name="browser" value="true" />
       <c:if test="_id">

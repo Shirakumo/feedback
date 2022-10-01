@@ -257,6 +257,11 @@
       (dm:delete project)
       (delete-directory (project-directory project)))))
 
+(defun list-members (project)
+  (db:iterate 'member (db:query (:= 'project (ensure-id project)))
+              (lambda (row) (user:get (gethash "user" row)))
+              :accumulate T :fields '("user")))
+
 (defun list-attachments (thing)
   (cond ((or (typep thing 'db:id) (eql 'project (dm:collection thing)))
          (dm:get 'attachment (db:query (:= 'project (ensure-id thing))) :sort '(("name" :asc))))
