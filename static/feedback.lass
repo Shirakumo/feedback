@@ -180,3 +180,63 @@
  ((:or .os .cpu .gpu)
   (.long
    :font-family monospace)))
+(.track.view
+ :display flex
+ :flex-direction column
+ (textarea
+  :font-family inherit
+  :font-size inherit)
+ ((:and .entry :last-child)
+  :border-bottom 1px solid gray)
+ (.entry
+  (.row
+   :display grid
+   :grid-template-columns 1em 5em 6em 1fr 5em 2em
+   :gap 0px
+   ((:or input select textarea)
+    :border none)
+   (>* :border-left 1px solid gray !important
+       :border-top 1px solid gray !important)
+   ((:and >* :first-child)
+    :border-left none !important)
+   ((:or .assigned .severity .status)
+    :text-align center)
+   (.drag
+    :background lightgray)
+   ((:or .drag .collapse)
+    :display flex
+    :justify-content center
+    :align-items center))
+  (.extra
+   :border-left 1em solid lightgray
+   (.actions
+    :background gray
+    (a :display inline-block
+       :padding 0.1em 0.5em
+       :color white)
+    ((:and a :hover)
+     :background black))
+   (.notes
+    :padding-left 1em
+    :border-left 1px solid gray
+    (.note
+     :display grid
+     :grid-template-columns "fit-content(10em)" 8em 1fr 5em
+     :gap 0.2em
+     :padding 0.2em
+     (.text
+      :border none
+      :background (hex E0E0E0)
+      :border-radius 0.5em
+      :padding 0.25em)))
+   (.relations
+    :margin 0
+    :padding 1em
+    :list-style none
+    :border-left 1px solid gray)))
+ (.entry.head
+  :font-weight bold
+  :background black
+  :color white)
+ (.entry.existing
+  (.drag :cursor grab)))

@@ -18,11 +18,19 @@
                (user :id))
              :indices '(project user))
 
+  (db:create 'track
+             '((project (:id project))
+               (name (:varchar 32))
+               (description :text))
+             :indices '(project))
+
   (db:create 'entry
              '((project (:id project))
+               (track (:id track))
                (status (:integer 1))
                (version (:varchar 64))
                (user-id (:varchar 64))
+               (order (:integer 4))
                (time (:integer 5))
                (os-type (:integer 1))
                (cpu-type (:integer 1))
@@ -35,7 +43,7 @@
                (assigned-to :id)
                (severity (:integer 1))
                (relates-to (:id entry)))
-             :indices '(project assigned-to severity user-id os-type cpu-type gpu-type))
+             :indices '(project track assigned-to severity user-id os-type cpu-type gpu-type))
   
   (db:create 'snapshot
              '((project (:id project))
