@@ -265,10 +265,42 @@
       (dm:delete project)
       (delete-directory (project-directory project)))))
 
+(defun ensure-track (track-ish)
+  (etypecase track-ish
+    (dm:data-model
+     (ecase (dm:collection track-ish)
+       (track track-ish)))
+    (T
+     (or (dm:get-one 'track (db:query (:= '_id (ensure-id track-ish))))
+         (error 'request-not-found :message "Could not find the requested track.")))))
+
+(defun list-tracks (project &key (skip 0) (amount 50))
+  (dm:get 'track (db:query (:= 'project (ensure-id project)))
+          :skip skip :amount amount :sort '(("name" :desc))))
+
+(defun make-track (project name &key description)
+  (let ((project (ensure-project project))
+        (track (dm:hull 'track)))
+    (setf-dm-fields track project name description)
+    (dm:insert track)))
+
+(defun edit-track (track &key name description)
+  (db:with-transaction ()
+    (let ((track (ensure-track track)))
+      (setf-dm-fields track name description)
+      (dm:save track))))
+
+(defun delete-track (track &key delete-entries)
+  (db:with-transaction ()
+    (if delete-entries
+        (db:remove 'entry (db:query (:= 'track (ensure-id track))))
+        (db:update 'entry (db:query (:= 'track (ensure-id track))) `(("track" . NIL))))
+    (db:remove 'track (db:query (:= '_id (ensure-id track))))))
+
 (defun list-members (project)
   (db:iterate 'member (db:query (:= 'project (ensure-id project)))
-              (lambda (row) (user:get (gethash "user" row)))
-              :accumulate T :fields '("user")))
+    (lambda (row) (user:get (gethash "user" row)))
+    :accumulate T :fields '("user")))
 
 (defun list-attachments (thing)
   (cond ((or (typep thing 'db:id) (eql 'project (dm:collection thing)))
@@ -295,13 +327,20 @@
      (or (dm:get-one 'entry (db:query (:= '_id (ensure-id entry-ish))))
          (error 'request-not-found :message "Could not find the requested entry.")))))
 
-(defun list-entries (&optional project &key (skip 0) (amount 50))
-  (dm:get 'entry (if project
-                     (db:query (:= 'project (ensure-id project)))
-                     (db:query :all))
+(defun list-entries (&optional parent &key (skip 0) (amount 50))
+  (dm:get 'entry (etypecase parent
+                   (dm:data-model
+                    (ecase (dm:collection parent)
+                      (project (db:query (:= 'project (dm:id parent))))
+                      (track (db:query (:= 'track (dm:id parent))))))
+                   (db:id
+                    (db:query (:= 'project parent)))
+                   (null
+                    (db:query :all)))
           :skip skip :amount amount :sort '(("time" :desc))))
 
 (defun make-entry (project &key (time (get-universal-time)) user-id
+                                track
                                 os-type os-info
                                 cpu-type cpu-info
                                 gpu-type gpu-info
@@ -309,8 +348,9 @@
                                 assigned-to severity
                                 relates-to)
   (let ((project (ensure-project project))
+        (track (when track (ensure-track track)))
         (model (dm:hull 'entry)))
-    (setf-dm-fields model project version time user-id os-info cpu-info gpu-info description severity relates-to)
+    (setf-dm-fields model project track version time user-id os-info cpu-info gpu-info description severity relates-to)
     (setf (dm:field model "assigned-to") (when assigned-to (user:id assigned-to)))
     (setf (dm:field model "status") (status->id :new))
     (setf (dm:field model "os-type") (os-type->id (or os-type :unknown)))
@@ -318,9 +358,9 @@
     (setf (dm:field model "gpu-type") (gpu-type->id (or gpu-type :unknown)))
     (dm:insert model)))
 
-(defun edit-entry (entry &key user-id description comment status (assigned-to NIL assigned-p) severity relates-to)
+(defun edit-entry (entry &key track user-id description comment status (assigned-to NIL assigned-p) severity relates-to)
   (let ((entry (ensure-entry entry)))
-    (setf-dm-fields entry user-id description comment severity relates-to)
+    (setf-dm-fields entry track user-id description comment severity relates-to)
     (when assigned-p
       (setf (dm:field entry "assigned-to") (when assigned-to (user:id assigned-to))))
     (setf (dm:field entry "status") (status->id status))
