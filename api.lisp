@@ -114,11 +114,13 @@
                    (feedback-mail project-name (uri-to-url url :representation :external) description)))
       (output entry "Feedback submitted." url))))
 
-(define-api feedback/entry/edit (entry &optional comment description status assigned-to severity relates-to) (:access (perm feedback entry edit))
+(define-api feedback/entry/edit (entry &optional comment description status assigned-to severity relates-to order) (:access (perm feedback entry edit))
   (db:with-transaction ()
     (let* ((entry (ensure-entry entry))
            (project (ensure-project entry)))
-      (edit-entry entry :description description :comment comment :status status
+      (edit-entry entry :description description :comment comment :status status :order (cond ((string= "top" order) :top)
+                                                                                              ((string= "bottom" order) :bottom)
+                                                                                              ((stringp order) (parse-integer order)))
                         :assigned-to assigned-to :severity severity :relates-to relates-to)
       (output entry "Entry updated." "feedback/~a/entry/~a" (dm:field project "name") (dm:id entry)))))
 

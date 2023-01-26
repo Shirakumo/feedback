@@ -312,6 +312,9 @@
       (dm:delete project)
       (delete-directory (project-directory project)))))
 
+(defun find-track (name project)
+  (dm:get-one 'track (db:query (:and (:= 'name name) (:= 'project (ensure-id project))))))
+
 (defun ensure-track (track-ish)
   (etypecase track-ish
     (dm:data-model
@@ -379,6 +382,8 @@
 
 (defun list-entries (&optional parent &key (skip 0) (amount 50))
   (dm:get 'entry (etypecase parent
+                   (user:user
+                    (db:query (:= 'assigned-to (user:id parent))))
                    (dm:data-model
                     (ecase (dm:collection parent)
                       (project (db:query (:= 'project (dm:id parent))))
@@ -387,7 +392,7 @@
                     (db:query (:= 'project parent)))
                    (null
                     (db:query :all)))
-          :skip skip :amount amount :sort '(("time" :desc))))
+          :skip skip :amount amount :sort '(("order" :desc) ("time" :desc))))
 
 (defun make-entry (project &key (time (get-universal-time)) user-id
                                 track status
@@ -397,31 +402,50 @@
                                 version description
                                 assigned-to severity
                                 relates-to notify)
-  (let ((project (ensure-project project))
-        (track (when track (ensure-track track)))
-        (relates-to (when relates-to (ensure-entry relates-to)))
-        (model (dm:hull 'entry)))
-    (setf-dm-fields model project track version time user-id os-info cpu-info gpu-info description severity relates-to)
-    (setf (dm:field model "assigned-to") (when assigned-to (user:id assigned-to)))
-    (setf (dm:field model "status") (status->id (or status :new)))
-    (setf (dm:field model "os-type") (os-type->id (or os-type :unknown)))
-    (setf (dm:field model "cpu-type") (cpu-type->id (or cpu-type :unknown)))
-    (setf (dm:field model "gpu-type") (gpu-type->id (or gpu-type :unknown)))
-    (prog1 (dm:insert model)
-      (when notify (notify model :entry-new project)))))
+  (db:with-transaction ()
+    (let ((project (ensure-project project))
+          (track (when track (ensure-track track)))
+          (relates-to (when relates-to (ensure-entry relates-to)))
+          (model (dm:hull 'entry)))
+      (setf-dm-fields model project track version time user-id os-info cpu-info gpu-info description severity relates-to)
+      (let ((highest (dm:get-one 'entry (if track (db:query (:= 'track (dm:id track))) (db:query (:= 'project (dm:id project)))) :sort `(("order" :desc)))))
+        (setf (dm:field model "order") (if highest (1+ (dm:field highest "order")) 0)))
+      (setf (dm:field model "assigned-to") (when assigned-to (user:id assigned-to)))
+      (setf (dm:field model "status") (status->id (or status :new)))
+      (setf (dm:field model "os-type") (os-type->id (or os-type :unknown)))
+      (setf (dm:field model "cpu-type") (cpu-type->id (or cpu-type :unknown)))
+      (setf (dm:field model "gpu-type") (gpu-type->id (or gpu-type :unknown)))
+      (prog1 (dm:insert model)
+        (when notify (notify model :entry-new project))))))
 
-(defun edit-entry (entry &key track user-id description comment status (assigned-to NIL assigned-p) (relates-to NIL relates-to-p) severity notify)
-  (let ((entry (ensure-entry entry)))
-    (setf-dm-fields entry track user-id description comment severity relates-to)
-    (when relates-to-p
-      (setf (dm:field entry "assigned-to") (when relates-to (ensure-entry relates-to))))
-    (when assigned-p
-      (setf (dm:field entry "assigned-to") (when assigned-to (user:id assigned-to))))
-    (when status
-      (setf (dm:field entry "status") (status->id status)))
-    (dm:save entry)
-    (when notify (notify entry :entry-edit))
-    entry))
+(defun edit-entry (entry &key track user-id description comment status (assigned-to NIL assigned-p) (relates-to NIL relates-to-p) severity notify order)
+  (db:with-transaction ()
+    (let ((entry (ensure-entry entry)))
+      (setf-dm-fields entry track user-id description comment severity relates-to)
+      (when relates-to-p
+        (setf (dm:field entry "assigned-to") (when relates-to (ensure-entry relates-to))))
+      (when assigned-p
+        (setf (dm:field entry "assigned-to") (when assigned-to (user:id assigned-to))))
+      (when status
+        (setf (dm:field entry "status") (status->id status)))
+      (when order
+        (let* ((prev (dm:field entry "order"))
+               (track (dm:field entry "track"))
+               (order (ecase order
+                        (:top (dm:field (dm:get-one 'entry (if track (db:query (:= 'track (dm:id track))) (db:query (:= 'project (dm:field entry "project")))) :sort `(("order" :desc))) "order"))
+                        (:bottom (dm:field (dm:get-one 'entry (if track (db:query (:and (:= 'track (dm:id track)) (:<= 'status 1))) (db:query (:and (:= 'project (dm:field entry "project")) (:<= 'status 1)))) :sort `(("order" :asc))) "order"))
+                        (T order))))
+          ;; FIXME: this sucks. But we can't do better with the standard interface.
+          (cond ((< prev order)
+                 (db:iterate 'entry (db:query (:and (:< prev 'order) (:<= 'order order)))
+                             (lambda (record) (db:update 'entry (db:query (:= '_id (gethash "_id" record))) `(("order" . ,(1- (gethash "order" record))))))))
+                ((< order prev)
+                 (db:iterate 'entry (db:query (:and (:<= order 'order) (:< 'order prev)))
+                             (lambda (record) (db:update 'entry (db:query (:= '_id (gethash "_id" record))) `(("order" . ,(1+ (gethash "order" record))))))))))
+        (setf (dm:field entry "order") order))
+      (dm:save entry)
+      (when notify (notify entry :entry-edit))
+      entry)))
 
 (defun delete-entry (entry &key (delete-related T))
   (db:with-transaction ()

@@ -6,16 +6,18 @@
               :representation :external))
 
 (defun track-url (track)
-  (uri-to-url (format NIL "feedback/~a/~a/"
-                      (dm:field (ensure-project track) "name")
-                      (dm:field track "name"))
-              :representation :external))
+  (let ((track (ensure-track track)))
+    (uri-to-url (format NIL "feedback/~a/~a/"
+                        (dm:field (ensure-project track) "name")
+                        (dm:field track "name"))
+                :representation :external)))
 
 (defun entry-url (entry)
-  (uri-to-url (format NIL "feedback/~a/entry/~a"
-                      (dm:field (ensure-project entry) "name")
-                      (id-code entry))
-              :representation :external))
+  (let ((entry (ensure-entry entry)))
+    (uri-to-url (format NIL "feedback/~a/entry/~a"
+                        (dm:field (ensure-project entry) "name")
+                        (id-code entry))
+                :representation :external)))
 
 (defun snapshot-url (snapshot)
   (uri-to-url (format NIL "feedback/~a/snapshot/~a"
@@ -24,10 +26,11 @@
               :representation :external))
 
 (defun note-url (note)
-  (uri-to-url (format NIL "feedback/~a/entry/~a"
-                      (dm:field (ensure-project note) "name")
-                      (dm:field note "entry"))
-              :representation :external :fragment (format NIL "note-~a" (dm:id note))))
+  (let ((note (ensure-note note)))
+    (uri-to-url (format NIL "feedback/~a/entry/~a"
+                        (dm:field (ensure-project note) "name")
+                        (dm:field note "entry"))
+                :representation :external :fragment (format NIL "note-~a" (dm:id note)))))
 
 (defun trace-url (snapshot)
   (uri-to-url (format NIL "feedback/~a/snapshot/~a/trace"
@@ -53,9 +56,9 @@
 (define-page dashboard "feedback/^$" (:access (perm feedback))
   (render-page "Dashboard" (@template "dashboard.ctml")
                :projects (list-projects)
-               :entries (list-entries)))
+               :entries (list-entries (auth:current))))
 
-(define-page project "feedback/^([^/]+)(?:/(\\d+)?)?$" (:uri-groups (project page) :access (perm feedback project))
+(define-page project ("feedback/^([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (project page) :access (perm feedback project))
   (let* ((project (find-project project))
          (amount 50)
          (page (parse-integer (or* page "1")))
@@ -63,9 +66,10 @@
     (render-page (dm:field project "name") (@template "project-view.ctml")
                  :page-idx page
                  :project project
+                 :tracks (list-tracks project)
                  :entries (list-entries project :skip skip :amount amount))))
 
-(define-page project-new ("feedback/^new$" 1) (:access (perm feedback project new))
+(define-page project-new ("feedback/^new$" 2) (:access (perm feedback project new))
   (render-page "New project" (@template "project-edit.ctml")
                :project (dm:hull 'project)))
 
@@ -76,11 +80,25 @@
                  :members (list-members project)
                  :attachments (list-attachments project))))
 
+(define-page track "feedback/^([^/]+)/([^/]+)(?:/(\\d+)?)?$" (:uri-groups (project track page) :access (perm feedback track))
+  (let* ((project (find-project project))
+         (track (find-track track project))
+         (amount 100)
+         (page (parse-integer (or* page "1")))
+         (skip (* amount (max 0 (1- page)))))
+    (render-page (dm:field project "name") (@template "track-view.ctml")
+                 :page-idx page
+                 :project project
+                 :track track
+                 :entries (list-entries track :skip skip :amount amount))))
+
 (define-page entry "feedback/^([^/]+)/entry/([^/]+)$" (:uri-groups (project entry) :access (perm feedback entry))
   (let ((project (find-project project))
         (entry (ensure-entry entry)))
-    (render-page (princ-to-string (dm:id entry)) (@template "entry-view.ctml")
-                 :up (uri-to-url (format NIL "feedback/~a" (dm:field project "name")) :representation :external)
+    (render-page (id-code entry) (@template "entry-view.ctml")
+                 :up (if (dm:field entry "track")
+                         (track-url (dm:field entry "track"))
+                         (project-url project))
                  :up-text (dm:field project "name")
                  :project project
                  :entry entry
@@ -91,7 +109,7 @@
   (let ((project (or (find-project project)
                      (ensure-project project)))
         (entry (ensure-entry entry)))
-    (render-page (princ-to-string (dm:id entry)) (@template "entry-edit.ctml")
+    (render-page (id-code entry) (@template "entry-edit.ctml")
                  :up (uri-to-url (format NIL "feedback/~a" (dm:field project "name")) :representation :external)
                  :up-text (dm:field project "name")
                  :entry entry)))
@@ -103,7 +121,7 @@
          (filename (format NIL "~a ~a.~(~a~)" (dm:id entry) (dm:field type "name") (id->attachment-type (dm:field type "type"))))
          (content-type (attachment-type-content-type (dm:field type "type"))))
     (setf (header "Content-Disposition") (format NIL "~:[attachment~;inline~]; filename=~s" (string= "text/plain" content-type) filename))
-    (setf (header "Cache-Control") "public, max-age=31536000")
+    (setf (header "Cache-Control") "private, max-age=31536000")
     (setf (header "Access-Control-Allow-Origin") "*")
     (serve-file path content-type)))
 
