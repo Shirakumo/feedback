@@ -5,10 +5,16 @@
                       (dm:field (ensure-project project) "name"))
               :representation :external))
 
+(defun track-url (track)
+  (uri-to-url (format NIL "feedback/~a/~a/"
+                      (dm:field (ensure-project track) "name")
+                      (dm:field track "name"))
+              :representation :external))
+
 (defun entry-url (entry)
   (uri-to-url (format NIL "feedback/~a/entry/~a"
                       (dm:field (ensure-project entry) "name")
-                      (ensure-id entry))
+                      (id-code entry))
               :representation :external))
 
 (defun snapshot-url (snapshot)
