@@ -56,6 +56,7 @@
 (define-page dashboard "feedback/^$" (:access (perm feedback))
   (render-page "Dashboard" (@template "dashboard.ctml")
                :projects (list-projects)
+               :page-idx 1
                :entries (list-entries (auth:current))))
 
 (define-page project ("feedback/^([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (project page) :access (perm feedback project))
@@ -73,7 +74,7 @@
   (render-page "New project" (@template "project-edit.ctml")
                :project (dm:hull 'project)))
 
-(define-page project-edit "feedback/^([^/]+)/edit$" (:uri-groups (project) :access (perm feedback project edit))
+(define-page project-edit ("feedback/^([^/]+)/edit$" 2) (:uri-groups (project) :access (perm feedback project edit))
   (let ((project (find-project project)))
     (render-page (dm:field project "name") (@template "project-edit.ctml")
                  :project project

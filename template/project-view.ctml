@@ -1,65 +1,69 @@
 <article class="project view">
-  <c:using value="project">
-    <p lquery='(text (or description "No description provided."))'></p>
-    <nav>
-      <a @href="feedback/{0}/edit name" class="button">
-        <i class="fas fa-edit"></i>
-        Edit
-      </a>
-      <a @href="feedback/{0}/snapshot/ name" class="button">
-        <i class="fas fa-camera"></i>
-        Snapshots
-      </a>
-      <c:when test="(< 1 (** :page-idx))">
-        <a @href="feedback/{0}/{1} name (1- (** :page-idx))" class="button">
-          <i class="fas fa-arrow-left"></i>
-          Previous Page
+  <section class="self">
+    <c:using value="project">
+      <nav>
+        <a @href="feedback/{0}/edit name" class="button">
+          <i class="fas fa-edit"></i>
+          Edit
         </a>
-      </c:when>
-      <a @href="feedback/{0}/{1} name (1+ (** :page-idx))" class="button">
-        <i class="fas fa-arrow-right"></i>
-        Next Page
-      </a>
-    </nav>
-  </c:using>
-  <form @action="feedback/api/feedback/entry/new" method="POST">
-    <input type="hidden" name="browser" value="true">
-    <input type="hidden" name="project" lquery="(val (dm:id project))">
-    <input type="hidden" name="user-id" lquery="(val (user:username (auth:current)))">
-    <div class="entries">
-      <th class="status"></th>
-      <th class="user assigned">Assigned</th>
-      <th class="description">Description</th>
-      <th class="user reporter">Reporter</th>
-      <th class="notes">Notes</th>
-      <th class="actions">Actions</th>
+        <a @href="feedback/{0}/snapshot/ name" class="button">
+          <i class="fas fa-camera"></i>
+          Snapshots
+        </a>
+      </nav>
+      <p lquery='(text (or description "No description provided."))'></p>
+    </c:using>
+  </section>
+  <section>
+    <header>
+      <h3>Tracks</h3>
+      <nav>
+        <a @href="" class="button">
+          <i class="fas fa-plus-circle"></i>
+          New Track
+        </a>
+      </nav>
+    </header>
+    <ul class="tracks" iterate="tracks">
+      <li>
+        <a class="name" lquery="(text name) (attr :href (feedback::track-url *))"></a>
+        <p class="description" lquery="(text description)"></p>
+      </li>
+    </ul>
+  </section>
+  <section>
+    <header>
+      <h3>Recent Entries</h3>
+      <nav>
+        <c:when test="(< 1 page-idx)">
+          <a @href="feedback/{0}/{1} (clip project :name) (1- page-idx)" class="button">
+            <i class="fas fa-arrow-left"></i>
+            Previous Page
+          </a>
+        </c:when>
+        <a @href="feedback/{0}/{1} (clip project :name) (1+ page-idx)" class="button">
+          <i class="fas fa-arrow-right"></i>
+          Next Page
+        </a>
+      </nav>
+    </header>
+    <article class="track view">
+      <div class="entry head">
+        <div class="row">
+          <span class="drag"></span>
+          <span class="severity">Severity</span>
+          <span class="assigned">Assigned</span>
+          <span class="description">Description</span>
+          <span class="status">Status</span>
+          <span class="collapse"></span>
+        </div>
+      </div>
+      <c:using value="(dm:hull 'feedback::entry :project (dm:id project))">
+        <c:import file='(template-file "entry.ctml" :feedback)'>
+      </c:using>
       <c:splice iterate="entries">
-        <td class="status"><i class="fas" lquery="(add-class (feedback::status-icon status))" /></td>
-        <td class="user assigned"><select name="assigned-to" iterate="(list* NIL (feedback::list-members project))" lquery="(select (when assigned-to (user:username assigned-to)))">
-          <option lquery="(val (when *(user:username *))) (text (when * (user:username *)))"></option>
-        </select></td>
-        <td class="description" lquery="(text (feedback::shorten description))"></td>
-        <td class="user reporter" lquery="(text user-id)"></td>
-        <td class="notes" lquery="(text notes)"></td>
-        <td class="actions">
-          <a @href="feedback/api/feedback/entry/edit?entry={0}&status=resolved&browser=true _id" class="button"
-             title="Mark as resolved">
-            <i class="fas fa-check-square"></i>
-          </a>
-          <a @href="feedback/api/feedback/entry/delete?entry={0}&browser=true _id" class="button"
-             title="Delete">
-            <i class="fas fa-trash"></i>
-          </a>
-        </td>
+        <c:import file='(template-file "entry.ctml" :feedback)'>
       </c:splice>
-      <td class="status"><i class="fas fa-question-circle"></i></td>
-      <td class="user assigned"><select name="assigned-to" iterate="(list* NIL (feedback::list-members project))">
-        <option lquery="(val (when *(user:username *))) (text (when * (user:username *)))"></option>
-      </select></td>
-      <td class="description"><textarea name="description"></textarea></td>
-      <td class="user reporter" lquery="(text (user:username (auth:current)))"></td>
-      <td class="notes"></td>
-      <td class="actions"><input type="submit" value="Submit"></td>
-    </div>
-  </form>
+    </article>
+  </section>
 </article>

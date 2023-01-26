@@ -1,0 +1,31 @@
+<article class="track view">
+  <section class="self">
+    <c:using value="project">
+      <nav>
+        <a @href="feedback/{0}/edit name" class="button">
+          <i class="fas fa-edit"></i>
+          Edit
+        </a>
+      </nav>
+      <p lquery='(text (or description "No description provided."))'></p>
+    </c:using>
+  </section>
+  <section>
+    <div class="entry head">
+      <div class="row">
+        <span class="drag"></span>
+        <span class="severity">Severity</span>
+        <span class="assigned">Assigned</span>
+        <span class="description">Description</span>
+        <span class="status">Status</span>
+        <span class="collapse"></span>
+      </div>
+    </div>
+    <c:using value="(dm:hull 'feedback::entry :project (dm:id project))">
+      <c:import file='(template-file "entry.ctml" :feedback)'>
+    </c:using>
+    <c:splice iterate="entries">
+      <c:import file='(template-file "entry.ctml" :feedback)'>
+    </c:splice>
+  </section>
+</article>

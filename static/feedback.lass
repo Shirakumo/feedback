@@ -233,7 +233,9 @@
     :margin 0
     :padding 1em
     :list-style none
-    :border-left 1px solid gray)))
+    :border-left 1px solid gray))
+  ((:and .extra .collapsed)
+   :display none))
  (.entry.head
   :font-weight bold
   :background black

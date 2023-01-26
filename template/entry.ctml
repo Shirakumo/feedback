@@ -1,0 +1,92 @@
+<div class="entry" lquery="(data :id _id) (add-class (if _id :existing :new))">
+  <form class="row" method="post" @action="feedback/api/feedback/entry/edit">
+    <span class="drag"><i class="fa-solid fa-grip-lines"></i></span>
+    <select class="severity" name="severity" lquery="(select severity)">
+      <option value="0"></option>
+      <option value="1">Irrelevant</option>
+      <option value="10">Nice To Have</option>
+      <option value="30">Low</option>
+      <option value="50">Medium</option>
+      <option value="80">High</option>
+      <option value="100">Critical</option>
+    </select>
+    <input type="text" class="assigned user" list="users" name="assigned-to" lquery="(text (when assigned-to (user:username assigned-to)))" />
+    <textarea class="description" name="description" placeholder="Description..." lquery="(text description) (attr :autofocus (not _id))"></textarea>
+    <select class="status" name="status" lquery="(select status)">
+      <option value="new">New</option>
+      <option value="triaged">Triaged</option>
+      <option value="resolved">Resolved</option>
+      <option value="wontfix">Wontfix</option>
+      <option value="invalid">Invalid</option>
+      <option value="duplicate">Duplicate</option>
+      <option value="unclear">Unclear</option>
+      <option value="deleted">Deleted</option>
+    </select>
+    <input type="hidden" name="browser" value="true" />
+    <c:if test="_id">
+      <c:then>
+        <input type="hidden" name="entry" lquery="(val _id)" />
+        <span class="collapse"><i class="fa-solid fa-chevron-up"></i></span>
+      </c:then>
+      <c:else>
+        <input type="hidden" name="project" lquery="(val project)" />
+        <input type="hidden" name="user-id" lquery="(val (user:username (auth:current)))" />
+        <input type="submit" value="Add" class="collapse" @formaction="feedback/api/feedback/entry/new" />
+      </c:else>
+    </c:if>
+  </form>
+  <c:when test="_id">
+    <div class="extra collapsed">
+      <nav class="actions">
+        <a href="#" class="detail" lquery="(attr :href (feedback::entry-url *))">
+          <i class="fa-solid fa-code-commit"></i>
+          Details
+        </a>
+        <a href="#" class="front" @href="feedback/api/feedback/entry/edit?entry={0}&order=top _id">
+          <i class="fa-solid fa-caret-up"></i>
+          To Front
+        </a>
+        <a href="#" class="back" @href="feedback/api/feedback/entry/edit?entry={0}&order=bottom _id">
+          <i class="fa-solid fa-caret-down"></i>
+          To Back
+        </a>
+        <a href="#" class="duplicate">
+          <i class="fa-solid fa-code-merge"></i>
+          Mark as Duplicate
+        </a>
+        <a href="#" class="related">
+          <i class="fa-solid fa-code-pull-request"></i>
+          Relate To
+        </a>
+        <a href="#" class="retrack">
+          <i class="fa-solid fa-shuffle"></i>
+          Retrack
+        </a>
+      </nav>
+      <div class="notes">
+        <c:splice iterate="(feedback::list-notes *)">
+          <form class="note existing" @action="feedback/api/feedback/note/edit">
+            <input type="hidden" name="note" lquery="(val _id)" />
+            <time class="time" lquery="(time time)">2023.01.25 13:28:12</time>
+            <a class="author user" lquery="(text (user:username author))" @href="feedback/user/{0} (user:username author)" href="#">Shinmera</a>
+            <textarea class="text" name="text" lquery="(text text)"></textarea>
+          </form>
+        </c:splice>
+        <form class="note new" method="post" @action="feedback/api/feedback/note/new">
+          <input type="hidden" name="entry" lquery="(val _id)" />
+          <time class="time now" lquery="(time (get-universal-time))">2023.01.25 13:28:12</time>
+          <a class="author user" lquery="(text (user:username (auth:current)))" @href="feedback/user/{0} (user:username (auth:current))">Shinmera</a>
+          <textarea class="text" name="text" placeholder="Note..." required></textarea>
+          <input type="submit" value="Submit">
+        </form>
+      </div>
+      <ul class="relations" iterate="(feedback::list-related *)">
+        <li lquery="(add-class (id->status status))">
+          <i class="fa-solid" lquery='(add-class (if (eql :duplicate (id->status status)) "fa-code-merge" "fa-code-pull-request"))'></i>
+          <a lquery="(attr :href (feedback::entry-url *)) (text (feedback::id-code *))">$1342</a> is
+          <c:s>(if (eql :duplicate (id->status status)) "a duplicate" "related")</c:s>
+        </li>
+      </ul>
+    </div>
+  </c:when>
+</div>

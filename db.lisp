@@ -161,7 +161,7 @@
     ((:resolved 2) "fa-check-circle")
     ((:wontfix 3) "fa-ban")
     ((:invalid 4) "fa-xmark")
-    ((:duplicate 5) "fa-copy")
+    ((:duplicate 5) "fa-code-merge")
     ((:unclear 6) "fa-question-circle")
     ((:deleted 7) "fa-trash")
     (T "fa-ellipsis-h")))
@@ -383,7 +383,8 @@
 (defun list-entries (&optional parent &key (skip 0) (amount 50))
   (dm:get 'entry (etypecase parent
                    (user:user
-                    (db:query (:= 'assigned-to (user:id parent))))
+                    (db:query (:and (:= 'assigned-to (user:id parent))
+                                    (:<= 'status 1))))
                    (dm:data-model
                     (ecase (dm:collection parent)
                       (project (db:query (:= 'project (dm:id parent))))
