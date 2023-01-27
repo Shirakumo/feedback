@@ -74,7 +74,8 @@
        ',(mapcar #'first mappings))
      (defun ,(intern (format NIL "~a->~a" (string a) (string b))) (thing)
        (cond ,@(loop for (a b) in mappings
-                     collect `((equalp thing ,(string a)) ,b))
+                     collect `((equalp thing ,(string a)) ,b)
+                     collect `((equalp thing ,(princ-to-string b)) ,b))
              (T (ecase thing
                   ,@(loop for (a b) in mappings
                           collect `((,a ,b) ,b))))))
@@ -319,6 +320,8 @@
   (etypecase track-ish
     (dm:data-model
      (ecase (dm:collection track-ish)
+       (entry
+        (dm:get-one 'track (db:query (:= '_id (dm:field track-ish "track")))))
        (track track-ish)))
     (T
      (or (dm:get-one 'track (db:query (:= '_id (ensure-id track-ish))))
@@ -375,7 +378,9 @@
   (etypecase entry-ish
     (dm:data-model
      (ecase (dm:collection entry-ish)
-       (entry entry-ish)))
+       (entry entry-ish)
+       (note
+        (dm:get-one 'entry (db:query (:= '_id (dm:field entry-ish "entry")))))))
     (T
      (or (dm:get-one 'entry (db:query (:= '_id (ensure-id entry-ish))))
          (error 'request-not-found :message "Could not find the requested entry.")))))
@@ -407,7 +412,9 @@
     (let ((project (ensure-project project))
           (track (when track (ensure-track track)))
           (relates-to (when relates-to (ensure-entry relates-to)))
-          (model (dm:hull 'entry)))
+          (model (dm:hull 'entry))
+          (severity (or severity 0))
+          (status (or status 0)))
       (setf-dm-fields model project track version time user-id os-info cpu-info gpu-info description severity relates-to)
       (let ((highest (dm:get-one 'entry (if track (db:query (:= 'track (dm:id track))) (db:query (:= 'project (dm:id project)))) :sort `(("order" :desc)))))
         (setf (dm:field model "order") (if highest (1+ (dm:field highest "order")) 0)))
@@ -432,18 +439,18 @@
       (when order
         (let* ((prev (dm:field entry "order"))
                (track (dm:field entry "track"))
-               (order (ecase order
-                        (:top (dm:field (dm:get-one 'entry (if track (db:query (:= 'track (dm:id track))) (db:query (:= 'project (dm:field entry "project")))) :sort `(("order" :desc))) "order"))
-                        (:bottom (dm:field (dm:get-one 'entry (if track (db:query (:and (:= 'track (dm:id track)) (:<= 'status 1))) (db:query (:and (:= 'project (dm:field entry "project")) (:<= 'status 1)))) :sort `(("order" :asc))) "order"))
+               (order (case order
+                        (:top (dm:field (dm:get-one 'entry (if track (db:query (:= 'track track)) (db:query (:= 'project (dm:field entry "project")))) :sort `(("order" :desc))) "order"))
+                        (:bottom (dm:field (dm:get-one 'entry (if track (db:query (:and (:= 'track track) (:<= 'status 1))) (db:query (:and (:= 'project (dm:field entry "project")) (:<= 'status 1)))) :sort `(("order" :asc))) "order"))
                         (T order))))
           ;; FIXME: this sucks. But we can't do better with the standard interface.
           (cond ((< prev order)
-                 (db:iterate 'entry (db:query (:and (:< prev 'order) (:<= 'order order)))
-                             (lambda (record) (db:update 'entry (db:query (:= '_id (gethash "_id" record))) `(("order" . ,(1- (gethash "order" record))))))))
+                 (loop for record in (db:select 'entry (db:query (:and (:< prev 'order) (:<= 'order order))))
+                       do (db:update 'entry (db:query (:= '_id (gethash "_id" record))) `(("order" . ,(1- (gethash "order" record)))))))
                 ((< order prev)
-                 (db:iterate 'entry (db:query (:and (:<= order 'order) (:< 'order prev)))
-                             (lambda (record) (db:update 'entry (db:query (:= '_id (gethash "_id" record))) `(("order" . ,(1+ (gethash "order" record))))))))))
-        (setf (dm:field entry "order") order))
+                 (loop for record in (db:select 'entry (db:query (:and (:<= order 'order) (:< 'order prev))))
+                       do (db:update 'entry (db:query (:= '_id (gethash "_id" record))) `(("order" . ,(1+ (gethash "order" record))))))))
+          (setf (dm:field entry "order") order)))
       (dm:save entry)
       (when notify (notify entry :entry-edit))
       entry)))

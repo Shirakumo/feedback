@@ -1,7 +1,7 @@
 (in-package #:feedback)
 
 (defun ensure-id (id)
-  (cond ((id-code-p id) (parse-id-code id))
+  (cond ((id-code-p id) (db:ensure-id (parse-id-code id)))
         ((typep id 'db:id) id)
         ((typep id 'dm:data-model) (dm:id id))
         ((stringp id) (db:ensure-id id))))
@@ -42,13 +42,14 @@
   (and (stringp entry-ish)
        (<= 5 (length entry-ish))
        (char= #\$ (char entry-ish 0))
-       (loop for char across entry-ish
+       (loop for i from 1 below (length entry-ish)
+             for char = (char entry-ish i)
              always (or (char<= #\0 char #\9)
-                        (char<= #\a char #\z)
-                        (char<= #\A char #\Z)))))
+                        (char<= #\a char #\f)
+                        (char<= #\A char #\F)))))
 
 (defun parse-id-code (entry-ish)
-  (parse-integer entry-ish :radix 16))
+  (parse-integer entry-ish :start 1 :radix 16))
 
 (defun short-text (text &optional (limit 32))
   (if (<= (length text) limit)

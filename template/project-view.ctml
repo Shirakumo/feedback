@@ -60,7 +60,7 @@
           <span class="collapse"></span>
         </div>
       </div>
-      <c:using value="(dm:hull 'feedback::entry :project (dm:id project))">
+      <c:using value="(dm:hull 'feedback::entry :project (dm:id project) :severity 0 :status 0)">
         <c:import file='(template-file "entry.ctml" :feedback)'>
       </c:using>
       <c:splice iterate="entries">
@@ -71,4 +71,7 @@
       </c:unless>
     </article>
   </section>
+  <datalist id="members" iterate="(feedback::list-members project)">
+    <option lquery="(val (user:username *))" />
+  </datalist>
 </article>

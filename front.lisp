@@ -19,6 +19,14 @@
                         (id-code entry))
                 :representation :external)))
 
+(defun track-entry-url (entry)
+  (let ((entry (ensure-entry entry)))
+    (uri-to-url (format NIL "feedback/~a~@[/~a~]"
+                        (dm:field (ensure-project entry) "name")
+                        (when (dm:field entry "track") (dm:field (ensure-track entry) "name")))
+                :representation :external
+                :fragment (id-code (dm:id entry)))))
+
 (defun snapshot-url (snapshot)
   (uri-to-url (format NIL "feedback/~a/snapshot/~a"
                       (dm:field (ensure-project snapshot) "name")
@@ -26,11 +34,17 @@
               :representation :external))
 
 (defun note-url (note)
-  (let ((note (ensure-note note)))
-    (uri-to-url (format NIL "feedback/~a/entry/~a"
-                        (dm:field (ensure-project note) "name")
-                        (dm:field note "entry"))
-                :representation :external :fragment (format NIL "note-~a" (dm:id note)))))
+  (let* ((note (ensure-note note))
+         (entry (ensure-entry note)))
+    (uri-to-url (if (dm:field entry "track")
+                    (format NIL "feedback/~a/~a"
+                            (dm:field (ensure-project entry) "name")
+                            (dm:field (ensure-track entry) "name")))
+                :representation :external
+                :fragment (note-tag note))))
+
+(defun note-tag (note)
+  (format NIL "~a-~a" (id-code (dm:field note "entry")) (dm:id note)))
 
 (defun trace-url (snapshot)
   (uri-to-url (format NIL "feedback/~a/snapshot/~a/trace"

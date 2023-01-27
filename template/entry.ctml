@@ -1,7 +1,7 @@
-<div class="entry" lquery="(data :id _id) (data :order order) (add-class (if _id :existing :new))">
+<div class="entry" lquery="(data :id _id) (data :order order) (add-class (if _id :existing :new)) (attr :id (when _id (feedback::id-code _id)))">
   <form class="row" method="post" @action="feedback/api/feedback/entry/edit">
     <span class="drag"><i class="fa-solid fa-grip-lines"></i></span>
-    <select class="severity" name="severity" lquery="(select severity)">
+    <select class="severity" name="severity" lquery="(select severity) (data :severity severity)">
       <option value="0"></option>
       <option value="1">Irrelevant</option>
       <option value="10">Nice To Have</option>
@@ -10,17 +10,17 @@
       <option value="80">High</option>
       <option value="100">Critical</option>
     </select>
-    <input type="text" class="assigned user" list="users" name="assigned-to" lquery="(text (when assigned-to (user:username assigned-to)))" />
+    <input type="text" class="assigned user" list="members" name="assigned-to" lquery="(val (when assigned-to (user:username assigned-to)))" />
     <textarea class="description" name="description" placeholder="Description..." lquery="(text description) (attr :autofocus (not _id))"></textarea>
-    <select class="status" name="status" lquery="(select status)">
-      <option value="new">New</option>
-      <option value="triaged">Triaged</option>
-      <option value="resolved">Resolved</option>
-      <option value="wontfix">Wontfix</option>
-      <option value="invalid">Invalid</option>
-      <option value="duplicate">Duplicate</option>
-      <option value="unclear">Unclear</option>
-      <option value="deleted">Deleted</option>
+    <select class="status" name="status" lquery="(select status) (add-class (feedback::id->status status))">
+      <option value="0">New</option>
+      <option value="1">Triaged</option>
+      <option value="2">Resolved</option>
+      <option value="3">Wontfix</option>
+      <option value="4">Invalid</option>
+      <option value="5">Duplicate</option>
+      <option value="6">Unclear</option>
+      <option value="7">Deleted</option>
     </select>
     <input type="hidden" name="browser" value="true" />
     <c:if test="_id">
@@ -43,11 +43,11 @@
           <i class="fa-solid fa-code-commit"></i>
           Details
         </a>
-        <a href="#" class="front" @href="feedback/api/feedback/entry/edit?entry={0}&order=top _id">
+        <a href="#" class="front" @href="feedback/api/feedback/entry/edit?entry={0}&order=top&browser=true _id">
           <i class="fa-solid fa-caret-up"></i>
           To Front
         </a>
-        <a href="#" class="back" @href="feedback/api/feedback/entry/edit?entry={0}&order=bottom _id">
+        <a href="#" class="back" @href="feedback/api/feedback/entry/edit?entry={0}&order=bottom&browser=true _id">
           <i class="fa-solid fa-caret-down"></i>
           To Back
         </a>
@@ -66,7 +66,8 @@
       </nav>
       <div class="notes">
         <c:splice iterate="(feedback::list-notes *)">
-          <form class="note existing" @action="feedback/api/feedback/note/edit">
+          <form class="note existing" @action="feedback/api/feedback/note/edit" lquery="(attr :id (feedback::note-tag *))">
+            <input type="hidden" name="browser" value="true" />
             <input type="hidden" name="note" lquery="(val _id)" />
             <time class="time" lquery="(time time)">2023.01.25 13:28:12</time>
             <a class="author user" lquery="(text (user:username author))" @href="feedback/user/{0} (user:username author)" href="#">Shinmera</a>
@@ -74,6 +75,7 @@
           </form>
         </c:splice>
         <form class="note new" method="post" @action="feedback/api/feedback/note/new">
+          <input type="hidden" name="browser" value="true" />
           <input type="hidden" name="entry" lquery="(val _id)" />
           <time class="time now" lquery="(time (get-universal-time))">2023.01.25 13:28:12</time>
           <a class="author user" lquery="(text (user:username (auth:current)))" @href="feedback/user/{0} (user:username (auth:current))">Shinmera</a>
