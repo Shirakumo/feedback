@@ -1,9 +1,9 @@
-<article class="dashboard">
+<article class="dashboard view">
   <section>
     <header>
       <h3>Projects</h3>
       <nav>
-        <a @href="feedback/new" class="button">
+        <a @href="feedback/new">
           <i class="fas fa-plus-circle"></i>
           New Project
         </a>
@@ -27,12 +27,12 @@
       <h3>Assigned Entries</h3>
       <nav>
         <c:when test="(< 1 page-idx)">
-          <a @href="feedback/{0} (1- page-idx)" class="button">
+          <a @href="feedback/{0} (1- page-idx)">
             <i class="fas fa-arrow-left"></i>
             Previous Page
           </a>
         </c:when>
-        <a @href="feedback/{0} (1+ page-idx)" class="button">
+        <a @href="feedback/{0} (1+ page-idx)">
           <i class="fas fa-arrow-right"></i>
           Next Page
         </a>
@@ -52,6 +52,9 @@
       <c:splice iterate="entries">
         <c:import file='(template-file "entry.ctml" :feedback)'>
       </c:splice>
+      <c:unless test="entries">
+        <div class="empty">There are no entries to show</div>
+      </c:unless>
     </article>
   </section>
 </article>

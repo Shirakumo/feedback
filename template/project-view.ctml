@@ -1,24 +1,26 @@
 <article class="project view">
   <section class="self">
     <c:using value="project">
-      <nav>
-        <a @href="feedback/{0}/edit name" class="button">
-          <i class="fas fa-edit"></i>
-          Edit
-        </a>
-        <a @href="feedback/{0}/snapshot/ name" class="button">
-          <i class="fas fa-camera"></i>
-          Snapshots
-        </a>
-      </nav>
-      <p lquery='(text (or description "No description provided."))'></p>
+      <header>
+        <nav>
+          <a @href="feedback/{0}/edit name">
+            <i class="fas fa-edit"></i>
+            Edit
+          </a>
+          <a @href="feedback/{0}/snapshot/ name">
+            <i class="fas fa-camera"></i>
+            Snapshots
+          </a>
+        </nav>
+      </header>
+      <p class="description" lquery='(text (or description "No description provided."))'></p>
     </c:using>
   </section>
   <section>
     <header>
       <h3>Tracks</h3>
       <nav>
-        <a @href="" class="button">
+        <a href="#" @href="feedback/{0}/new (clip project :name)">
           <i class="fas fa-plus-circle"></i>
           New Track
         </a>
@@ -36,12 +38,12 @@
       <h3>Recent Entries</h3>
       <nav>
         <c:when test="(< 1 page-idx)">
-          <a @href="feedback/{0}/{1} (clip project :name) (1- page-idx)" class="button">
+          <a @href="feedback/{0}/{1} (clip project :name) (1- page-idx)">
             <i class="fas fa-arrow-left"></i>
             Previous Page
           </a>
         </c:when>
-        <a @href="feedback/{0}/{1} (clip project :name) (1+ page-idx)" class="button">
+        <a @href="feedback/{0}/{1} (clip project :name) (1+ page-idx)">
           <i class="fas fa-arrow-right"></i>
           Next Page
         </a>
@@ -64,6 +66,9 @@
       <c:splice iterate="entries">
         <c:import file='(template-file "entry.ctml" :feedback)'>
       </c:splice>
+      <c:unless test="entries">
+        <div class="empty">There are no entries to show</div>
+      </c:unless>
     </article>
   </section>
 </article>

@@ -50,7 +50,7 @@
 (define-api feedback/track/new (project name &optional description) (:access (perm feedback track new))
   (let ((project (ensure-project project)))
     (output (make-track project name :description description)
-            "Track created." "feedback/~a/~a" (dm:field project "name") (dm:field track "name"))))
+            "Track created." "feedback/~a/~a" (dm:field project "name") name)))
 
 (define-api feedback/track/edit (track &optional name description) (:access (perm feedback track new))
   (let ((track (ensure-track track)))
@@ -86,7 +86,6 @@
   (db:with-transaction ()
     (let* ((project (or (find-project project)
                         (ensure-project project)))
-           (project-name (dm:field project "name"))
            (types (list-attachments project))
            (entry (make-entry project :track track
                                       :status status
@@ -101,18 +100,18 @@
                                       :description description
                                       :assigned-to assigned-to
                                       :relates-to relates-to
-                                      :severity severity))
-           (url (format NIL "feedback/~a/entry/~a" project-name (dm:id entry))))
+                                      :severity severity
+                                      :notify notify)))
       (loop for type in types
             for file = (post-var (dm:field type "name"))
             do (when file
                  (ensure-directories-exist (attachment-pathname entry type))
                  (uiop:copy-file (first file) (attachment-pathname entry type))))
-      (when (config :recipient)
-        (mail:send (config :recipient)
-                   (format NIL "New feedback for ~a" project-name)
-                   (feedback-mail project-name (uri-to-url url :representation :external) description)))
-      (output entry "Feedback submitted." url))))
+      (if (string= "true" (post/get "browser"))
+          (redirect (if track
+                        (track-url track)
+                        (project-url project)))
+          (api-output entry :message "Feedback submitted." :target (entry-url entry))))))
 
 (define-api feedback/entry/edit (entry &optional comment description status assigned-to severity relates-to order) (:access (perm feedback entry edit))
   (db:with-transaction ()

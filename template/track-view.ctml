@@ -1,13 +1,15 @@
 <article class="track view">
   <section class="self">
-    <c:using value="project">
-      <nav>
-        <a @href="feedback/{0}/edit name" class="button">
-          <i class="fas fa-edit"></i>
-          Edit
-        </a>
-      </nav>
-      <p lquery='(text (or description "No description provided."))'></p>
+    <c:using value="track">
+      <header>
+        <nav>
+          <a @href="feedback/{0}/{1}/edit (clip (** :project) :name) name">
+            <i class="fas fa-edit"></i>
+            Edit
+          </a>
+        </nav>
+      </header>
+      <p class="description" lquery='(text (or description "No description provided."))'></p>
     </c:using>
   </section>
   <section>
@@ -21,11 +23,14 @@
         <span class="collapse"></span>
       </div>
     </div>
-    <c:using value="(dm:hull 'feedback::entry :project (dm:id project))">
+    <c:using value="(dm:hull 'feedback::entry :project (dm:id project) :track (dm:id track))">
       <c:import file='(template-file "entry.ctml" :feedback)'>
     </c:using>
     <c:splice iterate="entries">
       <c:import file='(template-file "entry.ctml" :feedback)'>
     </c:splice>
+    <c:unless test="entries">
+      <div class="empty">There are no entries to show</div>
+    </c:unless>
   </section>
 </article>

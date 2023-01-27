@@ -1,4 +1,4 @@
-<div class="entry" lquery="(data :id _id) (add-class (if _id :existing :new))">
+<div class="entry" lquery="(data :id _id) (data :order order) (add-class (if _id :existing :new))">
   <form class="row" method="post" @action="feedback/api/feedback/entry/edit">
     <span class="drag"><i class="fa-solid fa-grip-lines"></i></span>
     <select class="severity" name="severity" lquery="(select severity)">
@@ -30,6 +30,7 @@
       </c:then>
       <c:else>
         <input type="hidden" name="project" lquery="(val project)" />
+        <input type="hidden" name="track" lquery="(val track)" />
         <input type="hidden" name="user-id" lquery="(val (user:username (auth:current)))" />
         <input type="submit" value="Add" class="collapse" @formaction="feedback/api/feedback/entry/new" />
       </c:else>

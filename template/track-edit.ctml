@@ -1,0 +1,27 @@
+<form class="track edit">
+  <c:using value="track">
+    <div class="row">
+      <label for="name">Name:</label>
+      <input type="text" name="name" id="name" placeholder="Name" minlength="1" maxlength="32" required
+             lquery="(val name)"/>
+    </div>
+    <div class="row">
+      <label for="description">Description:</label>
+      <textarea name="description" id="description" lquery="(text description)"></textarea>
+    </div>
+    <div class="actions">
+      <input type="hidden" name="project" lquery="(val project)" />
+      <input type="hidden" name="browser" value="true" />
+      <c:if test="_id">
+        <c:then>
+          <input type="hidden" name="project" lquery="(val _id)"/>
+          <input type="submit" value="Edit" @formaction="feedback/api/feedback/track/edit"/>
+          <input type="submit" value="Delete" @formaction="feedback/api/feedback/track/delete"/>
+        </c:then>
+        <c:else>
+          <input type="submit" value="Create" @formaction="feedback/api/feedback/track/new"/>
+        </c:else>
+      </c:if>
+    </div>
+  </c:using>
+</form>

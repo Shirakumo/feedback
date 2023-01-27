@@ -2,25 +2,34 @@
  :font-family "sans-serif"
  :font-size 12pt
  :padding 0 :margin 0
- :background (hex F0F0F0))
+ :background (hex F0F0F0)
+ (>header
+  :display flex
+  :align-items center
+  :border-bottom 0.2em solid (hex E0E0E0)
+  (h1
+   :margin 0 1em 0 0)
+  (h2
+   :margin 0)
+  (nav
+   :display flex
+   :align-items stretch)
+  (a[href]
+   :padding 0.1em 0.5em))
+ (>main
+  :background (hex FFFFFF)
+  :min-height 100vh)
+ (>footer
+  :padding 1em 1em
+  :color (hex A0A0A0)
+  :border-top 0.2em solid (hex E0E0E0)
+  :background (hex F0F0F0)
+  :text-align center))
 (a[href]
  :color (hex 0088EE)
  :text-decoration none)
 ((:and a[href] :hover)
  :color (hex 0055DD))
-(header
- :display flex
- :align-items center
- :border-bottom 0.2em solid (hex E0E0E0)
- (h1
-  :margin 0 1em 0 0)
- (h2
-  :margin 0)
- (nav
-  :display flex
-  :align-items stretch)
- (a[href]
-  :padding 0.1em 0.5em))
 (a.button
  :border-radius 2px
  :padding 0.1em 0.3em
@@ -33,15 +42,6 @@
  :color (hex 303030)
  :background (hex E0E0E0)
  :border-color (hex D0D0D0))
-(main
- :background (hex FFFFFF)
- :min-height 100vh)
-(footer
- :padding 1em 1em
- :color (hex A0A0A0)
- :border-top 0.2em solid (hex E0E0E0)
- :background (hex F0F0F0)
- :text-align center)
 (.box
  :font-size 1.3em
  :font-weight bold
@@ -89,8 +89,6 @@
    :background (hex D00000)
    :border 1px solid (hex A00000)
    :max-width 5em)))
-((:or .project.view .entry.view .dashboard .snapshot.list .snapshot.view)
- :padding 1em)
 (.project.edit
  ((:or .attachments .members)
   :flex-grow 1
@@ -107,41 +105,6 @@
  (.trace
   :width 100%
   :min-height 30em))
-(.entries
- :display grid
- :grid-template-columns 2em min-content auto min-content min-content max-content
- :grid-auto-rows auto
- :row-gap 0.2em
- :margin 1em 0
- :border 1px solid (hex E0E0E0)
- :width 100%
- (>* :border-bottom 1px solid (hex 505050))
- (th
-  :text-align left
-  :background (hex E0E0E0))
- (.description
-  (textarea
-   :width 100%
-   :box-sizing border-box))
- ((:or .version .user .session)
-  :white-space nowrap
-  :text-overflow ellipsis
-  :overflow hidden)
- (.user
-  (select
-   :width 100%))
- (.status
-  :text-align center
-  (.fa-ellipsis-h :color (hex 505050))
-  (.fa-exclamation-circle :color (hex 880000))
-  (.fa-check-circle :color (hex 008800))
-  (.fa-ban :color (hex A0A0A0)))
- ((:or .os .cpu .gpu) :text-align center)
- (.os :width 2em)
- ((:or .cpu .gpu) :width 4em)
- (.actions
-  :text-align right
-  (a :display inline)))
 ((:or .entry.view .snapshot.view)
  (.row
   :display flex
@@ -180,6 +143,39 @@
  ((:or .os .cpu .gpu)
   (.long
    :font-family monospace)))
+((:or .view .list)
+ (>section
+  :margin-bottom 2em
+  :background (hex F0F0F0)
+  (>header
+   (h3 :margin 0 1em)
+   (nav
+    :padding 0 1em
+    :display flex
+    :background gray
+    (a :padding 0.1em 0.5em
+       :color white)
+    ((:and a :hover)
+     :color white
+     :background black))))
+ (>section.self
+  (.description
+   :margin 0
+   :padding 0 1em))
+ (ul.projects
+  :list-style none
+  :margin 0
+  :padding 0 1em
+  (>li
+   :display grid
+   :grid-template-columns 6em 1fr
+   (.description :margin 0)
+   (.tracks
+    :grid-column 1 / 2
+    :list-style none
+    (>li
+     :display grid
+     :grid-template-columns 6em 1fr)))))
 (.track.view
  :display flex
  :flex-direction column
@@ -239,6 +235,11 @@
  (.entry.head
   :font-weight bold
   :background black
-  :color white)
+  :color white
+  ((.row *) :padding 0.5em))
  (.entry.existing
-  (.drag :cursor grab)))
+  (.drag :cursor grab))
+ (.empty
+  :padding 2em
+  :text-align center
+  :font-size 2em))
