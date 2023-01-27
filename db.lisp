@@ -21,7 +21,8 @@
   (db:create 'track
              '((project (:id project))
                (name (:varchar 32))
-               (description :text))
+               (description :text)
+               (protection (:integer 1)))
              :indices '(project))
 
   (db:create 'entry
