@@ -68,15 +68,18 @@
                (user :id)
                (type (:integer 1)))))
 
-;; TODO: csv import
-;; TODO: anonymously viewable tracks
 ;; TODO: test notifs
 ;; TODO: user pages
+;; TODO: anonymously viewable tracks
+;; TODO: manual attachments
+;; TODO: update without page refresh
+;; TODO: csv import
 
 (defun check-name (name)
-  (when (or (find name '("new" "snapshot" "edit" "entry" "user" "subscribe") :test #'string-equal)
-            (every #'digit-char-p name))
-    (error 'api-argument-invalid :argument "name" :message "The name cannot be numeric, or one of: new, snapshot, edit, entry, user")))
+  (let ((names '("new" "snapshot" "edit" "entry" "user" "subscribe")))
+    (when (or (find name names :test #'string-equal)
+              (every #'digit-char-p name))
+      (error 'api-argument-invalid :argument "name" :message (format NIL "The name cannot be numeric, or one of: ~{~a~^, ~}" names)))))
 
 (defmacro define-mapping ((a b) &body mappings)
   `(progn
