@@ -1,4 +1,14 @@
 <article class="dashboard view">
+  <section class="self">
+    <header>
+      <nav>
+        <a @href="feedback/subscribe/user/{0} (user:username (auth:current))">
+          <i class="fa-solid fa-envelope"></i>
+          Subscriptions
+        </a>
+      </nav>
+    </header>
+  </section>
   <section>
     <header>
       <h3>Projects</h3>

@@ -68,10 +68,13 @@
                (user :id)
                (type (:integer 1)))))
 
-;; TODO: csv import, anonymously viewable tracks
+;; TODO: csv import
+;; TODO: anonymously viewable tracks
+;; TODO: test notifs
+;; TODO: user pages
 
 (defun check-name (name)
-  (when (or (find name '("new" "snapshot" "edit" "entry" "user") :test #'string-equal)
+  (when (or (find name '("new" "snapshot" "edit" "entry" "user" "subscribe") :test #'string-equal)
             (every #'digit-char-p name))
     (error 'api-argument-invalid :argument "name" :message "The name cannot be numeric, or one of: new, snapshot, edit, entry, user")))
 
@@ -568,6 +571,14 @@
       (db:remove 'subscriber (db:query (:and (:= 'object (dm:id snapshot)) (:= 'object-type (object-type->id 'snapshot)))))
       (dm:delete snapshot))))
 
+(defun ensure-object (type id)
+  (ecase (id->object-type (object-type->id type))
+    (project (ensure-project id))
+    (track (ensure-track id))
+    (entry (ensure-entry id))
+    (note (ensure-note id))
+    (snapshot (ensure-snapshot id))))
+
 (defun notify (object type &optional (project (ensure-project object)))
   (let* ((type-template
            (ecase type
@@ -586,7 +597,7 @@
          (body (lquery:$1 rendered "body" (text)))
          (mask (subscription-types->id type)))
     (db:iterate 'subscriber (cond ((and (find type '(:entry-new :entry-edit))
-                                         (dm:field object "track"))
+                                        (dm:field object "track"))
                                    (db:query (:or (:and (:= 'object (dm:field object "project")) (:= 'object-type (object-type->id 'project)))
                                                   (:and (:= 'object (dm:field object "track")) (:= 'object-type (object-type->id 'track)))
                                                   (:and (:= 'object (dm:id object)) (:= 'object-type (object-type->id 'entry))))))
@@ -634,3 +645,12 @@
       (if (= 0 (dm:field existing "type"))
           (dm:delete existing)
           (dm:save existing)))))
+
+(defun list-subscriptions (object)
+  (if (typep object 'user:user)
+      (dm:get 'subscriber (db:query (:= 'user (user:id object))))
+      (dm:get 'subscriber (db:query (:and (:= 'object (dm:id object))
+                                          (:= 'object-type (object-type->id (dm:collection object))))))))
+
+(defun subscription-object (subscription)
+  (ensure-object (dm:field subscription "object-type") (dm:field subscription "object")))

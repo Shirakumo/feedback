@@ -31,6 +31,10 @@
               <i class="fa-solid fa-shuffle"></i>
               Retrack
             </a>
+            <a @href="feedback/subscribe/entry/{0} _id">
+              <i class="fa-solid fa-envelope"></i>
+              Subscriptions
+            </a>
           </nav>
         </header>
         <div class="row">

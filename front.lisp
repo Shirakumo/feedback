@@ -1,67 +1,88 @@
 (in-package #:feedback)
 
-(defun project-url (project)
-  (uri-to-url (format NIL "feedback/~a/"
-                      (dm:field (ensure-project project) "name"))
-              :representation :external))
+(defun object-url (object &rest args)
+  (etypecase object
+    (null (apply #'uri-to-url "feedback/" args))
+    (user:user (apply #'user-url object args))
+    (dm:data-model
+     (ecase (dm:collection object)
+       (project (apply #'project-url object args))
+       (track (apply #'track-url object args))
+       (entry (apply #'entry-url object args))
+       (note (apply #'note-url object args))
+       (snapshot (apply #'snapshot-url object args))))))
 
-(defun track-url (track)
+(defun user-url (user &rest args)
+  (apply #'uri-to-url (format NIL "feedback/user/~a/" (user:username user))
+         :representation :external args))
+
+(defun project-url (project &rest args)
+  (apply #'uri-to-url (format NIL "feedback/~a/"
+                              (dm:field (ensure-project project) "name"))
+         :representation :external args))
+
+(defun track-url (track &rest args)
   (let ((track (ensure-track track)))
-    (uri-to-url (format NIL "feedback/~a/~a/"
-                        (dm:field (ensure-project track) "name")
-                        (dm:field track "name"))
-                :representation :external)))
+    (apply #'uri-to-url (format NIL "feedback/~a/~a/"
+                                (dm:field (ensure-project track) "name")
+                                (dm:field track "name"))
+           :representation :external args)))
 
-(defun entry-url (entry)
+(defun entry-url (entry &rest args)
   (let ((entry (ensure-entry entry)))
-    (uri-to-url (format NIL "feedback/~a/entry/~a"
-                        (dm:field (ensure-project entry) "name")
-                        (id-code entry))
-                :representation :external)))
+    (apply #'uri-to-url (format NIL "feedback/~a/entry/~a"
+                                (dm:field (ensure-project entry) "name")
+                                (id-code entry))
+           :representation :external args)))
 
-(defun track-entry-url (entry)
+(defun track-entry-url (entry &rest args)
   (let ((entry (ensure-entry entry)))
-    (uri-to-url (format NIL "feedback/~a~@[/~a~]"
-                        (dm:field (ensure-project entry) "name")
-                        (when (dm:field entry "track") (dm:field (ensure-track entry) "name")))
-                :representation :external
-                :fragment (id-code (dm:id entry)))))
+    (apply #'uri-to-url (format NIL "feedback/~a~@[/~a~]"
+                                (dm:field (ensure-project entry) "name")
+                                (when (dm:field entry "track") (dm:field (ensure-track entry) "name")))
+           :representation :external
+           :fragment (id-code (dm:id entry))
+           args)))
 
-(defun track-note-url (note)
+(defun track-note-url (note &rest args)
   (let* ((note (ensure-note note))
          (entry (ensure-entry note)))
-    (uri-to-url (if (dm:field entry "track")
-                    (format NIL "feedback/~a/~a"
-                            (dm:field (ensure-project entry) "name")
-                            (dm:field (ensure-track entry) "name"))
-                    (format NIL "feedback/~a/"
-                            (dm:field (ensure-project entry) "name")))
-                :representation :external
-                :fragment (note-tag note))))
+    (apply #'uri-to-url (if (dm:field entry "track")
+                            (format NIL "feedback/~a/~a"
+                                    (dm:field (ensure-project entry) "name")
+                                    (dm:field (ensure-track entry) "name"))
+                            (format NIL "feedback/~a/"
+                                    (dm:field (ensure-project entry) "name")))
+           :representation :external
+           :fragment (note-tag note)
+           args)))
 
-(defun snapshot-url (snapshot)
-  (uri-to-url (format NIL "feedback/~a/snapshot/~a"
-                      (dm:field (ensure-project snapshot) "name")
-                      (ensure-id snapshot))
-              :representation :external))
+(defun snapshot-url (snapshot &rest args)
+  (apply #'uri-to-url (format NIL "feedback/~a/snapshot/~a"
+                              (dm:field (ensure-project snapshot) "name")
+                              (ensure-id snapshot))
+         :representation :external
+         args))
 
-(defun note-url (note)
+(defun note-url (note &rest args)
   (let* ((note (ensure-note note))
          (entry (ensure-entry note)))
-    (uri-to-url (format NIL "feedback/~a/entry/~a"
-                        (dm:field (ensure-project entry) "name")
-                        (id-code (dm:id entry)))
-                :representation :external
-                :fragment (note-tag note))))
+    (apply #'uri-to-url (format NIL "feedback/~a/entry/~a"
+                                (dm:field (ensure-project entry) "name")
+                                (id-code (dm:id entry)))
+           :representation :external
+           :fragment (note-tag note)
+           args)))
 
 (defun note-tag (note)
   (format NIL "~a-~a" (id-code (dm:field note "entry")) (dm:id note)))
 
-(defun trace-url (snapshot)
-  (uri-to-url (format NIL "feedback/~a/snapshot/~a/trace"
-                      (dm:field (ensure-project snapshot) "name")
-                      (ensure-id snapshot))
-              :representation :external))
+(defun trace-url (snapshot &rest args)
+  (apply #'uri-to-url (format NIL "feedback/~a/snapshot/~a/trace"
+                              (dm:field (ensure-project snapshot) "name")
+                              (ensure-id snapshot))
+         :representation :external
+         args))
 
 (defun attachment-url (entry type)
   (uri-to-url (format NIL "feedback/~a/entry/~a/~a"
@@ -186,6 +207,27 @@
                  :up-text (dm:field project "name")
                  :project project
                  :snapshot snapshot)))
+
+(define-page subscriptions ("feedback/^subscribe/([^/]+)/([^/]+)$" 2) (:uri-groups (type id) :access (perm feedback subscribe))
+  (if (string-equal type "user")
+      (let ((object (user:get id :if-does-not-exist :error)))
+        (render-page "Subscriptions" (@template "subscribe.ctml")
+                     :up (object-url object)
+                     :up-text (user:username object)
+                     :object object
+                     :subscriptions (list-subscriptions object)
+                     :have-entry T))
+      (let* ((object (ensure-object type id))
+             (subscriptions (list-subscriptions object)))
+        (render-page "Subscriptions" (@template "subscribe.ctml")
+                     :up (object-url object)
+                     :up-text (or (dm:field object "name")
+                                  (dm:field object "title")
+                                  (princ-to-string (dm:id object)))
+                     :object-type type :object-id id :object object
+                     :subscriptions subscriptions
+                     :have-entry (find (user:id (auth:current)) subscriptions
+                                       :key (lambda (sub) (dm:field sub "user")) :test #'equal)))))
 
 (define-page trace-file "feedback/^([^/]+)/snapshot/([^/]+)/trace$" (:uri-groups (project snapshot) :access (perm feedback snapshot))
   (declare (ignore project))
