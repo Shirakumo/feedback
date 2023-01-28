@@ -276,7 +276,7 @@
       (mapcar #'ensure-project (dm:get 'members (db:query (:= 'user (user:id member)))))
       (dm:get 'project (db:query :all))))
 
-(defun make-project (name &key description trace-data-type attachments (author (auth:current)) notify)
+(defun make-project (name &key description trace-data-type attachments (author (auth:current)))
   (check-name name)
   (db:with-transaction ()
     (when (find-project name)
@@ -292,7 +292,7 @@
                (setf (dm:field sub "type") (attachment-type->id type))
                (dm:insert sub))
       (db:insert 'members `(("project" . ,(dm:id model)) ("user" . ,(user:id author))))
-      (when notify (notify model :project-new))
+      (notify model :project-new)
       model)))
 
 (defun edit-project (project &key name description trace-data-type (attachments NIL attachments-p) members)
@@ -355,14 +355,14 @@
                      (db:query (:= 'project (ensure-id project))))
           :skip skip :amount amount :sort '(("name" :desc))))
 
-(defun make-track (project name &key description notify protection)
+(defun make-track (project name &key description protection)
   (check-name name)
   (let ((project (ensure-project project))
         (track (dm:hull 'track)))
     (setf-dm-fields track project name description)
     (setf (dm:field track "protection") (protection->id (or protection :private)))
     (prog1 (dm:insert track)
-      (when notify (notify track :track-new)))))
+      (notify track :track-new))))
 
 (defun edit-track (track &key name description protection)
   (db:with-transaction ()
@@ -445,7 +445,7 @@
                                 gpu-type gpu-info
                                 version description
                                 assigned-to severity
-                                relates-to notify)
+                                relates-to)
   (db:with-transaction ()
     (let ((project (ensure-project project))
           (track (when track (ensure-track track)))
@@ -462,9 +462,9 @@
       (setf (dm:field model "cpu-type") (cpu-type->id (or cpu-type :unknown)))
       (setf (dm:field model "gpu-type") (gpu-type->id (or gpu-type :unknown)))
       (prog1 (dm:insert model)
-        (when notify (notify model :entry-new project))))))
+        (notify model :entry-new project)))))
 
-(defun edit-entry (entry &key track user-id description status (assigned-to NIL assigned-p) (relates-to NIL relates-to-p) severity notify order)
+(defun edit-entry (entry &key track user-id description status (assigned-to NIL assigned-p) (relates-to NIL relates-to-p) severity order)
   (db:with-transaction ()
     (let ((entry (ensure-entry entry)))
       (setf-dm-fields entry track user-id description severity relates-to)
@@ -490,9 +490,8 @@
                  (loop for record in (db:select 'entry (db:query (:and (:<= order 'order) (:< 'order prev))))
                        do (db:update 'entry (db:query (:= '_id (gethash "_id" record))) `(("order" . ,(1+ (gethash "order" record))))))))
           (setf (dm:field entry "order") order)))
-      (dm:save entry)
-      (when notify (notify entry :entry-edit))
-      entry)))
+      (prog1 (dm:save entry)
+        (notify entry :entry-edit)))))
 
 (defun delete-entry (entry &key (delete-related T))
   (db:with-transaction ()
@@ -512,13 +511,13 @@
   (dm:get 'note (db:query (:= 'entry (dm:id entry)))
           :skip skip :amount amount :sort '(("time" :asc))))
 
-(defun make-note (entry text &key (author (auth:current)) (time (get-universal-time)) notify)
+(defun make-note (entry text &key (author (auth:current)) (time (get-universal-time)))
   (let ((entry (ensure-entry entry))
         (model (dm:hull 'note)))
     (setf-dm-fields model entry text time)
     (setf (dm:field model "author") (user:id author))
     (prog1 (dm:insert model)
-      (when notify (notify model :note-new)))))
+      (notify model :note-new))))
 
 (defun ensure-note (note-ish)
   (etypecase note-ish
@@ -529,11 +528,11 @@
      (or (dm:get-one 'note (db:query (:= '_id (ensure-id note-ish))))
          (error 'request-not-found :message "Could not find the requested note.")))))
 
-(defun edit-note (note &key text notify)
+(defun edit-note (note &key text)
   (let ((note (ensure-note note)))
     (setf-dm-fields note text)
     (prog1 (dm:save note)
-      (when notify (notify note :note-edit)))))
+      (notify note :note-edit))))
 
 (defun delete-note (note)
   (db:with-transaction ()
@@ -559,12 +558,12 @@
 
 (defun make-snapshot (project &key (time (get-universal-time))
                                    user-id session-id session-duration
-                                   snapshot-duration version notify)
+                                   snapshot-duration version)
   (let ((project (ensure-project project))
         (model (dm:hull 'snapshot)))
     (setf-dm-fields model project time user-id session-id session-duration snapshot-duration version)
     (prog1 (dm:insert model)
-      (when notify (notify model :snapshot-new)))))
+      (notify model :snapshot-new))))
 
 (defun delete-snapshot (snapshot)
   (db:with-transaction ()
@@ -581,7 +580,7 @@
     (note (ensure-note id))
     (snapshot (ensure-snapshot id))))
 
-(defun notify (object type &optional (project (ensure-project object)))
+(defun notify (object type &optional (project (ensure-project object)) (author (auth:current)))
   (let* ((type-template
            (ecase type
              (:entry-new (@template "mail-entry-new.ctml"))
@@ -600,13 +599,16 @@
          (mask (subscription-types->id type)))
     (db:iterate 'subscriber (cond ((and (find type '(:entry-new :entry-edit))
                                         (dm:field object "track"))
-                                   (db:query (:or (:and (:= 'object (dm:field object "project")) (:= 'object-type (object-type->id 'project)))
-                                                  (:and (:= 'object (dm:field object "track")) (:= 'object-type (object-type->id 'track)))
-                                                  (:and (:= 'object (dm:id object)) (:= 'object-type (object-type->id 'entry))))))
-                                  (T (db:query (:and (:= 'object (dm:id project)) (:= 'object-type (object-type->id 'project))))))
+                                   (db:query (:and (:or (:and (:= 'object (dm:field object "project")) (:= 'object-type (object-type->id 'project)))
+                                                        (:and (:= 'object (dm:field object "track")) (:= 'object-type (object-type->id 'track)))
+                                                        (:and (:= 'object (dm:id object)) (:= 'object-type (object-type->id 'entry))))
+                                                   (:/= 'user (user:id author)))))
+                                  (T (db:query (:and (:and (:= 'object (dm:id project)) (:= 'object-type (object-type->id 'project)))
+                                                     (:/= 'user (user:id author))))))
                 (lambda (record)
                   (when (< 0 (logand mask (gethash "type" record)))
-                    (mail:send (user:field :email (gethash "user" record)) subject body))))))
+                    (let ((email (user:field "email" (gethash "user" record))))
+                      (when email (mail:send email subject body))))))))
 
 (defun set-subscription (object types &optional (user (auth:current)))
   (let ((existing (dm:get-one 'subscriber (db:query (:and (:= 'object (dm:id object))

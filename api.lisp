@@ -75,7 +75,7 @@
                             :skip (parse-integer (or* skip "0"))
                             :amount (parse-integer (or* amount "100")))))
 
-(define-api feedback/entry/new (project user-id &optional track status version os-type cpu-type gpu-type os-info cpu-info gpu-info description assigned-to severity relates-to notify) (:access (perm feedback entry new))
+(define-api feedback/entry/new (project user-id &optional track status version os-type cpu-type gpu-type os-info cpu-info gpu-info description assigned-to severity relates-to) (:access (perm feedback entry new))
   (db:with-transaction ()
     (let* ((project (or (find-project project)
                         (ensure-project project)))
@@ -93,8 +93,7 @@
                                       :description description
                                       :assigned-to assigned-to
                                       :relates-to relates-to
-                                      :severity severity
-                                      :notify notify)))
+                                      :severity severity)))
       (loop for type in types
             for file = (post-var (dm:field type "name"))
             do (when file
