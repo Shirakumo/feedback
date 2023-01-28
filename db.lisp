@@ -68,11 +68,14 @@
                (user :id)
                (type (:integer 2)))))
 
+;; TODO: search field
 ;; TODO: test notifs
 ;; TODO: anonymously viewable tracks
 ;; TODO: manual attachments
-;; TODO: update without page refresh
 ;; TODO: csv import
+;; TODO: bulk actions (retracking, assigning, etc.)
+;; TODO: lazy infinite load
+;; TODO: update without page refresh
 
 (defun check-name (name)
   (let ((names '("new" "snapshot" "edit" "entry" "user" "subscribe")))
