@@ -60,8 +60,9 @@
           ("gpu-type" . ,(string gpu-type))
           ("gpu-info" . ,gpu-info))))))
 
-(defun submit (project user-id &key version description attachments client key secret token token-secret parameters (api-base "https://feedback.tymoon.eu/api/"))
+(defun submit (project user-id &key track version description attachments client key secret token token-secret parameters (api-base "https://feedback.tymoon.eu/api/"))
   (let ((parameters (append `(("project" . ,project)
+                              ("track" . ,track)
                               ("user-id" . ,(string user-id))
                               ("version" . ,(princ-to-string (or version "")))
                               ("description" . ,(or description "")))

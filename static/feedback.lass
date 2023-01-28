@@ -67,10 +67,9 @@
   ((:or input textarea select)
    :background (hex F0F0F0)
    :border 1px solid (hex E0E0E0)
-   :padding 0.2em)
-  (input :flex-grow 1)
-  (textarea :flex-grow 1
-            :min-height 10em))
+   :padding 0.2em
+   :flex-grow 1)
+  (textarea :min-height 10em))
  (.actions
   :display flex
   :margin 1em 0
@@ -89,6 +88,12 @@
    :background (hex D00000)
    :border 1px solid (hex A00000)
    :max-width 5em)))
+(form.edit.wide
+ :max-width none
+ :margin 0
+ :padding 0
+ ((:or input select textarea)
+  :background (hex F5F5F5)))
 (.project.edit
  ((:or .attachments .members)
   :flex-grow 1
@@ -110,7 +115,7 @@
   :display flex
   :flex-wrap wrap
   (label
-   :min-width 6em
+   :min-width 7em
    :font-weight bold)
   (.short
    :flex-grow 1)
@@ -144,11 +149,14 @@
   (.long
    :font-family monospace)))
 ((:or .view .list)
- (>section
+ (section
   :margin-bottom 2em
   :background (hex F0F0F0)
   (>header
-   (h3 :margin 0 1em)
+   (h3
+    :padding 0 1em
+    :margin 0
+    :border-bottom 2px solid gray)
    (nav
     :padding 0 1em
     :display flex
@@ -158,27 +166,30 @@
     ((:and a :hover)
      :color white
      :background black))))
- (>section.self
+ (section.self
   (.description
    :margin 0
-   :padding 0 1em))
+   :padding 0.5em 1em))
  (ul.projects
   :list-style none
   :margin 0
   :padding 0 1em
   (>li
    :display grid
-   :grid-template-columns 6em 1fr
+   :grid-template-columns "fit-content(20em)" 1fr
+   (a :padding 0.5em 0)
    (.description :margin 0)
    (.tracks
-    :grid-column 1 / 2)))
+    :grid-column 1 / 2
+    :border-left 0.2em solid gray)))
  (ul.tracks
   :list-style none
   :margin 0
   :padding 0 1em
   (>li
+   (a :padding 0.5em 0)
    :display grid
-   :grid-template-columns 6em 1fr)))
+   :grid-template-columns "fit-content(20em)" 1fr)))
 (.track.view
  :display flex
  :flex-direction column
@@ -207,23 +218,23 @@
    ((:or .drag .collapse)
     :display flex
     :justify-content center
-    :align-items center)
-   (".severity[data-severity=\"1\"]"
-    :color (rgba 0 0 0 0.5))
-   (".severity[data-severity=\"30\"]"
-    :background (rgba 0 100 0 0.25))
-   (".severity[data-severity=\"50\"]"
-    :background (rgba 255 180 0 0.75))
-   (".severity[data-severity=\"80\"]"
-    :background (rgba 255 0 0 0.75)
-    :color white)
-   (".severity[data-severity=\"100\"]"
-    :background (rgba 255 0 0 1.0)
-    :color white
-    :font-weight bold
-    :box-shadow 0 0 10px red
-    :z-index 1
-    :border-color transparent !important))
+    :align-items center))
+  (".severity[data-severity=\"1\"]"
+   :color (rgba 0 0 0 0.5))
+  (".severity[data-severity=\"30\"]"
+   :background (rgba 0 100 0 0.25))
+  (".severity[data-severity=\"50\"]"
+   :background (rgba 255 180 0 0.75))
+  (".severity[data-severity=\"80\"]"
+   :background (rgba 255 0 0 0.75)
+   :color white)
+  (".severity[data-severity=\"100\"]"
+   :background (rgba 255 0 0 1.0)
+   :color white
+   :font-weight bold
+   :box-shadow 0 0 10px red
+   :z-index 1
+   :border-color transparent !important)
   (.extra
    :border-left 1em solid lightgray
    :height auto
@@ -236,19 +247,6 @@
        :color white)
     ((:and a :hover)
      :background black))
-   (.notes
-    :padding-left 1em
-    :border-left 1px solid gray
-    (.note
-     :display grid
-     :grid-template-columns "fit-content(10em)" 8em 1fr 5em
-     :gap 0.2em
-     :padding 0.2em
-     (.text
-      :border none
-      :background (hex E0E0E0)
-      :border-radius 0.5em
-      :padding 0.25em)))
    (.relations
     :margin 0
     :padding 1em
@@ -256,6 +254,15 @@
     :border-left 1px solid gray))
   ((:and .extra .collapsed)
    :height 0px))
+ ((:and .entry (:or .resolved .wontfix .invalid .duplicate .deleted))
+  (.row :opacity 0.8 (* :background lightgray)))
+ ((.entry.triaged .status) :background lightgray)
+ ((.entry.resolved .status) :background green)
+ ((.entry.wontfix .status) :background darkgray)
+ ((.entry.invalid .status) :background black :color white)
+ ((.entry.duplicate .status) :background lightgray)
+ ((.entry.unclear .status) :background orange)
+ ((.entry.deleted .status) :background darkred)
  (.entry.dragover
   :position relative
   :margin-top 1em
@@ -276,7 +283,25 @@
  (.empty
   :padding 2em
   :text-align center
-  :font-size 2em))
+  :font-size 1.2em))
+(.notes
+ :padding-left 1em
+ :border-left 1px solid gray
+ (.note
+  :display grid
+  :grid-template-columns 10em 8em 1fr 5em
+  :gap 0.2em
+  :padding 0.2em
+  (.author
+   :white-space nowrap
+   :overflow hidden
+   :text-overflow ellipsis)
+  (.text
+   :border none
+   :background (hex F5F5F5)
+   :border 1px solid (hex E0E0E0)
+   :border-radius 0.5em
+   :padding 0.25em)))
 (.highlight
  :outline 3px solid yellow
  :border-radius 3px
@@ -289,3 +314,28 @@
             (0%   :outline-color (rgba 255 255 0 0.0))
             (50%  :outline-color (rgba 255 255 0 1.0))
             (100% :outline-color (rgba 255 255 0 0.0)))
+(.popup
+ :z-index 10000
+ :display none
+ :position fixed
+ :left 0 :right 0 :bottom 0 :top 0
+ :background (rgba 0 0 0 0.5)
+ (.frame
+  :max-width 800px
+  :margin 2em auto
+  :background (hex F0F0F0)
+  (>header
+   :padding 0.5em 1em
+   :background lightgray
+   :border-bottom 0.2em solid gray
+   (h3 :margin 0))
+  (>form
+   :display flex
+   :padding 1em
+   (input :font-size inherit)))
+ (.frame.query
+  :max-width 400px
+  (>form
+   :font-size 1.2em
+   (input[type=text]
+    :flex-grow 1))))

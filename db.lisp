@@ -13,7 +13,7 @@
                (type (:integer 1)))
              :indices '(project))
 
-  (db:create 'member
+  (db:create 'members
              '((project (:id project))
                (user :id))
              :indices '(project user))
@@ -40,7 +40,6 @@
                (cpu-info :text)
                (gpu-info :text)
                (description :text)
-               (comment :text)
                (assigned-to :id)
                (severity (:integer 1))
                (relates-to (:id entry)))
@@ -68,6 +67,13 @@
                (object-type (:integer 1))
                (user :id)
                (type (:integer 1)))))
+
+;; TODO: csv import, anonymously viewable tracks
+
+(defun check-name (name)
+  (when (or (find name '("new" "snapshot" "edit" "entry" "user") :test #'string-equal)
+            (every #'digit-char-p name))
+    (error 'api-argument-invalid :argument "name" :message "The name cannot be numeric, or one of: new, snapshot, edit, entry, user")))
 
 (defmacro define-mapping ((a b) &body mappings)
   `(progn
@@ -137,12 +143,19 @@
   (:2d-points 1)
   (:3d-points 2))
 
+(define-mapping (protection id)
+  (:private 0)
+  (:registered-read 1)
+  (:registered-write 2)
+  (:public-read 3)
+  (:public-write 4))
+
 (define-mapping (object-type id)
   (project 0)
   (track 1)
   (entry 2)
   (note 3)
-  (member 4)
+  (members 4)
   (snapshot 5)
   (attachment 6)
   (subscriber 7))
@@ -244,7 +257,7 @@
     (dm:data-model
      (ecase (dm:collection project-ish)
        (project project-ish)
-       ((attachment track entry note snapshot member)
+       ((attachment track entry note snapshot members)
         (dm:get-one 'project (db:query (:= '_id (dm:field project-ish "project")))))))
     (T
      (or (dm:get-one 'project (db:query (:= '_id (ensure-id project-ish))))
@@ -255,10 +268,11 @@
 
 (defun list-projects (&optional (member (auth:current NIL)))
   (if member
-      (mapcar #'ensure-project (dm:get 'member (db:query (:= 'user (user:id member)))))
+      (mapcar #'ensure-project (dm:get 'members (db:query (:= 'user (user:id member)))))
       (dm:get 'project (db:query :all))))
 
 (defun make-project (name &key description trace-data-type attachments (author (auth:current)) notify)
+  (check-name name)
   (db:with-transaction ()
     (when (find-project name)
       (error "Project named ~s already exists" name))
@@ -272,7 +286,7 @@
             do (setf-dm-fields sub (model "project") name)
                (setf (dm:field sub "type") (attachment-type->id type))
                (dm:insert sub))
-      (db:insert 'member `(("project" . ,(dm:id model)) ("user" . ,(user:id author))))
+      (db:insert 'members `(("project" . ,(dm:id model)) ("user" . ,(user:id author))))
       (when notify (notify model :project-new))
       model)))
 
@@ -299,10 +313,10 @@
           (dolist (attachment existing)
             (dm:delete attachment))))
       (when members
-        (db:remove 'member (db:query (:= 'project (dm:id project))))
+        (db:remove 'members (db:query (:= 'project (dm:id project))))
         ;; FIXME: Notify for new members
         (dolist (member members)
-          (db:insert 'member `(("project" . ,(dm:id project)) ("user" . ,(user:id member))))))
+          (db:insert 'members `(("project" . ,(dm:id project)) ("user" . ,(user:id member))))))
       project)))
 
 (defun delete-project (project)
@@ -310,7 +324,8 @@
     (let ((project (ensure-project project)))
       (mapc #'delete-entry (list-entries project))
       (mapc #'delete-snapshot (list-snapshots project))
-      (db:remove 'subscriber (db:query (:and (:= 'object (dm:id project)) (:= 'object-type (object-type->id :project)))))
+      (db:remove 'subscriber (db:query (:and (:= 'object (dm:id project)) (:= 'object-type (object-type->id 'project)))))
+      (db:remove 'members (db:query (:= 'project (dm:id project))))
       (dm:delete project)
       (delete-directory (project-directory project)))))
 
@@ -328,21 +343,28 @@
      (or (dm:get-one 'track (db:query (:= '_id (ensure-id track-ish))))
          (error 'request-not-found :message "Could not find the requested track.")))))
 
-(defun list-tracks (project &key (skip 0) (amount 50))
-  (dm:get 'track (db:query (:= 'project (ensure-id project)))
+(defun list-tracks (project &key (skip 0) (amount 50) query)
+  (dm:get 'track (if query
+                     (db:query (:and (:= 'project (ensure-id project))
+                                     (:MATCHES* 'name (cl-ppcre:quote-meta-chars query))))
+                     (db:query (:= 'project (ensure-id project))))
           :skip skip :amount amount :sort '(("name" :desc))))
 
-(defun make-track (project name &key description notify)
+(defun make-track (project name &key description notify protection)
+  (check-name name)
   (let ((project (ensure-project project))
         (track (dm:hull 'track)))
     (setf-dm-fields track project name description)
+    (setf (dm:field track "protection") (protection->id (or protection :private)))
     (prog1 (dm:insert track)
       (when notify (notify track :track-new)))))
 
-(defun edit-track (track &key name description)
+(defun edit-track (track &key name description protection)
   (db:with-transaction ()
     (let ((track (ensure-track track)))
       (setf-dm-fields track name description)
+      (when protection
+        (setf (dm:field track "protection") (protection->id protection)))
       (dm:save track))))
 
 (defun delete-track (track &key (delete-entries T))
@@ -351,11 +373,11 @@
       (if delete-entries
           (db:remove 'entry (db:query (:= 'track (dm:id track))))
           (db:update 'entry (db:query (:= 'track (dm:id track))) `(("track" . NIL))))
-      (db:remove 'subscriber (db:query (:and (:= 'object (dm:id track)) (:= 'object-type (object-type->id :track)))))
+      (db:remove 'subscriber (db:query (:and (:= 'object (dm:id track)) (:= 'object-type (object-type->id 'track)))))
       (db:remove 'track (db:query (:= '_id (dm:id track)))))))
 
 (defun list-members (project)
-  (db:iterate 'member (db:query (:= 'project (ensure-id project)))
+  (db:iterate 'members (db:query (:= 'project (ensure-id project)))
     (lambda (row) (user:get (gethash "user" row)))
     :accumulate T :fields '("user")))
 
@@ -386,20 +408,30 @@
      (or (dm:get-one 'entry (db:query (:= '_id (ensure-id entry-ish))))
          (error 'request-not-found :message "Could not find the requested entry.")))))
 
-(defun list-entries (&optional parent &key (skip 0) (amount 50))
-  (dm:get 'entry (etypecase parent
-                   (user:user
-                    (db:query (:and (:= 'assigned-to (user:id parent))
-                                    (:<= 'status 1))))
-                   (dm:data-model
-                    (ecase (dm:collection parent)
-                      (project (db:query (:= 'project (dm:id parent))))
-                      (track (db:query (:= 'track (dm:id parent))))))
-                   (db:id
-                    (db:query (:= 'project parent)))
-                   (null
-                    (db:query :all)))
-          :skip skip :amount amount :sort '(("order" :desc) ("time" :desc))))
+(defun list-entries (&optional parent &key (skip 0) (amount 50) query)
+  (macrolet ((query (query)
+               `(cond ((null query)
+                       (db:query ,query))
+                      ((id-code-p query)
+                       (db:query (:and ,query
+                                       (:or (:= '_id (parse-id-code query))
+                                            (:matches* 'description (cl-ppcre:quote-meta-chars query))))))
+                      (T
+                       (db:query (:and ,query
+                                       (:matches* 'description (cl-ppcre:quote-meta-chars query))))))))
+    (dm:get 'entry (etypecase parent
+                     (user:user
+                      (query (:and (:= 'assigned-to (user:id parent))
+                                      (:<= 'status 1))))
+                     (dm:data-model
+                      (ecase (dm:collection parent)
+                        (project (query (:= 'project (dm:id parent))))
+                        (track (query (:= 'track (dm:id parent))))))
+                     (db:id
+                      (query (:= 'project parent)))
+                     (null
+                      (query :all)))
+            :skip skip :amount amount :sort '(("order" :desc) ("time" :desc)))))
 
 (defun make-entry (project &key (time (get-universal-time)) user-id
                                 track status
@@ -427,10 +459,10 @@
       (prog1 (dm:insert model)
         (when notify (notify model :entry-new project))))))
 
-(defun edit-entry (entry &key track user-id description comment status (assigned-to NIL assigned-p) (relates-to NIL relates-to-p) severity notify order)
+(defun edit-entry (entry &key track user-id description status (assigned-to NIL assigned-p) (relates-to NIL relates-to-p) severity notify order)
   (db:with-transaction ()
     (let ((entry (ensure-entry entry)))
-      (setf-dm-fields entry track user-id description comment severity relates-to)
+      (setf-dm-fields entry track user-id description severity relates-to)
       (when relates-to-p
         (setf (dm:field entry "assigned-to") (when relates-to (ensure-entry relates-to))))
       (when assigned-p
@@ -438,6 +470,7 @@
       (when status
         (setf (dm:field entry "status") (status->id status)))
       (when order
+        (dm:save entry)
         (let* ((prev (dm:field entry "order"))
                (track (dm:field entry "track"))
                (order (case order
@@ -464,7 +497,7 @@
           (db:remove 'entry (db:query (:= 'relates-to (dm:id entry))))
           (db:update 'entry (db:query (:= 'relates-to (dm:id entry))) `(("relates-to" . NIL))))
       (db:remove 'note (db:query (:= 'entry (dm:id entry))))
-      (db:remove 'subscriber (db:query (:and (:= 'object (dm:id entry)) (:= 'object-type (object-type->id :entry)))))
+      (db:remove 'subscriber (db:query (:and (:= 'object (dm:id entry)) (:= 'object-type (object-type->id 'entry)))))
       (dm:delete entry))))
 
 (defun list-related (entry)
@@ -499,7 +532,7 @@
 
 (defun delete-note (note)
   (db:with-transaction ()
-    (db:remove 'subscriber (db:query (:and (:= 'object (dm:id note)) (:= 'object-type (object-type->id :note)))))
+    (db:remove 'subscriber (db:query (:and (:= 'object (dm:id note)) (:= 'object-type (object-type->id 'note)))))
     (dm:delete note)))
 
 (defun ensure-snapshot (snapshot-ish)
@@ -532,7 +565,7 @@
   (db:with-transaction ()
     (let ((snapshot (ensure-snapshot snapshot)))
       (delete-directory (snapshot-directory snapshot))
-      (db:remove 'subscriber (db:query (:and (:= 'object (dm:id snapshot)) (:= 'object-type (object-type->id :snapshot)))))
+      (db:remove 'subscriber (db:query (:and (:= 'object (dm:id snapshot)) (:= 'object-type (object-type->id 'snapshot)))))
       (dm:delete snapshot))))
 
 (defun notify (object type &optional (project (ensure-project object)))
@@ -554,10 +587,10 @@
          (mask (subscription-types->id type)))
     (db:iterate 'subscriber (cond ((and (find type '(:entry-new :entry-edit))
                                          (dm:field object "track"))
-                                   (db:query (:or (:and (:= 'object (dm:field object "project")) (:= 'object-type (object-type->id :project)))
-                                                  (:and (:= 'object (dm:field object "track")) (:= 'object-type (object-type->id :track)))
-                                                  (:and (:= 'object (dm:id object)) (:= 'object-type (object-type->id :entry))))))
-                                  (T (db:query (:and (:= 'object (dm:id project)) (:= 'object-type (object-type->id :project))))))
+                                   (db:query (:or (:and (:= 'object (dm:field object "project")) (:= 'object-type (object-type->id 'project)))
+                                                  (:and (:= 'object (dm:field object "track")) (:= 'object-type (object-type->id 'track)))
+                                                  (:and (:= 'object (dm:id object)) (:= 'object-type (object-type->id 'entry))))))
+                                  (T (db:query (:and (:= 'object (dm:id project)) (:= 'object-type (object-type->id 'project))))))
                 (lambda (record)
                   (when (< 0 (logand mask (gethash "type" record)))
                     (mail:send (user:field :email (gethash "user" record)) subject body))))))

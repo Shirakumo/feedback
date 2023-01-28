@@ -1,63 +1,171 @@
-<article class="entry view">
-  <c:using value="entry">
-    <div class="row">
-      <label>Status:</label>
-      <span class="short status" lquery="(text (feedback::id->status status))"></span>
-    </div>
-    <div class="row">
-      <label>Version:</label>
-      <span class="short version" lquery="(text version)"></span>
-    </div>
-    <div class="row">
-      <label>User ID:</label>
-      <span class="short user" lquery="(text user-id)"></span>
-    </div>
-    <div class="row">
-      <label>Time:</label>
-      <time class="short time" lquery="(time time)"></time>
-    </div>
-    <div class="row os">
-      <label>OS:</label>
-      <span class="short" lquery="(text (feedback::id->os-type os-type))"></span>
-      <input type="checkbox" class="expand" title="Expand long log" />
-      <pre class="long extra os" lquery="(text os-info)"></pre>
-    </div>
-    <div class="row cpu">
-      <label>CPU:</label>
-      <span class="short" lquery="(text (feedback::id->cpu-type cpu-type))"></span>
-      <input type="checkbox" class="expand" title="Expand long log" />
-      <pre class="long extra cpu" lquery="(text cpu-info)"></pre>
-    </div>
-    <div class="row gpu">
-      <label>GPU:</label>
-      <span class="short" lquery="(text (feedback::id->gpu-type gpu-type))"></span>
-      <input type="checkbox" class="expand" title="Expand long log" />
-      <pre class="long extra gpu" lquery="(text gpu-info)"></pre>
-    </div>
-    <div class="row">
-      <label>Description:</label>
-      <span class="long description" lquery="(text description)"></span>
-    </div>
-    <div class="row">
-      <label>Comment: <a @href="feedback/{0}/entry/{1}/edit project _id"><i class="fas fa-edit"/></a></label>
-      <span class="long comment" lquery="(text comment)"></span>
-    </div>
-    <div class="row">
-      <label>Attachments:</label>
+<c:using value="entry">
+  <article class="entry view" lquery="(data :id _id :project project :track track)">
+    <form class="edit wide" method="post" @action="feedback/api/feedback/entry/edit">
+      <input type="hidden" name="browser" value="true" />
+      <input type="hidden" name="in-detail" value="true" />
+      <input type="hidden" name="entry" lquery="(val _id)" />
+      <section>
+        <header>
+          <nav>
+            <a href="#" class="in-track" lquery="(attr :href (feedback::track-entry-url *))">
+              <i class="fa-solid fa-code-commit"></i>
+              In Track
+            </a>
+            <a href="#" class="front" @href="feedback/api/feedback/entry/edit?entry={0}&order=top&browser=true _id">
+              <i class="fa-solid fa-caret-up"></i>
+              To Front
+            </a>
+            <a href="#" class="back" @href="feedback/api/feedback/entry/edit?entry={0}&order=bottom&browser=true _id">
+              <i class="fa-solid fa-caret-down"></i>
+              To Back
+            </a>
+            <a href="#" class="duplicate">
+              <i class="fa-solid fa-code-merge"></i>
+              Mark as Duplicate
+            </a>
+            <a href="#" class="related">
+              <i class="fa-solid fa-code-pull-request"></i>
+              Relate To
+            </a>
+            <a href="#" class="retrack">
+              <i class="fa-solid fa-shuffle"></i>
+              Retrack
+            </a>
+          </nav>
+        </header>
+        <div class="row">
+          <label>Time:</label>
+          <time class="short time" lquery="(time time)"></time>
+        </div>
+        <div class="row">
+          <label>Track:</label>
+          <span class="short track" lquery="(text (clip (feedback::ensure-track *) :name))"></span>
+        </div>
+        <div class="row">
+          <label>Status:</label>
+          <select class="status" name="status" lquery="(select status) (add-class (feedback::id->status status))">
+            <option value="0">New</option>
+            <option value="1">Triaged</option>
+            <option value="2">Resolved</option>
+            <option value="3">Wontfix</option>
+            <option value="4">Invalid</option>
+            <option value="5">Duplicate</option>
+            <option value="6">Unclear</option>
+            <option value="7">Deleted</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Severity:</label>
+          <select class="severity" name="severity" lquery="(select severity) (data :severity severity)">
+            <option value="0"></option>
+            <option value="1">Irrelevant</option>
+            <option value="10">Nice To Have</option>
+            <option value="30">Low</option>
+            <option value="50">Medium</option>
+            <option value="80">High</option>
+            <option value="100">Critical</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Version:</label>
+          <input type="text" class="version" name="version" lquery="(val version)" />
+        </div>
+        <div class="row">
+          <label>Reporter:</label>
+          <input type="text" class="reporter user" list="members" name="user-id" lquery="(val user-id)" />
+        </div>
+        <div class="row">
+          <label>Assigned:</label>
+          <input type="text" class="assigned user" list="members" name="assigned-to" lquery="(val (when assigned-to (user:username assigned-to)))" />
+        </div>
+        <c:when test="relates-to">
+          <div class="row">
+            <label>Relates To:</label>
+            <input type="text" class="relates-to" name="relates-to" lquery="(val relates-to)" />
+          </div>
+        </c:when>
+        <c:when test="(< 0 os-type)">
+          <div class="row os">
+            <label>OS:</label>
+            <span class="short" lquery="(text (feedback::id->os-type os-type))"></span>
+            <input type="checkbox" class="expand" title="Expand long log" />
+            <pre class="long extra os" lquery="(text os-info)"></pre>
+          </div>
+        </c:when>
+        <c:when test="(< 0 cpu-type)">
+          <div class="row cpu">
+            <label>CPU:</label>
+            <span class="short" lquery="(text (feedback::id->cpu-type cpu-type))"></span>
+            <input type="checkbox" class="expand" title="Expand long log" />
+            <pre class="long extra cpu" lquery="(text cpu-info)"></pre>
+          </div>
+        </c:when>
+        <c:when test="(< 0 gpu-type)">
+          <div class="row gpu">
+            <label>GPU:</label>
+            <span class="short" lquery="(text (feedback::id->gpu-type gpu-type))"></span>
+            <input type="checkbox" class="expand" title="Expand long log" />
+            <pre class="long extra gpu" lquery="(text gpu-info)"></pre>
+          </div>
+        </c:when>
+        <div class="row">
+          <label>Description:</label>
+          <textarea class="description" name="description" placeholder="Description..." lquery="(text description)"></textarea>
+        </div>
+      </section>
+    </form>
+    
+    <section>
+      <header>
+        <h3>Attachments:</h3>
+        <nav>
+          <a @href="feedback/{0}/entry/{1}/new">
+            <i class="fas fa-plus-circle"></i>
+            New Attachment
+          </a>
+        </nav>
+      </header>
       <ul class="long" iterate="(** :attachments)">
         <li class="attachment">
           <a lquery="(text name) (attr :href (feedback::attachment-url ** *))">
-            <c:if test="(feedback::attachment-image-p type)">
-              <c:then>
-                <img alt="image" class="full" lquery="(attr :src (feedback::attachment-url ** *))"/>
-              </c:then>
-              <c:elseif test="(feedback::attachment-text-p type)">
-                <div class="long log" lquery="(text (alexandria:read-file-into-string (feedback::attachment-pathname ** *)))"></div>
-              </c:elseif>
-            </c:if>
+            <c:when test="(feedback::attachment-image-p type)">
+              <img alt="image" class="full" lquery="(attr :src (feedback::attachment-url ** *))"/>
+            </c:when>
+            <c:when test="(feedback::attachment-text-p type)">
+              <div class="long log" lquery="(text (alexandria:read-file-into-string (feedback::attachment-pathname ** *)))"></div>
+            </c:when>
           </a>
         </li>
       </ul>
-    </div>
-  </c:using>
-</article>
+    </section>
+    <section>
+      <header>
+        <h3>Notes</h3>
+      </header>
+      <div class="notes">
+        <c:splice iterate="(feedback::list-notes *)">
+          <form class="note existing" @action="feedback/api/feedback/note/edit" lquery="(attr :id (feedback::note-tag *))">
+            <input type="hidden" name="browser" value="true" />
+            <input type="hidden" name="in-detail" value="true" />
+            <input type="hidden" name="note" lquery="(val _id)" />
+            <time class="time" lquery="(time time)">2023.01.25 13:28:12</time>
+            <a class="author user" lquery="(text (user:username author))" @href="feedback/user/{0} (user:username author)" href="#">Shinmera</a>
+            <textarea class="text" name="text" lquery="(text text)"></textarea>
+          </form>
+        </c:splice>
+        <form class="note new" method="post" @action="feedback/api/feedback/note/new">
+          <input type="hidden" name="browser" value="true" />
+          <input type="hidden" name="in-detail" value="true" />
+          <input type="hidden" name="entry" lquery="(val _id)" />
+          <time class="time now" lquery="(time (get-universal-time))">2023.01.25 13:28:12</time>
+          <a class="author user" lquery="(text (user:username (auth:current)))" @href="feedback/user/{0} (user:username (auth:current))">Shinmera</a>
+          <textarea class="text" name="text" placeholder="Note..." required></textarea>
+          <input type="submit" value="Submit">
+        </form>
+      </div>
+    </section>
+    <datalist id="members" iterate="(feedback::list-members project)">
+      <option lquery="(val (user:username *))" />
+    </datalist>
+  </article>
+</c:using>

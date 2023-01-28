@@ -1,4 +1,4 @@
-<div class="entry" lquery="(data :id _id) (data :order order) (add-class (if _id :existing :new)) (attr :id (when _id (feedback::id-code _id)))">
+<div class="entry" lquery="(data :id _id :order order :project project :track track) (add-class (if _id :existing :new) (feedback::id->status status)) (attr :id (when _id (feedback::id-code _id)))">
   <form class="row" method="post" @action="feedback/api/feedback/entry/edit">
     <span class="drag"><i class="fa-solid fa-grip-lines"></i></span>
     <select class="severity" name="severity" lquery="(select severity) (data :severity severity)">
@@ -77,17 +77,17 @@
         <form class="note new" method="post" @action="feedback/api/feedback/note/new">
           <input type="hidden" name="browser" value="true" />
           <input type="hidden" name="entry" lquery="(val _id)" />
-          <time class="time now" lquery="(time (get-universal-time))">2023.01.25 13:28:12</time>
+          <div></div>
           <a class="author user" lquery="(text (user:username (auth:current)))" @href="feedback/user/{0} (user:username (auth:current))">Shinmera</a>
           <textarea class="text" name="text" placeholder="Note..." required></textarea>
           <input type="submit" value="Submit">
         </form>
       </div>
       <ul class="relations" iterate="(feedback::list-related *)">
-        <li lquery="(add-class (id->status status))">
-          <i class="fa-solid" lquery='(add-class (if (eql :duplicate (id->status status)) "fa-code-merge" "fa-code-pull-request"))'></i>
+        <li lquery="(add-class (feedback::id->status status))">
+          <i class="fa-solid" lquery='(add-class (if (eql :duplicate (feedback::id->status status)) "fa-code-merge" "fa-code-pull-request"))'></i>
           <a lquery="(attr :href (feedback::entry-url *)) (text (feedback::id-code *))">$1342</a> is
-          <c:s>(if (eql :duplicate (id->status status)) "a duplicate" "related")</c:s>
+          <c:s>(if (eql :duplicate (feedback::id->status status)) "a duplicate" "related")</c:s>
         </li>
       </ul>
     </div>

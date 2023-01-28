@@ -6,6 +6,16 @@
              lquery="(val name)"/>
     </div>
     <div class="row">
+      <label for="protection">Protection:</label>
+      <select name="protection" id="protection" lquery="(select protection)">
+        <option value="0">Members Only</option>
+        <option value="1">Registered Read</option>
+        <option value="2">Registered Write</option>
+        <option value="3">Public Read</option>
+        <option value="4">Public Write</option>
+      </select>
+    </div>
+    <div class="row">
       <label for="description">Description:</label>
       <textarea name="description" id="description" lquery="(text description)"></textarea>
     </div>

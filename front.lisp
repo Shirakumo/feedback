@@ -27,6 +27,18 @@
                 :representation :external
                 :fragment (id-code (dm:id entry)))))
 
+(defun track-note-url (note)
+  (let* ((note (ensure-note note))
+         (entry (ensure-entry note)))
+    (uri-to-url (if (dm:field entry "track")
+                    (format NIL "feedback/~a/~a"
+                            (dm:field (ensure-project entry) "name")
+                            (dm:field (ensure-track entry) "name"))
+                    (format NIL "feedback/~a/"
+                            (dm:field (ensure-project entry) "name")))
+                :representation :external
+                :fragment (note-tag note))))
+
 (defun snapshot-url (snapshot)
   (uri-to-url (format NIL "feedback/~a/snapshot/~a"
                       (dm:field (ensure-project snapshot) "name")
@@ -36,10 +48,9 @@
 (defun note-url (note)
   (let* ((note (ensure-note note))
          (entry (ensure-entry note)))
-    (uri-to-url (if (dm:field entry "track")
-                    (format NIL "feedback/~a/~a"
-                            (dm:field (ensure-project entry) "name")
-                            (dm:field (ensure-track entry) "name")))
+    (uri-to-url (format NIL "feedback/~a/entry/~a"
+                        (dm:field (ensure-project entry) "name")
+                        (id-code (dm:id entry)))
                 :representation :external
                 :fragment (note-tag note))))
 
@@ -142,19 +153,6 @@
                  :entry entry
                  :notes (list-notes entry)
                  :attachments (list-attachments entry))))
-
-(define-page entry-edit ("feedback/^([^/]+)/entry/([^/]+)/edit$" 1) (:uri-groups (project entry) :access (perm feedback entry edit))
-  (let ((project (or (find-project project)
-                     (ensure-project project)))
-        (entry (ensure-entry entry)))
-    (render-page (id-code entry) (@template "entry-edit.ctml")
-                 :up (if (dm:field entry "track")
-                         (track-url (dm:field entry "track"))
-                         (project-url project))
-                 :up-text (if (dm:field entry "track")
-                              (dm:field (ensure-track entry) "name")
-                              (dm:field project "name"))
-                 :entry entry)))
 
 (define-page attachment "feedback/^([^/]+)/entry/([^/]+)/([^/]+)$" (:uri-groups (project entry attachment) :access (perm feedback entry))
   (let* ((type (ensure-attachment (find-project project) attachment))

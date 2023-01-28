@@ -13,7 +13,7 @@
           </a>
         </nav>
       </header>
-      <p class="description" lquery='(text (or description "No description provided."))'></p>
+      <p class="description" lquery='(html (feedback::render-description description))'></p>
     </c:using>
   </section>
   <section>

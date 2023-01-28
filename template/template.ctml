@@ -23,6 +23,18 @@
     <main>
       <div class="box info" lquery='(text (post/get "message"))'></div>
       <div class="box error" lquery='(text (post/get "error"))'></div>
+      <div class="popup">
+        <article class="frame query">
+          <header>
+            <h3>Select</h3>
+          </header>
+          <form>
+            <input type="text" list="popup-query" name="entry">
+            <input type="submit">
+          </form>
+          <datalist id="popup-query"></datalist>
+        </article>
+      </div>
       <c:splice lquery="(html content)"/>
       <script @src="/static/feedback/feedback.js"></script>
     </main>

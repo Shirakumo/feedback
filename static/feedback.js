@@ -25,7 +25,7 @@ class Feedback{
             let element = document.getElementById(window.location.hash.substr(1));
             if(element){
                 element.classList.add("highlight");
-                if(element.closest(".entry")) element.closest(".entry").expand().scrollIntoView({block:"nearest"});
+                if(element.closest(".entry").expand) element.closest(".entry").expand().scrollIntoView({block:"nearest"});
             }
         }
 
@@ -39,7 +39,9 @@ class Feedback{
         self.registerAll(element, ".project.edit", self.registerProjectEdit);
         self.registerAll(element, ".trace", self.registerTrace);
         self.registerAll(element, ".track", self.registerTrack);
+        self.registerAll(element, ".entry.view", self.registerEntry);
         self.registerAll(element, ".confirm", self.registerConfirm);
+        self.registerAll(element, "time", self.registerTime);
     }
 
     registerAll(element, query, regger){
@@ -155,7 +157,7 @@ class Feedback{
         let ordered = [];
         element.entries = ordered;
         for(var i=0; i<entries.length; ++i){
-            self.registerEntry(element, entries[i]);
+            self.registerEntry(entries[i], element);
             if(entries[i].classList.contains("existing"))
                 ordered[parseInt(entries[i].dataset.order)] = entries[i];
         }
@@ -180,7 +182,7 @@ class Feedback{
         };
     }
 
-    registerEntry(track, element){
+    registerEntry(element, track){
         var self = this;
         if(element.classList.contains("existing")){
             let collapse = element.querySelector(".collapse");
@@ -273,6 +275,45 @@ class Feedback{
                 }
             });
         });
+
+        let parseEntry = (entry)=>self.parseIdCode(entry.substr(0, entry.indexOf(" ")));
+        self.registerAll(element, "a.duplicate", (el)=>{
+            el.addEventListener("click", (ev)=>{
+                ev.preventDefault();
+                self.queryListed("entry/list", {project: element.dataset.project},
+                                 (e)=>self.formatIdCode(e._id)+" "+self.formatShort(e.description))
+                    .then((entry)=>self.apiCall("entry/edit", {
+                        "entry": element.dataset.id,
+                        "status": "duplicate",
+                        "order": "bottom",
+                        "relates-to": parseEntry(entry)}))
+                    .then(self.handleResponse);
+            });
+        });
+
+        self.registerAll(element, "a.related", (el)=>{
+            el.addEventListener("click", (ev)=>{
+                ev.preventDefault();
+                self.queryListed("entry/list", {project: element.dataset.project},
+                                 (e)=>self.formatIdCode(e._id)+" "+self.formatShort(e.description))
+                    .then((entry)=>self.apiCall("entry/edit", {
+                        "entry": element.dataset.id,
+                        "relates-to": parseEntry(entry)}))
+                    .then(self.handleResponse);
+            });
+        });
+
+        self.registerAll(element, "a.retrack", (el)=>{
+            el.addEventListener("click", (ev)=>{
+                ev.preventDefault();
+                self.queryListed("track/list", {project: element.dataset.project},
+                                 (e)=>e._id+" "+e.name)
+                    .then((entry)=>self.apiCall("entry/edit", {
+                        "entry": element.dataset.id,
+                        "track": entry.substr(0, entry.indexOf(" "))}))
+                    .then(self.handleResponse);
+            });
+        });
     }
 
     registerConfirm(element){
@@ -286,11 +327,101 @@ class Feedback{
         });
     }
 
+    registerTime(element){
+        var self = this;
+        element.innerText = self.formatTime(new Date(Date.parse(element.getAttribute("datetime")+"Z")));
+        if(element.classList.contains("now"))
+           setInterval(()=>{
+               element.innerText = self.formatTime();
+           }, 1000);
+    }
+
+    formatTime(stamp){
+        stamp = stamp || new Date();
+        let p = (f)=>(f<10?"0"+f:f);
+        return p(stamp.getFullYear())+"."+p(stamp.getMonth()+1)+"."+p(stamp.getDate())+" "
+            + p(stamp.getHours())+":"+p(stamp.getMinutes())+":"+p(stamp.getSeconds());
+    }
+
+    formatIdCode(id){
+        let code = id.toString(16);
+        while(code.length < 4) code = "0"+code;
+        return "$"+code;
+    }
+
+    parseIdCode(code){
+        return parseInt(code.substr(1), 16);
+    }
+
+    formatShort(text, len){
+        len = len || 36;
+        return (text.length <= len)? text : text.substr(0, 33)+"...";
+    }
+
     submitForm(el){
         let form = el.closest("form");
         if(form.querySelector('input[type="submit"]'))
             form.querySelector('input[type="submit"]').click();
         else form.submit();
+    }
+
+    showMessage(msg){
+        document.querySelector(".box.info").innerText = msg;
+    }
+
+    showError(msg){
+        document.querySelector(".box.error").innerText = msg;
+    }
+
+    handleResponse(result){
+        if(result.target && window.location.href == result.target)
+            window.location.reload();
+        if(result.target)
+            window.location.replace(result.target);
+        else if(result.message) 
+            self.showMessage(result.message);
+    }
+
+    queryListed(api, data, present){
+        var self = this;
+        return new Promise((ok, fail)=>{
+            let popup = document.querySelector(".popup");
+            let input = popup.querySelector("input[name=entry]");
+            let datalist = popup.querySelector("datalist");
+            let close; close = ()=>{
+                popup.removeEventListener("click", close);
+                popup.style.display = null;
+                datalist.innerHTML = "";
+                input.value = "";
+            };
+            popup.style.display = "block";
+            requestAnimationFrame(()=>popup.querySelector("input").focus());
+            popup.addEventListener("click", (ev)=>{
+                if(ev.target == popup){close();fail();}});
+
+            input.addEventListener("input", (ev)=>{
+                if(0 < input.value.length){
+                    data.query = input.value;
+                    self.apiCall(api, data)
+                        .then((r)=>{
+                            if(r.status == 200 && r.data){
+                                datalist.innerHTML = "";
+                                r.data.forEach((e)=>{
+                                    let option = document.createElement("option");
+                                    option.setAttribute("value", present(e));
+                                    datalist.appendChild(option);
+                                });
+                            }
+                        });
+                }
+            });
+
+            popup.querySelector("form").addEventListener("submit", (ev)=>{
+                ev.preventDefault();
+                ok(input.value);
+                close();
+            });
+        });
     }
     
 };

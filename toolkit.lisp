@@ -55,3 +55,10 @@
   (if (<= (length text) limit)
       text
       (format NIL "~a..." (subseq text (- limit 3)))))
+
+(defun render-description (text)
+  (if text
+      (cl-markless:output (cl-markless:parse text T)
+                          :target (plump:make-root)
+                          :format 'cl-markless-plump:plump)
+      ""))

@@ -14,4 +14,6 @@
                :r-data-model
                :r-oauth
                :r-clip
-               :i-json))
+               :i-json
+               :cl-markless-plump
+               :cl-ppcre))
