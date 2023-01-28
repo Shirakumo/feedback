@@ -438,7 +438,8 @@
                       (query :all)))
             :skip skip :amount amount :sort '(("order" :desc) ("time" :desc)))))
 
-(defun make-entry (project &key (time (get-universal-time)) user-id
+(defun make-entry (project &key (time (get-universal-time))
+                                (user-id (user:username (auth:current)))
                                 track status
                                 os-type os-info
                                 cpu-type cpu-info
