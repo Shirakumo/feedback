@@ -41,7 +41,7 @@
       <nav class="actions">
         <a href="#" class="detail" lquery="(attr :href (feedback::entry-url *))">
           <i class="fa-solid fa-code-commit"></i>
-          Details
+          <span class="code" lquery="(text (feedback::id-code *))"></span> Details
         </a>
         <a href="#" class="front" @href="feedback/api/feedback/entry/edit?entry={0}&order=top&browser=true _id">
           <i class="fa-solid fa-caret-up"></i>

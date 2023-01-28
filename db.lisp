@@ -68,9 +68,11 @@
                (user :id)
                (type (:integer 2)))))
 
+;; TODO: search field
 ;; TODO: test notifs
 ;; TODO: anonymously viewable tracks
 ;; TODO: manual attachments
+;; TODO: lazy infinite load
 ;; TODO: update without page refresh
 ;; TODO: csv import
 
