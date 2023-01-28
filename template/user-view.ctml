@@ -1,0 +1,42 @@
+<article class="user view">
+  <section class="self">
+    <header>
+      <img src="#" class="avatar" lquery="(attr :src (profile:avatar user 128))" />
+    </header>
+  </section>
+  <section>
+    <header>
+      <h3>Assigned Entries</h3>
+      <nav>
+        <c:when test="(< 1 page-idx)">
+          <a @href="feedback/user/{0}/{1} (user:username user) (1- page-idx)">
+            <i class="fas fa-arrow-left"></i>
+            Previous Page
+          </a>
+        </c:when>
+        <a @href="feedback/user/{0}/{1} (user:username user) (1+ page-idx)">
+          <i class="fas fa-arrow-right"></i>
+          Next Page
+        </a>
+      </nav>
+    </header>
+    <article class="track view">
+      <div class="entry head">
+        <div class="row">
+          <span class="drag"></span>
+          <span class="severity">Severity</span>
+          <span class="assigned">Assigned</span>
+          <span class="description">Description</span>
+          <span class="status">Status</span>
+          <span class="collapse"></span>
+        </div>
+      </div>
+      <c:splice iterate="entries">
+        <c:import file='(template-file "entry.ctml" :feedback)'>
+      </c:splice>
+      <c:unless test="entries">
+        <div class="empty">There are no entries to show</div>
+      </c:unless>
+    </article>
+  </section>
+</article>

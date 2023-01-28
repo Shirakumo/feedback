@@ -69,7 +69,6 @@
                (type (:integer 1)))))
 
 ;; TODO: test notifs
-;; TODO: user pages
 ;; TODO: anonymously viewable tracks
 ;; TODO: manual attachments
 ;; TODO: update without page refresh

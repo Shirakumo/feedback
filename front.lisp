@@ -2,7 +2,7 @@
 
 (defun object-url (object &rest args)
   (etypecase object
-    (null (apply #'uri-to-url "feedback/" args))
+    (null (apply #'uri-to-url "feedback/" :representation :external args))
     (user:user (apply #'user-url object args))
     (dm:data-model
      (ecase (dm:collection object)
@@ -99,11 +99,26 @@
            :content (plump:parse content)
            args)))
 
-(define-page dashboard "feedback/^$" (:access (perm feedback))
-  (render-page "Dashboard" (@template "dashboard.ctml")
-               :projects (list-projects)
-               :page-idx 1
-               :entries (list-entries (auth:current))))
+(define-page dashboard "feedback/^(?:/(\\d+)?)?$" (:uri-groups (page) :access (perm feedback))
+  (let* ((amount 50)
+         (page (parse-integer (or* page "1")))
+         (skip (* amount (max 0 (1- page)))))
+    (render-page "Dashboard" (@template "dashboard.ctml")
+                 :projects (list-projects)
+                 :page-idx page
+                 :entries (list-entries (auth:current) :skip skip :amount amount))))
+
+(define-page user ("feedback/^user/([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (user page) :access (perm feedback))
+  (let* ((user (user:get user :if-does-not-exist :error))
+         (amount 50)
+         (page (parse-integer (or* page "1")))
+         (skip (* amount (max 0 (1- page)))))
+    (render-page (user:username user) (@template "user-view.ctml")
+                 :up (object-url NIL)
+                 :up-text "Dashboard"
+                 :page-idx page
+                 :user user
+                 :entries (list-entries user :skip skip :amount amount))))
 
 (define-page project ("feedback/^([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (project page) :access (perm feedback project))
   (let* ((project (find-project project))

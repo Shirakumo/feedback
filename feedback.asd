@@ -11,6 +11,7 @@
   :depends-on ((:interface :database)
                (:interface :auth)
                (:interface :mail)
+               (:interface :profile)
                :r-data-model
                :r-oauth
                :r-clip
