@@ -42,20 +42,6 @@
  :color (hex 303030)
  :background (hex E0E0E0)
  :border-color (hex D0D0D0))
-(.box
- :font-size 1.3em
- :font-weight bold
- :text-align center
- :padding 0.2em
- :background (hex E0E0E0))
-((:and .box :empty)
- :display none)
-(.box.info
- :background (hex 00AA00)
- :color (hex FFFFFF))
-(.box.error
- :background (hex AA0000)
- :color (hex FFFFFF))
 (form.edit
  :max-width 500px
  :margin 0 auto
@@ -315,6 +301,33 @@
   :padding 0.5em
   (span :text-align center)
   ((:or .user .object) :text-align left)))
+
+(.box
+ :position fixed
+ :bottom -2.0em :left 0 :right 0
+ :font-size 1.3em
+ :height 1.3em
+ :font-weight bold
+ :text-align center
+ :padding 0.2em
+ :background (hex E0E0E0))
+((:and .box ":not(:empty)")
+ :bottom 0
+ :animation-name box
+ :animation-delay 2s
+ :animation-duration 1s
+ :animation-fill-mode forwards)
+(.box.info
+ :background (hex 00AA00)
+ :color (hex FFFFFF))
+(.box.error
+ :background (hex AA0000)
+ :color (hex FFFFFF))
+
+(:keyframes box
+            (0% :bottom 0)
+            (100% :bottom -2.0em))
+
 (.highlight
  :outline 3px solid yellow
  :border-radius 3px
