@@ -66,7 +66,7 @@
              '((object :id)
                (object-type (:integer 1))
                (user :id)
-               (type (:integer 1)))))
+               (type (:integer 2)))))
 
 ;; TODO: test notifs
 ;; TODO: anonymously viewable tracks
