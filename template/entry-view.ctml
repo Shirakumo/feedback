@@ -35,6 +35,10 @@
               <i class="fa-solid fa-envelope"></i>
               Subscriptions
             </a>
+            <a href="#" class="delete confirm" @href="feedback/api/feedback/entry/delete?entry={0}&browser=true _id">
+              <i class="fa-solid fa-trash"></i>
+              Delete
+            </a>
           </nav>
         </header>
         <div class="row">
