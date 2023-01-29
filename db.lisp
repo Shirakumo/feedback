@@ -73,6 +73,7 @@
 ;; TODO: manual attachments
 ;; TODO: bulk actions (retracking, assigning, etc.)
 ;; TODO: lazy infinite load
+;; TODO: changelog export
 ;; TODO: update without page refresh
 
 (defun check-name (name)

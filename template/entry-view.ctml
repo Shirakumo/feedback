@@ -43,7 +43,7 @@
         </div>
         <div class="row">
           <label>Track:</label>
-          <span class="short track" lquery="(text (clip (feedback::ensure-track *) :name))"></span>
+          <span class="short track" lquery="(text (when track (clip (feedback::ensure-track *) :name)))"></span>
         </div>
         <div class="row">
           <label>Status:</label>
