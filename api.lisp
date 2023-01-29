@@ -32,53 +32,70 @@
           "Project created"))
 
 (define-api feedback/project/edit (project &optional name trace-data-type description attachment-name[] attachment-type[] member[]) (:access (perm feedback project edit))
-  (output (edit-project project :name name
-                                :description description
-                                :trace-data-type trace-data-type
-                                :attachments (loop for name in attachment-name[]
-                                                   for type in attachment-type[]
-                                                   collect (list name type))
-                                :members member[])
-          "Project edited"))
+  (let ((project (ensure-project project)))
+    (check-accessible project :write)
+    (output (edit-project project :name name
+                                  :description description
+                                  :trace-data-type trace-data-type
+                                  :attachments (loop for name in attachment-name[]
+                                                     for type in attachment-type[]
+                                                     collect (list name type))
+                                  :members member[])
+            "Project edited")))
 
 (define-api feedback/project/delete (project) (:access (perm feedback project delete))
-  (delete-project (ensure-project project))
-  (output NIL "Project deleted" "feedback/"))
+  (let ((project (ensure-project project)))
+    (check-accessible project :write)
+    (delete-project project)
+    (output NIL "Project deleted" "feedback/")))
 
 (define-api feedback/track/list (project &optional query skip amount) (:access (perm feedback track list))
-  (api-output (list-tracks (ensure-project project)
-                           :query (or* query)
-                           :skip (parse-integer (or* skip "0"))
-                           :amount (parse-integer (or* amount "100")))))
+  (let ((project (ensure-project project)))
+    (check-accessible project :read)
+    (api-output (list-tracks project
+                             :query (or* query)
+                             :skip (parse-integer (or* skip "0"))
+                             :amount (parse-integer (or* amount "100"))))))
 
 (define-api feedback/track/new (project name &optional description protection) (:access (perm feedback track new))
   (let ((project (ensure-project project)))
+    (check-accessible project :write)
     (output (make-track project name :description description :protection protection)
             "Track created")))
 
 (define-api feedback/track/edit (track &optional name description protection) (:access (perm feedback track new))
   (let ((track (ensure-track track)))
+    (check-accessible (ensure-project track) :read)
     (output (edit-track track :name name
                               :description description
                               :protection protection)
             "Track edited")))
 
 (define-api feedback/track/delete (track) (:access (perm feedback track delete))
-  (delete-track (ensure-track track))
-  (output NIL "Track deleted" "feedback/"))
+  (let ((track (ensure-track track)))
+    (check-accessible (ensure-project track) :read)
+    (delete-track track)
+    (output NIL "Track deleted" "feedback/")))
 
 (define-api feedback/entry/list (&optional project track query skip amount) (:access (perm feedback entry list))
-  (api-output (list-entries (cond (project (ensure-project project))
-                                  (track (ensure-track track))
-                                  (T (error 'api-argument-missing :argument "project")))
-                            :query (or* query)
-                            :skip (parse-integer (or* skip "0"))
-                            :amount (parse-integer (or* amount "100")))))
+  (let ((object (cond (project (ensure-project project))
+                      (track (ensure-track track))
+                      (T (error 'api-argument-missing :argument "project")))))
+    (check-accessible object :read)
+    (api-output (list-entries object
+                              :query (or* query)
+                              :skip (parse-integer (or* skip "0"))
+                              :amount (parse-integer (or* amount "100"))))))
 
 (define-api feedback/entry/new (project user-id &optional track status version os-type cpu-type gpu-type os-info cpu-info gpu-info description assigned-to severity relates-to) (:access (perm feedback entry new))
   (db:with-transaction ()
     (let* ((project (or (find-project project)
                         (ensure-project project)))
+           (track (cond (track
+                         (check-accessible (or (find-track track project) (ensure-track track)) :write))
+                        (T
+                         (check-accessible project :write)
+                         NIL)))
            (types (list-attachments project))
            (entry (make-entry project :track track
                                       :status status
@@ -104,6 +121,7 @@
 (define-api feedback/entry/edit (entry &optional description status assigned-to severity relates-to order) (:access (perm feedback entry edit))
   (db:with-transaction ()
     (let* ((entry (ensure-entry entry)))
+      (check-accessible entry :write)
       (edit-entry entry :description description :status status :order (cond ((string= "top" order) :top)
                                                                              ((string= "bottom" order) :bottom)
                                                                              ((stringp order) (parse-integer order)))
@@ -112,25 +130,30 @@
 
 (define-api feedback/entry/delete (entry) (:access (perm feedback entry delete))
   (let ((entry (ensure-entry entry)))
+    (check-accessible entry :write)
     (delete-entry entry)
     (output NIL "Entry deleted" "feedback/~a/" (dm:field (ensure-project entry) "name"))))
 
 (define-api feedback/note/new (entry text) (:access (perm feedback note new))
-  (let ((note (make-note entry text)))
-    (output note "Note created")))
+  (let ((entry (ensure-entry entry)))
+    (check-accessible entry :write)
+    (output (make-note entry text) "Note created")))
 
 (define-api feedback/note/edit (note text) (:access (perm feedback note edit))
-  (let ((note (edit-note note :text text)))
-    (output note "Note edited")))
+  (let ((note (ensure-note note)))
+    (check-accessible note :write)
+    (output (edit-note note :text text) "Note edited")))
 
 (define-api feedback/note/delete (note) (:access (perm feedback note delete))
-  (let ((note (delete-note note)))
-    (output note "Note deleted")))
+  (let ((note (ensure-note note)))
+    (check-accessible note :write)
+    (output (delete-note note) "Note deleted")))
 
 (define-api feedback/snapshot/new (project user-id session-id session-duration snapshot-duration &optional version trace) (:access (perm feedback entry new))
   (db:with-transaction ()
-    (let* ((project (or (find-project project)
-                        (ensure-project project)))
+    (let* ((project (check-accessible (or (find-project project)
+                                          (ensure-project project))
+                                      :write))
            (snapshot (make-snapshot project :version version
                                             :user-id user-id
                                             :session-id session-id
@@ -145,20 +168,24 @@
 
 (define-api feedback/snapshot/delete (snapshot) (:access (perm feedback entry delete))
   (let ((snapshot (ensure-snapshot snapshot)))
+    (check-accessible snapshot :write)
     (delete-snapshot snapshot)
     (output NIL "Snapshot deleted" "feedback/~a/" (dm:field (ensure-project snapshot) "name"))))
 
 (define-api feedback/subscription/add (object-type object-id type[]) (:access (perm feedback project subscribe))
   (let ((object (ensure-object object-type object-id)))
+    (check-accessible (ensure-project object) :write)
     (subscribe-to object type[])
     (output object "Subscription updated" "feedback/subscribe/~a/~a" object-type object-id)))
 
 (define-api feedback/subscription/remove (object-type object-id type[]) (:access (perm feedback project subscribe))
   (let ((object (ensure-object object-type object-id)))
+    (check-accessible (ensure-project object) :write)
     (unsubscribe-from object type[])
     (output object "Subscription updated" "feedback/subscribe/~a/~a" object-type object-id)))
 
 (define-api feedback/subscription/edit (object-type object-id type[]) (:access (perm feedback project subscribe))
   (let ((object (ensure-object object-type object-id)))
+    (check-accessible (ensure-project object) :write)
     (set-subscription object type[])
     (output object "Subscription updated" "feedback/subscribe/~a/~a" object-type object-id)))

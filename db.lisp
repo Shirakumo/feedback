@@ -74,7 +74,9 @@
 ;; TODO: bulk actions (retracking, assigning, etc.)
 ;; TODO: lazy infinite load
 ;; TODO: changelog export
-;; TODO: update without page refresh
+;; TODO: update without page refresh (both push & pull!)
+;; TODO: speed up load by caching object fetches
+;; TODO: tags
 
 (defun check-name (name)
   (let ((names '("new" "snapshot" "edit" "entry" "user" "subscribe")))
@@ -264,7 +266,9 @@
     (dm:data-model
      (ecase (dm:collection project-ish)
        (project project-ish)
-       ((attachment track entry note snapshot members)
+       (note
+        (ensure-project (ensure-entry project-ish)))
+       ((attachment track entry snapshot members)
         (dm:get-one 'project (db:query (:= '_id (dm:field project-ish "project")))))))
     (T
      (or (dm:get-one 'project (db:query (:= '_id (ensure-id project-ish))))
@@ -677,3 +681,36 @@
 
 (defun subscription-object (subscription)
   (ensure-object (dm:field subscription "object-type") (dm:field subscription "object")))
+
+(defun accessible-p (object action &optional (user (auth:current "anonymous")))
+  (flet ((project-accessible-p (project)
+           (< 0 (db:count 'members (db:query (:and (:= 'project project) (:= 'user (user:id user))))))))
+    (ecase (dm:collection object)
+      (project
+       (project-accessible-p (dm:id object)))
+      (track
+       (or (project-accessible-p (dm:field object "project"))
+           (ecase (id->protection (dm:field object "protection"))
+             (:private NIL)
+             (:registered-read (and (eql :read action)
+                                    (not (eq user (user:get "anonymous")))))
+             (:registered-write (not (eq user (user:get "anonymous"))))
+             (:public-read (eql :read action))
+             (:public-write T))))
+      (entry
+       (if (dm:field object "track")
+           (accessible-p (ensure-track object) action user)
+           (project-accessible-p (dm:field object "project"))))
+      (note
+       (let ((entry (ensure-entry object)))
+         (ecase action
+           (:read (accessible-p entry action user))
+           (:write (or (= (dm:field object "author") (user:id user))
+                       (project-accessible-p (dm:field entry "project")))))))
+      (T
+       (project-accessible-p (dm:field object "project"))))))
+
+(defun check-accessible (object action &optional (user (auth:current)))
+  (if (accessible-p object action user)
+      object
+      (error 'request-denied)))
