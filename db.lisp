@@ -73,7 +73,6 @@
 ;; TODO: manual attachments
 ;; TODO: bulk actions (retracking, assigning, etc.)
 ;; TODO: lazy infinite load
-;; TODO: auto-duplicate (if description same as last submitted on same track)
 ;; TODO: update without page refresh
 
 (defun check-name (name)
@@ -456,16 +455,32 @@
           (model (dm:hull 'entry))
           (severity (or severity 0))
           (status (or status 0)))
+      (let ((highest (dm:get-one 'entry (if track
+                                            (db:query (:= 'track (dm:id track)))
+                                            (db:query (:= 'project (dm:id project))))
+                                 :sort `(("order" :desc)))))
+        (cond ((null highest)
+               (setf (dm:field model "order") 0))
+              ((and (equalp (dm:field highest "description") description)
+                    (equalp (dm:field highest "user-id") user-id))
+               (error 'api-argument-invalid :argument "description" :message "Duplicate entry"))
+              (T
+               (setf (dm:field model "order") (1+ (dm:field highest "order"))))))
+      (let ((duplicate (dm:get-one 'entry (if track
+                                              (db:query (:and (:= 'track (dm:id track)) (:= 'description description) (:/= 'status (status->id :duplicate))))
+                                              (db:query (:and (:= 'project (dm:id project)) (:= 'description description) (:/= 'status (status->id :duplicate))))))))
+        (when duplicate
+          (setf status :duplicate)
+          (setf relates-to (dm:id duplicate))))
       (setf-dm-fields model project track version time user-id os-info cpu-info gpu-info description severity relates-to)
-      (let ((highest (dm:get-one 'entry (if track (db:query (:= 'track (dm:id track))) (db:query (:= 'project (dm:id project)))) :sort `(("order" :desc)))))
-        (setf (dm:field model "order") (if highest (1+ (dm:field highest "order")) 0)))
       (setf (dm:field model "assigned-to") (when assigned-to (user:id assigned-to)))
       (setf (dm:field model "status") (status->id (or status :new)))
       (setf (dm:field model "os-type") (os-type->id (or os-type :unknown)))
       (setf (dm:field model "cpu-type") (cpu-type->id (or cpu-type :unknown)))
       (setf (dm:field model "gpu-type") (gpu-type->id (or gpu-type :unknown)))
       (prog1 (dm:insert model)
-        (notify model :entry-new project)))))
+        (unless (eql status :duplicate)
+          (notify model :entry-new project))))))
 
 (defun edit-entry (entry &key track user-id description status (assigned-to NIL assigned-p) (relates-to NIL relates-to-p) severity order)
   (db:with-transaction ()
