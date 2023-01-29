@@ -41,6 +41,10 @@
     <header>
       <h3>Recent Entries</h3>
       <nav>
+        <form class="search" method="get" @action="feedback/{0}/ (clip project :name)">
+          <input type="search" name="query" placeholder="Filter..." />
+          <input type="submit" value="Go" />
+        </form>
         <c:when test="(< 1 page-idx)">
           <a @href="feedback/{0}/{1} (clip project :name) (1- page-idx)">
             <i class="fas fa-arrow-left"></i>

@@ -68,12 +68,12 @@
                (user :id)
                (type (:integer 2)))))
 
-;; TODO: search field
 ;; TODO: csv import
 ;; TODO: anonymously viewable tracks
 ;; TODO: manual attachments
 ;; TODO: bulk actions (retracking, assigning, etc.)
 ;; TODO: lazy infinite load
+;; TODO: auto-duplicate (if description same as last submitted on same track)
 ;; TODO: update without page refresh
 
 (defun check-name (name)

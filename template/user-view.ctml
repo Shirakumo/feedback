@@ -8,6 +8,10 @@
     <header>
       <h3>Assigned Entries</h3>
       <nav>
+        <form class="search" method="get" @action="feedback/user/{0}/ (user:username user)">
+          <input type="search" name="query" placeholder="Filter..." />
+          <input type="submit" value="Go" />
+        </form>
         <c:when test="(< 1 page-idx)">
           <a @href="feedback/user/{0}/{1} (user:username user) (1- page-idx)">
             <i class="fas fa-arrow-left"></i>

@@ -40,6 +40,10 @@
     <header>
       <h3>Assigned Entries</h3>
       <nav>
+        <form class="search" method="get">
+          <input type="search" name="query" placeholder="Filter..." />
+          <input type="submit" value="Go" />
+        </form>
         <c:when test="(< 1 page-idx)">
           <a @href="feedback/{0} (1- page-idx)">
             <i class="fas fa-arrow-left"></i>

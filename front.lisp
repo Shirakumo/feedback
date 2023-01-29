@@ -106,7 +106,7 @@
     (render-page "Dashboard" (@template "dashboard.ctml")
                  :projects (list-projects)
                  :page-idx page
-                 :entries (list-entries (auth:current) :skip skip :amount amount))))
+                 :entries (list-entries (auth:current) :skip skip :amount amount :query (or* (post/get "query"))))))
 
 (define-page user ("feedback/^user/([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (user page) :access (perm feedback))
   (let* ((user (user:get user :if-does-not-exist :error))
@@ -118,7 +118,7 @@
                  :up-text "Dashboard"
                  :page-idx page
                  :user user
-                 :entries (list-entries user :skip skip :amount amount))))
+                 :entries (list-entries user :skip skip :amount amount :query (or* (post/get "query"))))))
 
 (define-page project ("feedback/^([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (project page) :access (perm feedback project))
   (let* ((project (find-project project))
@@ -129,7 +129,7 @@
                  :page-idx page
                  :project project
                  :tracks (list-tracks project)
-                 :entries (list-entries project :skip skip :amount amount))))
+                 :entries (list-entries project :skip skip :amount amount :query (or* (post/get "query"))))))
 
 (define-page project-new ("feedback/^new$" 2) (:access (perm feedback project new))
   (render-page "New project" (@template "project-edit.ctml")
@@ -156,7 +156,7 @@
                  :page-idx page
                  :project project
                  :track track
-                 :entries (list-entries track :skip skip :amount amount))))
+                 :entries (list-entries track :skip skip :amount amount :query (or* (post/get "query"))))))
 
 (define-page track-new ("feedback/^([^/]+)/new$" 2) (:uri-groups (project) :access (perm feedback project edit))
   (let ((project (find-project project)))

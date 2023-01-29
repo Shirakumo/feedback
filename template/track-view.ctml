@@ -17,6 +17,24 @@
     </c:using>
   </section>
   <section>
+    <header>
+      <nav>
+        <form class="search" method="get" @action="feedback/{0}/{1} (clip project :name) (clip track :name)">
+          <input type="search" name="query" placeholder="Filter..." />
+          <input type="submit" value="Go" />
+        </form>
+        <c:when test="(< 1 page-idx)">
+          <a @href="feedback/{0}/{1}/{2} (clip project :name) (clip track :name) (1- page-idx)">
+            <i class="fas fa-arrow-left"></i>
+            Previous Page
+          </a>
+        </c:when>
+        <a @href="feedback/{0}/{1}/{2} (clip project :name) (clip track :name) (1+ page-idx)">
+          <i class="fas fa-arrow-right"></i>
+          Next Page
+        </a>
+      </nav>
+    </header>
     <div class="entry head">
       <div class="row">
         <span class="drag"></span>
