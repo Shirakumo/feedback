@@ -69,10 +69,9 @@
                (type (:integer 2)))))
 
 ;; TODO: search field
-;; TODO: test notifs
+;; TODO: csv import
 ;; TODO: anonymously viewable tracks
 ;; TODO: manual attachments
-;; TODO: csv import
 ;; TODO: bulk actions (retracking, assigning, etc.)
 ;; TODO: lazy infinite load
 ;; TODO: update without page refresh
@@ -597,7 +596,7 @@
              (:member-new (@template "mail-member-new.ctml"))))
          (rendered
            (let ((*package* #.*package*))
-             (clip:process type-template :project project :object object)))
+             (clip:process type-template :project project :object object :author author)))
          (subject (lquery:$1 rendered "title" (text)))
          (body (lquery:$1 rendered "body" (text)))
          (mask (subscription-types->id type)))
