@@ -190,6 +190,16 @@
     ((:deleted 7) "fa-trash")
     (T "fa-ellipsis-h")))
 
+(defun attachment-type-icon (attachment-type)
+  (case attachment-type
+    ((:png 1 :jpg 2) "fa-file-image")
+    ((:txt 3 :log 4) "fa-file-lines")
+    ((:zip 5) "fa-file-zipper")
+    ((:sig 6) "fa-file-signature")
+    ((:csv 7) "fa-file-csv")
+    ((:json 8 :xml 9) "fa-file-code")
+    (T "fa-file")))
+
 (defun attachment-type-content-type (attachment-type)
   (case attachment-type
     ((:png 1) "image/png")

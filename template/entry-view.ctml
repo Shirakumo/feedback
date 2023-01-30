@@ -133,18 +133,20 @@
           </a>
         </nav>
       </header>
-      <ul class="long" iterate="(** :attachments)">
-        <li class="attachment">
-          <a lquery="(text name) (attr :href (feedback::attachment-url ** *))">
-            <c:when test="(feedback::attachment-image-p type)">
+      <div class="attachments" iterate="(** :attachments)">
+        <form class="attachment existing">
+          <i class="fa-solid fa-fw" lquery="(add-class (feedback::attachment-type-icon type))"></i>
+          <a lquery="(text name) (attr :href (feedback::attachment-url ** *))"></a>
+          <c:case value="(feedback::id->attachment-type type)">
+            <v values=":jpg :png :svg :gif">
               <img alt="image" class="full" lquery="(attr :src (feedback::attachment-url ** *))"/>
-            </c:when>
-            <c:when test="(feedback::attachment-text-p type)">
+            </v>
+            <v values=":txt :log">
               <div class="long log" lquery="(text (alexandria:read-file-into-string (feedback::attachment-pathname ** *)))"></div>
-            </c:when>
-          </a>
-        </li>
-      </ul>
+            </v>
+          </c:case>
+        </form>
+      </div>
     </section>
     <section>
       <header>
