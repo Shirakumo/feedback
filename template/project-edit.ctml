@@ -55,6 +55,24 @@
         </a>
       </div>
     </div>
+    <div class="row">
+      <label for="tags">Tags:</label>
+      <div class="tags">
+        <ul id="tags" iterate="(list* NIL (** :tags))">
+          <li class="tag">
+            <input type="text" name="tag[]" lquery="(val name)">
+            <input type="color" name="tag-color[]" lquery="(val (feedback::print-color color))">
+            <a href="#" class="button delete">
+              <i class="fas fa-trash"></i>
+            </a>
+          </li>
+        </ul>
+        <a href="#" class="button add">
+          <i class="fas fa-plus-circle"></i>
+          Add Tag
+        </a>
+      </div>
+    </div>
     <div class="actions">
       <input type="hidden" name="browser" value="true" />
       <c:if test="_id">

@@ -144,6 +144,7 @@
                  :up-text (dm:field project "name")
                  :project project
                  :members (list-members project)
+                 :tags (list-tags project)
                  :attachments (list-attachments project))))
 
 (define-page track "feedback/^([^/]+)/([^/]+)(?:/(\\d+)?)?$" (:uri-groups (project track page) :access (perm feedback track))

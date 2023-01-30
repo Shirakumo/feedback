@@ -12,6 +12,7 @@
                (:interface :auth)
                (:interface :mail)
                (:interface :profile)
+               (:interface :relational-database)
                :r-data-model
                :r-oauth
                :r-clip

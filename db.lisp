@@ -13,6 +13,11 @@
                (type (:integer 1)))
              :indices '(project))
 
+  (db:create 'tag
+             '((project (:id project))
+               (name (:varchar 32))
+               (color (:integer 3))))
+
   (db:create 'members
              '((project (:id project))
                (user :id))
@@ -44,6 +49,10 @@
                (severity (:integer 1))
                (relates-to (:id entry)))
              :indices '(project track assigned-to severity user-id os-type cpu-type gpu-type))
+
+  (db:create 'entry-tag
+             '((entry (:id entry))
+               (tag (:id tag))))
   
   (db:create 'snapshot
              '((project (:id project))
@@ -106,7 +115,7 @@
   (:windows 1)
   (:linux 2)
   (:macos 3)
-  (:freebsd 4)
+  (:bsd 4)
   (:android 5)
   (:ios 6))
 
@@ -174,7 +183,7 @@
     ((:windows 1) "fa-windows")
     ((:linux 2) "fa-linux")
     ((:macos 3) "fa-apple")
-    ((:freebsd 4) "fa-freebsd")
+    ((:bsd 4) "fa-freebsd")
     ((:android 5) "fa-android")
     ((:ios 6) "fa-app-store-ios")
     (T "fa-question-circle")))
@@ -292,7 +301,7 @@
       (mapcar #'ensure-project (dm:get 'members (db:query (:= 'user (user:id member)))))
       (dm:get 'project (db:query :all))))
 
-(defun make-project (name &key description trace-data-type attachments (author (auth:current)))
+(defun make-project (name &key description trace-data-type attachments tags (author (auth:current)))
   (check-name name)
   (db:with-transaction ()
     (when (find-project name)
@@ -307,11 +316,16 @@
             do (setf-dm-fields sub (model "project") name)
                (setf (dm:field sub "type") (attachment-type->id type))
                (dm:insert sub))
+      (loop for (name color) in tags
+            for sub = (dm:hull 'tag)
+            when (or* name)
+            do (setf-dm-fields sub (model "project") name color)
+               (dm:insert sub))
       (db:insert 'members `(("project" . ,(dm:id model)) ("user" . ,(user:id author))))
       (notify model :project-new)
       model)))
 
-(defun edit-project (project &key name description trace-data-type (attachments NIL attachments-p) members)
+(defun edit-project (project &key name description trace-data-type (attachments NIL attachments-p) members (tags NIL tags-p))
   (db:with-transaction ()
     (let ((project (ensure-project project)))
       (setf-dm-fields project name description)
@@ -328,7 +342,7 @@
                           (setf existing (delete entry existing)))
                          ((or* name)
                           (let ((sub (dm:hull 'attachment)))
-                            (setf-dm-fields sub (project "project") name)
+                            (setf-dm-fields sub project name)
                             (setf (dm:field sub "type") (attachment-type->id type))
                             (dm:insert sub)))))
           (dolist (attachment existing)
@@ -338,6 +352,21 @@
         ;; FIXME: Notify for new members
         (dolist (member members)
           (db:insert 'members `(("project" . ,(dm:id project)) ("user" . ,(user:id member))))))
+      (when tags-p
+        (let ((existing (list-tags project)))
+          (loop for (name color) in tags
+                for entry = (find name existing :key (lambda (n) (dm:field n "name"))
+                                                :test #'string-equal)
+                do (cond (entry
+                          (setf (dm:field entry "color") color)
+                          (setf existing (delete entry existing)))
+                         ((or* name)
+                          (let ((sub (dm:hull 'tag)))
+                            (setf-dm-fields sub project name color)
+                            (dm:insert sub)))))
+          (dolist (tag existing)
+            (db:remove 'entry-tag (db:query (:= 'tag (dm:id tag))))
+            (dm:delete tag))))
       project)))
 
 (defun delete-project (project)
@@ -347,6 +376,7 @@
       (mapc #'delete-snapshot (list-snapshots project))
       (db:remove 'subscriber (db:query (:and (:= 'object (dm:id project)) (:= 'object-type (object-type->id 'project)))))
       (db:remove 'members (db:query (:= 'project (dm:id project))))
+      (db:remove 'tag (db:query (:= 'project (dm:id project))))
       (dm:delete project)
       (delete-directory (project-directory project)))))
 
@@ -363,6 +393,11 @@
     (T
      (or (dm:get-one 'track (db:query (:= '_id (ensure-id track-ish))))
          (error 'request-not-found :message "Could not find the requested track.")))))
+
+(defun list-tags (object)
+  (ecase (dm:collection object)
+    (project (dm:get 'tag (db:query (:= 'project (dm:id object))) :sort '(("name" :asc))))
+    (entry (dm:get (rdb:join (tag _id) (entry-tag tag)) (db:query (:= 'entry (dm:id object))) :sort '(("name" :asc))))))
 
 (defun list-tracks (project &key (skip 0) (amount 50) query)
   (dm:get 'track (if query
@@ -534,6 +569,7 @@
           (db:remove 'entry (db:query (:= 'relates-to (dm:id entry))))
           (db:update 'entry (db:query (:= 'relates-to (dm:id entry))) `(("relates-to" . NIL))))
       (db:remove 'note (db:query (:= 'entry (dm:id entry))))
+      (db:remove 'entry-tag (db:query (:= 'entry (dm:id entry))))
       (db:remove 'subscriber (db:query (:and (:= 'object (dm:id entry)) (:= 'object-type (object-type->id 'entry)))))
       (dm:delete entry))))
 

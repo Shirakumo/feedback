@@ -112,6 +112,7 @@ class Feedback{
         };
         duper(element.querySelector(".attachments"));
         duper(element.querySelector(".members"));
+        duper(element.querySelector(".tags"));
     }
 
     registerTrace(element){

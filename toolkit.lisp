@@ -69,3 +69,18 @@
                           :target (plump:make-root)
                           :format 'cl-markless-plump:plump)
       ""))
+
+(defun parse-color (color)
+  (cond ((string= "" color) #xFFFFFF)
+        ((char= #\# (char color 0)) (parse-integer color :start 1 :radix 16))
+        (T (or (parse-integer color :junk-allowed T)
+               (with-stringcase color
+                 ("red"   #xFF0000)
+                 ("green" #x00FF00)
+                 ("blue"  #x0000FF)
+                 ("white" #xFFFFFF)
+                 ("black" #x000000)
+                 (T       #xFFFFFF))))))
+
+(defun print-color (color)
+  (format NIL "#~6,'0X" color))

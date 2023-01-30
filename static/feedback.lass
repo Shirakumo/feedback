@@ -81,7 +81,7 @@
  ((:or input select textarea)
   :background (hex F5F5F5)))
 (.project.edit
- ((:or .attachments .members)
+ ((:or .attachments .members .tags)
   :flex-grow 1
   (ul
    :margin 0 :padding 0

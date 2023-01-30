@@ -23,15 +23,18 @@
 (define-api feedback/project/list () (:access (perm feedback project list))
   (api-output (list-projects)))
 
-(define-api feedback/project/new (name &optional trace-data-type description attachment-name[] attachment-type[]) (:access (perm feedback project new))
+(define-api feedback/project/new (name &optional trace-data-type description attachment-name[] attachment-type[] tag[] tag-color[]) (:access (perm feedback project new))
   (output (make-project name :description description
                              :trace-data-type trace-data-type
                              :attachments (loop for name in attachment-name[]
                                                 for type in attachment-type[]
-                                                collect (list name type)))
+                                                collect (list name type))
+                             :tags (loop for name in tag[]
+                                         for color in tag-color[]
+                                         collect (list name color)))
           "Project created"))
 
-(define-api feedback/project/edit (project &optional name trace-data-type description attachment-name[] attachment-type[] member[]) (:access (perm feedback project edit))
+(define-api feedback/project/edit (project &optional name trace-data-type description attachment-name[] attachment-type[] member[] tag[] tag-color[]) (:access (perm feedback project edit))
   (let ((project (ensure-project project)))
     (check-accessible project :write)
     (output (edit-project project :name name
@@ -40,6 +43,9 @@
                                   :attachments (loop for name in attachment-name[]
                                                      for type in attachment-type[]
                                                      collect (list name type))
+                                  :tags (loop for name in tag[]
+                                              for color in tag-color[]
+                                              collect (list name (when color (parse-color color))))
                                   :members member[])
             "Project edited")))
 
