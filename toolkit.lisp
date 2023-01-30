@@ -54,7 +54,7 @@
 (defun short-text (text &optional (limit 32))
   (if (<= (length text) limit)
       text
-      (format NIL "~a..." (subseq text (- limit 3)))))
+      (format NIL "~a..." (subseq text 0 (- limit 3)))))
 
 (defun render-description (text)
   (if text
