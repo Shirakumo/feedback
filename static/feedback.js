@@ -261,6 +261,8 @@ class Feedback{
             });
         }
 
+        self.registerAll(element, ".note.existing", self.registerNote);
+
         self.registerAll(element, ".row input,.row select", (el)=>{
             el.addEventListener("change", (ev)=>self.submitForm(el));
         });
@@ -317,6 +319,14 @@ class Feedback{
                         "track": entry.substr(0, entry.indexOf(" "))}))
                     .then(self.handleResponse);
             });
+        });
+    }
+
+    registerNote(element){
+        var self = this;
+        element.querySelector("p.text").addEventListener("dblclick", (ev)=>{
+            element.querySelector("textarea.text").style.display = "block";
+            element.querySelector("p.text").style.display = "none";
         });
     }
 

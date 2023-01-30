@@ -161,6 +161,7 @@
             <time class="time" lquery="(time time)">2023.01.25 13:28:12</time>
             <a class="author user" lquery="(text (user:username author))" @href="feedback/user/{0} (user:username author)" href="#">Shinmera</a>
             <textarea class="text" name="text" lquery="(text text)"></textarea>
+            <p class="text" name="text" lquery="(html (feedback::render-comment text))"></p>
           </form>
         </c:splice>
         <form class="note new" method="post" @action="feedback/api/feedback/note/new">
