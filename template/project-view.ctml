@@ -39,7 +39,7 @@
   </section>
   <section>
     <header>
-      <h3>Recent Entries</h3>
+      <h3>Untracked Entries</h3>
       <nav>
         <form class="search" method="get" @action="feedback/{0}/ (clip project :name)">
           <input type="search" name="query" placeholder="Filter..." />

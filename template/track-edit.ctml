@@ -24,7 +24,7 @@
       <input type="hidden" name="browser" value="true" />
       <c:if test="_id">
         <c:then>
-          <input type="hidden" name="project" lquery="(val _id)"/>
+          <input type="hidden" name="track" lquery="(val _id)"/>
           <input type="submit" value="Edit" @formaction="feedback/api/feedback/track/edit"/>
           <input type="submit" value="Delete" @formaction="feedback/api/feedback/track/delete"/>
         </c:then>

@@ -446,7 +446,7 @@
                                       (:<= 'status 1))))
                      (dm:data-model
                       (ecase (dm:collection parent)
-                        (project (query (:= 'project (dm:id parent))))
+                        (project (query (:and (:= 'project (dm:id parent)) (:null 'track))))
                         (track (query (:= 'track (dm:id parent))))))
                      (db:id
                       (query (:= 'project parent)))
