@@ -215,6 +215,10 @@ class Feedback{
                 return element;
             };
 
+            element.querySelector("form.row").addEventListener("dblclick", (ev)=>{
+                extra.querySelector(".detail").click();
+            });
+
             collapse.addEventListener("click", (ev)=>{
                 if(extra.classList.contains("collapsed"))
                     element.expand();
