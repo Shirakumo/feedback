@@ -104,11 +104,7 @@
   (db:with-transaction ()
     (let* ((project (or (find-project project)
                         (ensure-project project)))
-           (track (cond (track
-                         (check-accessible (or (find-track track project) (ensure-track track)) :write))
-                        (T
-                         (check-accessible project :write)
-                         NIL)))
+           (track (when track (or (find-track track project) (ensure-track track))))
            (types (list-attachments project))
            (entry (make-entry project :track track
                                       :status status
