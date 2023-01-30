@@ -287,7 +287,10 @@
    :background (hex F5F5F5)
    :border 1px solid (hex E0E0E0)
    :border-radius 0.5em
-   :padding 0.25em)
+   :padding 0.25em))
+ (.note.existing
+  (p.text
+   :margin 0)
   (textarea.text
    :display none)))
 (.subscriptions
