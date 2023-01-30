@@ -147,6 +147,14 @@
                  :tags (list-tags project)
                  :attachments (list-attachments project))))
 
+(define-page project-import ("feedback/^([^/]+)/import$" 2) (:uri-groups (project) :access (perm feedback project edit))
+  (let ((project (find-project project)))
+    (check-accessible project :write)
+    (render-page "Import" (@template "project-import.ctml")
+                 :up (project-url project)
+                 :up-text (dm:field project "name")
+                 :project project)))
+
 (define-page track "feedback/^([^/]+)/([^/]+)(?:/(\\d+)?)?$" (:uri-groups (project track page) :access (perm feedback track))
   (let* ((project (find-project project))
          (track (find-track track project))

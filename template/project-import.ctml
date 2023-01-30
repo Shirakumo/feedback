@@ -1,0 +1,19 @@
+<form class="project edit import">
+  <c:using value="project">
+    <div class="row">
+      <label for="name">CSV:</label>
+      <input type="file" name="csv" id="csv" required />
+    </div>
+    <div class="row">
+      <label for="tags">Track:</label>
+      <select name="track" id="track" iterate="(list* NIL (feedback::list-tracks *))">
+        <option lquery="(val _id) (text name)"></option>
+      </select>
+    </div>
+    <div class="actions">
+      <input type="hidden" name="browser" value="true" />
+      <input type="hidden" name="project" lquery="(val _id)"/>
+      <input type="submit" value="Import" @formaction="feedback/api/feedback/project/import"/>
+    </div>
+  </c:using>
+</form>

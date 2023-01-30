@@ -6,6 +6,7 @@
   :components ((:file "module")
                (:file "toolkit")
                (:file "db")
+               (:file "import")
                (:file "front")
                (:file "api"))
   :depends-on ((:interface :database)
@@ -18,4 +19,6 @@
                :r-clip
                :i-json
                :cl-markless-plump
-               :cl-ppcre))
+               :cl-ppcre
+               :cl-csv
+               :local-time))

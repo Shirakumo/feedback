@@ -70,6 +70,18 @@
                           :format 'cl-markless-plump:plump)
       ""))
 
+(defun one-of (value &rest options)
+  (find value options :test (lambda (a b) (search b a :test #'char-equal))))
+
+(defmacro with-stringcase (value &body body)
+  (let ((v (gensym "V")))
+    `(let ((,v ,value))
+       (cond ,@(loop for (vals . forms) in body
+                     collect `(,(cond ((eql T vals) T)
+                                      ((listp vals) `(one-of ,v ,@vals))
+                                      (T `(one-of ,v ,vals)))
+                               ,@forms))))))
+
 (defun parse-color (color)
   (cond ((string= "" color) #xFFFFFF)
         ((char= #\# (char color 0)) (parse-integer color :start 1 :radix 16))

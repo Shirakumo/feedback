@@ -55,6 +55,13 @@
     (delete-project project)
     (output NIL "Project deleted" "feedback/")))
 
+(define-api feedback/project/import (project csv &optional track) (:access (perm feedback project edit))
+  (db:with-transaction ()
+    (let* ((project (ensure-project project)))
+      (check-accessible project :write)
+      (import-entry-csv (first csv) project :track (when (or* track) (ensure-track track)))
+      (output project "Entries imported"))))
+
 (define-api feedback/track/list (project &optional query skip amount) (:access (perm feedback track list))
   (let ((project (ensure-project project)))
     (check-accessible project :read)
@@ -93,7 +100,7 @@
                               :skip (parse-integer (or* skip "0"))
                               :amount (parse-integer (or* amount "100"))))))
 
-(define-api feedback/entry/new (project user-id &optional track status version os-type cpu-type gpu-type os-info cpu-info gpu-info description assigned-to severity relates-to) (:access (perm feedback entry new))
+(define-api feedback/entry/new (project user-id &optional track status version os-type cpu-type gpu-type os-info cpu-info gpu-info description assigned-to severity relates-to tag[]) (:access (perm feedback entry new))
   (db:with-transaction ()
     (let* ((project (or (find-project project)
                         (ensure-project project)))
@@ -116,7 +123,8 @@
                                       :description description
                                       :assigned-to assigned-to
                                       :relates-to relates-to
-                                      :severity severity)))
+                                      :severity severity
+                                      :tags tag[])))
       (loop for type in types
             for file = (post-var (dm:field type "name"))
             do (when file
@@ -124,14 +132,14 @@
                  (uiop:copy-file (first file) (attachment-pathname entry type))))
       (output entry "Feedback submitted"))))
 
-(define-api feedback/entry/edit (entry &optional track description status assigned-to severity relates-to order) (:access (perm feedback entry edit))
+(define-api feedback/entry/edit (entry &optional track description status assigned-to severity relates-to order tag[]) (:access (perm feedback entry edit))
   (db:with-transaction ()
     (let* ((entry (ensure-entry entry)))
       (check-accessible entry :write)
       (edit-entry entry :description description :status status :order (cond ((string= "top" order) :top)
                                                                              ((string= "bottom" order) :bottom)
                                                                              ((stringp order) (parse-integer order)))
-                        :assigned-to assigned-to :severity severity :relates-to relates-to :track track)
+                        :assigned-to assigned-to :severity severity :relates-to relates-to :track track :tags tag[])
       (output entry "Entry updated"))))
 
 (define-api feedback/entry/delete (entry) (:access (perm feedback entry delete))

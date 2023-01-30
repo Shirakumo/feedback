@@ -78,6 +78,7 @@
                (type (:integer 2)))))
 
 ;; TODO: csv import
+;; TODO: tags (display, edit on entries, search entries by tag)
 ;; TODO: anonymously viewable tracks
 ;; TODO: manual attachments
 ;; TODO: bulk actions (retracking, assigning, etc.)
@@ -85,7 +86,6 @@
 ;; TODO: changelog export
 ;; TODO: update without page refresh (both push & pull!)
 ;; TODO: speed up load by caching object fetches
-;; TODO: tags
 
 (defun check-name (name)
   (let ((names '("new" "snapshot" "edit" "entry" "user" "subscribe")))
@@ -322,7 +322,7 @@
             do (setf-dm-fields sub (model "project") name color)
                (dm:insert sub))
       (db:insert 'members `(("project" . ,(dm:id model)) ("user" . ,(user:id author))))
-      (notify model :project-new)
+      (notify model :project-new author)
       model)))
 
 (defun edit-project (project &key name description trace-data-type (attachments NIL attachments-p) members (tags NIL tags-p))
@@ -398,6 +398,18 @@
   (ecase (dm:collection object)
     (project (dm:get 'tag (db:query (:= 'project (dm:id object))) :sort '(("name" :asc))))
     (entry (dm:get (rdb:join (tag _id) (entry-tag tag)) (db:query (:= 'entry (dm:id object))) :sort '(("name" :asc))))))
+
+(defun ensure-tag (tag-ish &optional project)
+  (etypecase tag-ish
+    (dm:data-model
+     (ecase (dm:collection tag-ish)
+       (tag tag-ish)))
+    (db:id
+     (or (dm:get-one 'tag (db:query (:= '_id tag-ish)))
+         (error 'request-not-found :message "Could not find the requested tag.")))
+    (string
+     (or (dm:get-one 'tag (db:query (:and (:= 'name tag-ish) (:= 'project (ensure-id project)))))
+         (error 'request-not-found :message "Could not find the requested tag.")))))
 
 (defun list-tracks (project &key (skip 0) (amount 50) query)
   (dm:get 'track (if query
@@ -497,7 +509,7 @@
                                 gpu-type gpu-info
                                 version description
                                 assigned-to severity
-                                relates-to)
+                                relates-to tags)
   (db:with-transaction ()
     (let ((project (ensure-project project))
           (track (when track (ensure-track track)))
@@ -529,10 +541,12 @@
       (setf (dm:field model "cpu-type") (cpu-type->id (or cpu-type :unknown)))
       (setf (dm:field model "gpu-type") (gpu-type->id (or gpu-type :unknown)))
       (prog1 (dm:insert model)
+        (dolist (tag tags)
+          (db:insert 'entry-tag `(("entry" . ,(dm:id model)) ("tag" . ,(dm:id (ensure-tag tag project))))))
         (unless (eql status :duplicate)
           (notify model :entry-new project))))))
 
-(defun edit-entry (entry &key track user-id description status (assigned-to NIL assigned-p) (relates-to NIL relates-to-p) severity order)
+(defun edit-entry (entry &key track user-id description status (assigned-to NIL assigned-p) (relates-to NIL relates-to-p) severity order (tags NIL tags-p))
   (db:with-transaction ()
     (let ((entry (ensure-entry entry)))
       (setf-dm-fields entry track user-id description severity relates-to)
@@ -542,6 +556,10 @@
         (setf (dm:field entry "assigned-to") (when assigned-to (user:id assigned-to))))
       (when status
         (setf (dm:field entry "status") (status->id status)))
+      (when tags-p
+        (db:remove 'entry-tag (db:query (:= 'entry (dm:id entry))))
+        (dolist (tag tags)
+          (db:insert 'entry-tag `(("entry" . ,(dm:id entry)) ("tag" . ,(dm:id (ensure-tag tag (dm:field entry "project"))))))))
       (when order
         (dm:save entry)
         (let* ((prev (dm:field entry "order"))
