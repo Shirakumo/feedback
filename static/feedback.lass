@@ -189,7 +189,7 @@
   (textarea :resize none)
   (.row
    :display grid
-   :grid-template-columns 1em 5em 6em 1fr 5em 2em
+   :grid-template-columns 1em 5em 6em 1fr 6em 5em 2em
    :gap 0px
    ((:or input select textarea)
     :border none)
@@ -221,6 +221,9 @@
    :box-shadow 0 0 10px red
    :z-index 1
    :border-color transparent !important)
+  (.tags
+   :display flex
+   :flex-wrap T)
   (.extra
    :border-left 1em solid lightgray
    :height auto
@@ -290,7 +293,9 @@
    :padding 0.25em))
  (.note.existing
   (p.text
-   :margin 0)
+   :margin 0
+   ((:and p :first-child) :margin-top 0)
+   ((:and p :last-child) :margin-bottom 0))
   (textarea.text
    :display none)))
 (.subscriptions
@@ -306,7 +311,15 @@
   :padding 0.5em
   (span :text-align center)
   ((:or .user .object) :text-align left)))
-
+(.tag
+ :overflow hidden
+ :text-overflow ellipsis
+ :display inline-block
+ :margin 0.1em
+ :padding 0.1em 0.5em
+ :color white
+ :background black
+ :border-radius 0.2em)
 (.box
  :position fixed
  :bottom -2.0em :left 0 :right 0

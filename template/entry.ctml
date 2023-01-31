@@ -12,6 +12,9 @@
     </select>
     <input type="text" class="assigned user" list="members" name="assigned-to" lquery="(val (when assigned-to (user:username assigned-to)))" />
     <textarea class="description" name="description" placeholder="Description..." lquery="(text description) (attr :autofocus (not _id))"></textarea>
+    <div class="tags" iterate="(feedback::list-tags *)">
+      <span class="tag" lquery="(data :color (feedback::print-color color)) (text name)"></span>
+    </div>
     <select class="status" name="status" lquery="(select status) (add-class (feedback::id->status status))">
       <option value="0">New</option>
       <option value="1">Triaged</option>

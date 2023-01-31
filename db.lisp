@@ -88,7 +88,7 @@
 ;; TODO: speed up load by caching object fetches
 
 (defun check-name (name)
-  (let ((names '("new" "snapshot" "edit" "entry" "user" "subscribe")))
+  (let ((names '("new" "snapshot" "edit" "entry" "user" "subscribe" "import")))
     (when (or (find name names :test #'string-equal)
               (every #'digit-char-p name))
       (error 'api-argument-invalid :argument "name" :message (format NIL "The name cannot be numeric, or one of: ~{~a~^, ~}" names)))))
@@ -322,7 +322,7 @@
             do (setf-dm-fields sub (model "project") name color)
                (dm:insert sub))
       (db:insert 'members `(("project" . ,(dm:id model)) ("user" . ,(user:id author))))
-      (notify model :project-new author)
+      (notify model :project-new model author)
       model)))
 
 (defun edit-project (project &key name description trace-data-type (attachments NIL attachments-p) members (tags NIL tags-p))
@@ -359,6 +359,7 @@
                                                 :test #'string-equal)
                 do (cond (entry
                           (setf (dm:field entry "color") color)
+                          (dm:save entry)
                           (setf existing (delete entry existing)))
                          ((or* name)
                           (let ((sub (dm:hull 'tag)))
@@ -399,6 +400,9 @@
     (project (dm:get 'tag (db:query (:= 'project (dm:id object))) :sort '(("name" :asc))))
     (entry (dm:get (rdb:join (tag _id) (entry-tag tag)) (db:query (:= 'entry (dm:id object))) :sort '(("name" :asc))))))
 
+(defun find-tag (name project)
+  (dm:get-one 'tag (db:query (:and (:= 'name name) (:= 'project (ensure-id project))))))
+
 (defun ensure-tag (tag-ish &optional project)
   (etypecase tag-ish
     (dm:data-model
@@ -408,7 +412,7 @@
      (or (dm:get-one 'tag (db:query (:= '_id tag-ish)))
          (error 'request-not-found :message "Could not find the requested tag.")))
     (string
-     (or (dm:get-one 'tag (db:query (:and (:= 'name tag-ish) (:= 'project (ensure-id project)))))
+     (or (find-tag tag-ish project)
          (error 'request-not-found :message "Could not find the requested tag.")))))
 
 (defun list-tracks (project &key (skip 0) (amount 50) query)
@@ -425,7 +429,7 @@
     (setf-dm-fields track project name description)
     (setf (dm:field track "protection") (protection->id (or protection :private)))
     (prog1 (dm:insert track)
-      (notify track :track-new))))
+      (notify track :track-new project))))
 
 (defun edit-track (track &key name description protection)
   (db:with-transaction ()
@@ -501,6 +505,18 @@
                       (query :all)))
             :skip skip :amount amount :sort '(("order" :desc) ("time" :desc)))))
 
+(defmacro %entry-query (parent-form &rest query)
+  (let ((parent 'parent))
+    `(let ((,parent ,parent-form))
+       (flet ((track (id) (db:query (:and (:= 'track id) ,@query)))
+              (project (id) (db:query (:and (:= 'project id) ,@query))))
+         (ecase (dm:collection ,parent)
+           (entry (if (dm:field ,parent "track")
+                      (track (dm:field ,parent "track"))
+                      (project (dm:field ,parent "project"))))
+           (track (track (dm:id ,parent)))
+           (project (project (dm:id ,parent))))))))
+
 (defun make-entry (project &key (time (get-universal-time))
                                 (user-id (user:username (auth:current)))
                                 track status
@@ -517,10 +533,7 @@
           (model (dm:hull 'entry))
           (severity (or severity 0))
           (status (or status 0)))
-      (let ((highest (dm:get-one 'entry (if track
-                                            (db:query (:= 'track (dm:id track)))
-                                            (db:query (:= 'project (dm:id project))))
-                                 :sort `(("order" :desc)))))
+      (let ((highest (dm:get-one 'entry (%entry-query (or track project)) :sort `(("order" :desc)))))
         (cond ((null highest)
                (setf (dm:field model "order") 0))
               ((and (equalp (dm:field highest "description") description)
@@ -528,9 +541,7 @@
                (error 'api-argument-invalid :argument "description" :message "Duplicate entry"))
               (T
                (setf (dm:field model "order") (1+ (dm:field highest "order"))))))
-      (let ((duplicate (dm:get-one 'entry (if track
-                                              (db:query (:and (:= 'track (dm:id track)) (:= 'description description) (:/= 'status (status->id :duplicate))))
-                                              (db:query (:and (:= 'project (dm:id project)) (:= 'description description) (:/= 'status (status->id :duplicate))))))))
+      (let ((duplicate (dm:get-one 'entry (%entry-query (or track project) (:= 'description description) (:/= 'status (status->id :duplicate))))))
         (when duplicate
           (setf status :duplicate)
           (setf relates-to (dm:id duplicate))))
@@ -540,6 +551,14 @@
       (setf (dm:field model "os-type") (os-type->id (or os-type :unknown)))
       (setf (dm:field model "cpu-type") (cpu-type->id (or cpu-type :unknown)))
       (setf (dm:field model "gpu-type") (gpu-type->id (or gpu-type :unknown)))
+      ;; Reorder to bottom
+      (unless (find (id->status (dm:field model "status")) '(:new :triaged :unclear))
+        (let ((bottom (dm:get-one 'entry (%entry-query (or track project) (:<= 'status 1)) :sort `(("order" :asc)))))
+          (when bottom
+            (setf bottom (dm:field bottom "order"))
+            (loop for record in (db:select 'entry (%entry-query (or track project) (:and (:<= bottom 'order))))
+                  do (db:update 'entry (db:query (:= '_id (gethash "_id" record))) `(("order" . ,(1+ (gethash "order" record))))))
+            (setf (dm:field model "order") bottom))))
       (prog1 (dm:insert model)
         (dolist (tag tags)
           (db:insert 'entry-tag `(("entry" . ,(dm:id model)) ("tag" . ,(dm:id (ensure-tag tag project))))))
@@ -563,17 +582,16 @@
       (when order
         (dm:save entry)
         (let* ((prev (dm:field entry "order"))
-               (track (dm:field entry "track"))
                (order (case order
-                        (:top (dm:field (dm:get-one 'entry (if track (db:query (:= 'track track)) (db:query (:= 'project (dm:field entry "project")))) :sort `(("order" :desc))) "order"))
-                        (:bottom (dm:field (dm:get-one 'entry (if track (db:query (:and (:= 'track track) (:<= 'status 1))) (db:query (:and (:= 'project (dm:field entry "project")) (:<= 'status 1)))) :sort `(("order" :asc))) "order"))
+                        (:top (dm:field (dm:get-one 'entry (%entry-query entry) :sort `(("order" :desc))) "order"))
+                        (:bottom (dm:field (dm:get-one 'entry (%entry-query entry (:<= 'status 1)) :sort `(("order" :asc))) "order"))
                         (T order))))
           ;; FIXME: this sucks. But we can't do better with the standard interface.
           (cond ((< prev order)
-                 (loop for record in (db:select 'entry (db:query (:and (:< prev 'order) (:<= 'order order))))
+                 (loop for record in (db:select 'entry (%entry-query entry (:and (:< prev 'order) (:<= 'order order))))
                        do (db:update 'entry (db:query (:= '_id (gethash "_id" record))) `(("order" . ,(1- (gethash "order" record)))))))
                 ((< order prev)
-                 (loop for record in (db:select 'entry (db:query (:and (:<= order 'order) (:< 'order prev))))
+                 (loop for record in (db:select 'entry (%entry-query entry (:and (:<= order 'order) (:< 'order prev))))
                        do (db:update 'entry (db:query (:= '_id (gethash "_id" record))) `(("order" . ,(1+ (gethash "order" record))))))))
           (setf (dm:field entry "order") order)))
       (prog1 (dm:save entry)
@@ -650,7 +668,7 @@
         (model (dm:hull 'snapshot)))
     (setf-dm-fields model project time user-id session-id session-duration snapshot-duration version)
     (prog1 (dm:insert model)
-      (notify model :snapshot-new))))
+      (notify model :snapshot-new project))))
 
 (defun delete-snapshot (snapshot)
   (db:with-transaction ()

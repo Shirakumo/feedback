@@ -1,13 +1,21 @@
-<form class="project edit import">
+<form class="project edit import" method="post" enctype="multipart/form-data">
   <c:using value="project">
     <div class="row">
       <label for="name">CSV:</label>
       <input type="file" name="csv" id="csv" required />
     </div>
     <div class="row">
-      <label for="tags">Track:</label>
-      <select name="track" id="track" iterate="(list* NIL (feedback::list-tracks *))">
+      <label for="track">Track:</label>
+      <select name="track" id="track" iterate="(list* NIL (feedback::list-tracks *))" lquery='(select (post/get "track"))'>
         <option lquery="(val _id) (text name)"></option>
+      </select>
+    </div>
+    <div class="row">
+      <label for="tags">Missing Tags:</label>
+      <select name="tags" id="tags">
+        <option value="error">Error</option>
+        <option value="ignore">Ignore</option>
+        <option value="create">Create</option>
       </select>
     </div>
     <div class="actions">

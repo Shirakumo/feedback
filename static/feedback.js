@@ -321,6 +321,8 @@ class Feedback{
                     .then(self.handleResponse);
             });
         });
+
+        self.registerAll(element, ".tag", self.registerTag);
     }
 
     registerNote(element){
@@ -349,6 +351,17 @@ class Feedback{
            setInterval(()=>{
                element.innerText = self.formatTime();
            }, 1000);
+    }
+
+    registerTag(element){
+        var self = this;
+        let color = element.dataset.color;
+        var r = parseInt(color.substring(1,3),16);
+        var g = parseInt(color.substring(3,5),16);
+        var b = parseInt(color.substring(5,7),16);
+        var yiq = ((r*299)+(g*587)+(b*114))/1000;
+        element.style.background = color;
+        element.style.color = (yiq >= 128) ? 'black' : 'white';
     }
 
     formatTime(stamp){
