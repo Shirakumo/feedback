@@ -4,3 +4,5 @@
 ; TODO: changelog export
 ; TODO: update without page refresh (both push & pull!)
 ; TODO: speed up load by caching object fetches
+; TODO: more reasonable subscriptions view (show only own, better checkbox model)
+; TODO: more reasonable permissions (private, reg view / add / edit, anon view / add)

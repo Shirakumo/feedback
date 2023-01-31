@@ -738,11 +738,26 @@
           (dm:delete existing)
           (dm:save existing)))))
 
-(defun list-subscriptions (object)
-  (if (typep object 'user:user)
-      (dm:get 'subscriber (db:query (:= 'user (user:id object))))
-      (dm:get 'subscriber (db:query (:and (:= 'object (dm:id object))
-                                          (:= 'object-type (object-type->id (dm:collection object))))))))
+(defun list-subscriptions (scope &optional (user (auth:current)))
+  (let ((subs (dm:get 'subscriber (db:query (:= 'user (user:id user)))
+                      :sort '(("object-type" :asc) ("object" :asc)))))
+    (when scope
+      (macrolet ((filter (&rest cases)
+                   `(loop for sub in subs
+                          for object = (dm:field sub "object")
+                          when (case (id->object-type (dm:field sub "object-type"))
+                                 ,@cases)
+                          collect sub)))
+        (ecase (dm:collection scope)
+          (entry
+           (filter (:entry (equal object (dm:id scope)))))
+          (track
+           (filter (:track (equal object (dm:id scope)))
+                   (:entry (= 1 (db:count 'entry (db:query (:and (:= 'track (dm:id scope)) (:= '_id object))))))))
+          (project
+           (filter (:project (equal object (dm:id scope)))
+                   (:track (= 1 (db:count 'track (db:query (:and (:= 'project (dm:id scope)) (:= '_id object))))))
+                   (:entry (= 1 (db:count 'entry (db:query (:and (:= 'project (dm:id scope)) (:= '_id object)))))))))))))
 
 (defun subscription-object (subscription)
   (ensure-object (dm:field subscription "object-type") (dm:field subscription "object")))

@@ -249,7 +249,7 @@
                      :up (object-url object)
                      :up-text (user:username object)
                      :object object
-                     :subscriptions (list-subscriptions object)
+                     :subscriptions (list-subscriptions NIL object)
                      :have-entry T))
       (let* ((object (ensure-object type id))
              (subscriptions (list-subscriptions object)))
