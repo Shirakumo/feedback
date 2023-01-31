@@ -394,9 +394,10 @@
          (error 'request-not-found :message "Could not find the requested track.")))))
 
 (defun list-tags (object)
-  (ecase (dm:collection object)
-    (project (dm:get 'tag (db:query (:= 'project (dm:id object))) :sort '(("name" :asc))))
-    (entry (dm:get (rdb:join (tag _id) (entry-tag tag)) (db:query (:= 'entry (dm:id object))) :sort '(("name" :asc))))))
+  (when (dm:id object)
+    (ecase (dm:collection object)
+      (project (dm:get 'tag (db:query (:= 'project (dm:id object))) :sort '(("name" :asc))))
+      (entry (dm:get (rdb:join (tag _id) (entry-tag tag)) (db:query (:= 'entry (dm:id object))) :sort '(("name" :asc)))))))
 
 (defun find-tag (name project)
   (dm:get-one 'tag (db:query (:and (:= 'name name) (:= 'project (ensure-id project))))))
