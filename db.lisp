@@ -77,10 +77,8 @@
                (user :id)
                (type (:integer 2)))))
 
-;; TODO: csv import
-;; TODO: tags (display, edit on entries, search entries by tag)
-;; TODO: anonymously viewable tracks
 ;; TODO: manual attachments
+;; TODO: search entries by tag
 ;; TODO: bulk actions (retracking, assigning, etc.)
 ;; TODO: lazy infinite load
 ;; TODO: changelog export

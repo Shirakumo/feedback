@@ -15,6 +15,7 @@
                       (track (track-url object :query `(("message" . ,message))))
                       (trace (trace-url object :query `(("message" . ,message))))
                       (snapshot (snapshot-url object :query `(("message" . ,message))))
+                      (tag (project-url (dm:field object "project") :query `(("message" . ,message))))
                       (attachment (entry-url (dm:field object "entry") :query `(("message" . ,message))))))))
     (if (string= "true" (post/get "browser"))
         (redirect target)
@@ -54,6 +55,11 @@
     (check-accessible project :write)
     (delete-project project)
     (output NIL "Project deleted" "feedback/")))
+
+(define-api feedback/project/tags (project) (:access (perm feedback project edit))
+  (let ((project (ensure-project project)))
+    (check-accessible project :read)
+    (api-output (list-tags project))))
 
 (define-api feedback/project/import (project csv &optional tags track) (:access (perm feedback project edit))
   (db:with-transaction ()
@@ -142,6 +148,22 @@
                                                                              ((stringp order) (parse-integer order)))
                         :assigned-to assigned-to :severity severity :relates-to relates-to :track track :tags tag[])
       (output entry "Entry updated"))))
+
+(define-api feedback/entry/tag/new (entry tag) (:access (perm feedback entry edit))
+  (let ((entry (ensure-entry entry)))
+    (check-accessible entry :write)
+    (let ((tags (list-tags entry))
+          (tag (ensure-tag tag (dm:field entry "project"))))
+      (unless (find (dm:id tag) tags :key (lambda (x) (dm:field x "tag")) :test #'equal)
+        (db:insert 'entry-tag `(("entry" . ,(dm:id entry)) ("tag" . ,(dm:id tag)))))
+      (output tag "Tag added"))))
+
+(define-api feedback/entry/tag/delete (entry tag) (:access (perm feedback entry edit))
+  (let ((entry (ensure-entry entry)))
+    (check-accessible entry :write)
+    (let ((tag (ensure-tag tag (dm:field entry "project"))))
+      (db:remove 'entry-tag (db:query (:and (:= 'entry (dm:id entry)) (:= 'tag (dm:id tag)))))
+      (output tag "Tag removed"))))
 
 (define-api feedback/entry/delete (entry) (:access (perm feedback entry delete))
   (let ((entry (ensure-entry entry)))

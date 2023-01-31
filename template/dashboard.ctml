@@ -63,6 +63,7 @@
           <span class="severity">Severity</span>
           <span class="assigned">Assigned</span>
           <span class="description">Description</span>
+          <span class="tags">Tags</span>
           <span class="status">Status</span>
           <span class="collapse"></span>
         </div>

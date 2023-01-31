@@ -151,7 +151,7 @@
 
 (defun import-entry-csv (csv project &key track (tags :ignore))
   (db:with-transaction ()
-    (let ((entries (parse-entry-csv csv))
+    (let ((entries (nreverse (parse-entry-csv csv)))
           (tag-cache (make-hash-table :test 'equalp)))
       (dolist (entry entries)
         (dolist (name (getf entry :tags))

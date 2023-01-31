@@ -220,6 +220,10 @@ class Feedback{
                 extra.querySelector(".detail").click();
             });
 
+            self.registerAll(element, ".row input,.row select", (el)=>{
+                el.addEventListener("change", (ev)=>self.submitForm(el));
+            });
+
             collapse.addEventListener("click", (ev)=>{
                 if(extra.classList.contains("collapsed"))
                     element.expand();
@@ -263,10 +267,6 @@ class Feedback{
         }
 
         self.registerAll(element, ".note.existing", self.registerNote);
-
-        self.registerAll(element, ".row input,.row select", (el)=>{
-            el.addEventListener("change", (ev)=>self.submitForm(el));
-        });
         
         self.registerAll(element, "textarea", (el)=>{
             el.fit = ()=>{
@@ -322,7 +322,7 @@ class Feedback{
             });
         });
 
-        self.registerAll(element, ".tag", self.registerTag);
+        self.registerAll(element, ".tags", self.registerTags);
     }
 
     registerNote(element){
@@ -353,8 +353,45 @@ class Feedback{
            }, 1000);
     }
 
+    registerTags(element){
+        var self = this;
+
+        let entry = element.closest(".entry");
+        self.registerAll(element, "span.tag", self.registerTag);
+
+        element.addEventListener("click", ()=>{
+            let constructor = element.querySelector("input");
+            if(!constructor){
+                constructor = document.createElement("input");
+                constructor.setAttribute("list", "tags");
+                constructor.addEventListener("change", (ev)=>{
+                    ev.preventDefault();
+                    if(constructor.value){
+                        self.apiCall("entry/tag/new", {tag: constructor.value, entry: entry.dataset.id})
+                            .then((response)=>{
+                                let tag = document.createElement("span");
+                                let color = response.data.color.toString(16);
+                                while(color.length < 6) color = "0"+color;
+                                tag.dataset.color = "#"+color;
+                                tag.classList.add("tag");
+                                tag.innerText = response.data.name;
+                                element.insertBefore(tag, constructor);
+                                self.registerTag(tag);
+                                constructor.classList.add("hidden");
+                            });
+                    }
+                });
+                element.appendChild(constructor);
+            }
+            constructor.value = "";
+            constructor.classList.remove("hidden");
+            constructor.focus();
+        });
+    }
+
     registerTag(element){
         var self = this;
+        let entry = element.closest(".entry");
         let color = element.dataset.color;
         var r = parseInt(color.substring(1,3),16);
         var g = parseInt(color.substring(3,5),16);
@@ -362,6 +399,19 @@ class Feedback{
         var yiq = ((r*299)+(g*587)+(b*114))/1000;
         element.style.background = color;
         element.style.color = (yiq >= 128) ? 'black' : 'white';
+
+        element.addEventListener("click", (ev)=>ev.stopPropagation());
+        element.addEventListener("dblclick", (ev)=>{
+            ev.preventDefault();
+            ev.stopPropagation();
+            if(element.classList.contains("removed")){
+                self.apiCall("entry/tag/new", {tag: element.innerText, entry: entry.dataset.id})
+                    .then(()=>element.classList.remove("removed"));
+            }else{
+                self.apiCall("entry/tag/delete", {tag: element.innerText, entry: entry.dataset.id})
+                    .then(()=>element.classList.add("removed"));
+            }
+        });
     }
 
     formatTime(stamp){

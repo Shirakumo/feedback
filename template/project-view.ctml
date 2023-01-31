@@ -68,6 +68,7 @@
           <span class="severity">Severity</span>
           <span class="assigned">Assigned</span>
           <span class="description">Description</span>
+          <span class="tags">Tags</span>
           <span class="status">Status</span>
           <span class="collapse"></span>
         </div>
@@ -85,5 +86,8 @@
   </section>
   <datalist id="members" iterate="(feedback::list-members project)">
     <option lquery="(val (user:username *))" />
+  </datalist>
+  <datalist id="tags" iterate="(feedback::list-tags project)">
+    <option lquery="(val name)" />
   </datalist>
 </article>

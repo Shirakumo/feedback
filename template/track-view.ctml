@@ -63,4 +63,7 @@
   <datalist id="members" iterate="(feedback::list-members project)">
     <option lquery="(val (user:username *))" />
   </datalist>
+  <datalist id="tags" iterate="(feedback::list-tags project)">
+    <option lquery="(val name)" />
+  </datalist>
 </article>

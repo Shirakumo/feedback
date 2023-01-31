@@ -223,7 +223,11 @@
    :border-color transparent !important)
   (.tags
    :display flex
-   :flex-wrap T)
+   :flex-wrap wrap
+   (input
+    :flex-grow 1
+    :min-width 1em
+    :height 1em))
   (.extra
    :border-left 1em solid lightgray
    :height auto
@@ -311,15 +315,22 @@
   :padding 0.5em
   (span :text-align center)
   ((:or .user .object) :text-align left)))
-(.tag
+(span.tag
  :overflow hidden
  :text-overflow ellipsis
  :display inline-block
+ :white-space nowrap
  :margin 0.1em
  :padding 0.1em 0.5em
  :color white
  :background black
- :border-radius 0.2em)
+ :border-radius 0.2em
+ :cursor default
+ :user-select none)
+(span.tag.removed
+ :opacity 0.5)
+(.hidden
+ :display none)
 (.box
  :position fixed
  :bottom -2.0em :left 0 :right 0
