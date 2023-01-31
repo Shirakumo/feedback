@@ -77,14 +77,6 @@
                (user :id)
                (type (:integer 2)))))
 
-;; TODO: manual attachments
-;; TODO: search entries by tag
-;; TODO: bulk actions (retracking, assigning, etc.)
-;; TODO: lazy infinite load
-;; TODO: changelog export
-;; TODO: update without page refresh (both push & pull!)
-;; TODO: speed up load by caching object fetches
-
 (defun check-name (name)
   (let ((names '("new" "snapshot" "edit" "entry" "user" "subscribe" "import")))
     (when (or (find name names :test #'string-equal)
@@ -453,15 +445,7 @@
     :accumulate T :fields '("user")))
 
 (defun list-attachments (thing)
-  (cond ((or (typep thing 'db:id) (eql 'project (dm:collection thing)))
-         (dm:get 'attachment (db:query (:= 'project (ensure-id thing))) :sort '(("name" :asc))))
-        ((eql 'entry (dm:collection thing))
-         (let ((types (list-attachments (dm:field thing "project"))))
-           (loop for type in types
-                 when (probe-file (attachment-pathname thing type))
-                 collect type)))
-        (T
-         (error "Don't know wtf to do with~%  ~a" thing))))
+  (dm:get 'attachment (db:query (:= 'project (if (typep thing 'db:id) thing (dm:id (ensure-project thing))))) :sort '(("name" :asc))))
 
 (defun ensure-attachment (project name)
   (or (dm:get-one 'attachment (db:query (:and (:= 'project (ensure-id project))

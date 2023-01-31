@@ -133,24 +133,36 @@
       <header>
         <h3>Attachments:</h3>
         <nav>
-          <a @href="feedback/{0}/entry/{1}/new">
-            <i class="fas fa-plus-circle"></i>
-            New Attachment
-          </a>
         </nav>
       </header>
       <div class="attachments" iterate="(** :attachments)">
-        <form class="attachment existing">
+        <form class="attachment existing" method="post" enctype="multipart/form-data" @action="feedback/api/feedback/entry/edit">
+          <input type="hidden" name="browser" value="true" />
+          <input type="hidden" name="in-detail" value="true" />
+          <input type="hidden" name="entry" lquery="(val (** :_id))" />
           <i class="fa-solid fa-fw" lquery="(add-class (feedback::attachment-type-icon type))"></i>
-          <a lquery="(text name) (attr :href (feedback::attachment-url ** *))"></a>
-          <c:case value="(feedback::id->attachment-type type)">
-            <v values=":jpg :png :svg :gif">
-              <img alt="image" class="full" lquery="(attr :src (feedback::attachment-url ** *))"/>
-            </v>
-            <v values=":txt :log">
-              <div class="long log" lquery="(text (alexandria:read-file-into-string (feedback::attachment-pathname ** *)))"></div>
-            </v>
-          </c:case>
+          <c:let url="(feedback::attachment-url ** *)" path="(feedback::attachment-pathname ** *)" name="name">
+            <c:if test="(probe-file path)">
+              <c:then>
+                <a class="name" lquery="(text name) (attr :href url)"></a>
+                <input type="file" lquery="(attr :name name)" required />
+                <input type="submit" value="Upload" />
+                <c:case value="(feedback::id->attachment-type (** :type))">
+                  <v values=":jpg :png :svg :gif">
+                    <img alt="image" class="preview full" lquery="(attr :src url)"/>
+                  </v>
+                  <v values=":txt :log">
+                    <div class="preview long log" lquery="(text (alexandria:read-file-into-string path))"></div>
+                  </v>
+                </c:case>
+              </c:then>
+              <c:else>
+                <span class="name" lquery="(text name)"></span>
+                <input type="file" lquery="(attr :name name)" required />
+                <input type="submit" value="Upload" />
+              </c:else>
+            </c:if>
+          </c:let>
         </form>
       </div>
     </section>

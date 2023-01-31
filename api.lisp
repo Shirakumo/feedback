@@ -134,19 +134,27 @@
                                       :tags tag[])))
       (loop for type in types
             for file = (post-var (dm:field type "name"))
+            for path = (attachment-pathname entry type)
             do (when file
-                 (ensure-directories-exist (attachment-pathname entry type))
-                 (uiop:copy-file (first file) (attachment-pathname entry type))))
+                 (ensure-directories-exist path)
+                 (uiop:copy-file (first file) path)))
       (output entry "Feedback submitted"))))
 
 (define-api feedback/entry/edit (entry &optional track description status assigned-to severity relates-to order tag[]) (:access (perm feedback entry edit))
   (db:with-transaction ()
-    (let* ((entry (ensure-entry entry)))
+    (let* ((entry (ensure-entry entry))
+           (types (list-attachments (dm:field entry "project"))))
       (check-accessible entry :write)
       (edit-entry entry :description description :status status :order (cond ((string= "top" order) :top)
                                                                              ((string= "bottom" order) :bottom)
                                                                              ((stringp order) (parse-integer order)))
                         :assigned-to assigned-to :severity severity :relates-to relates-to :track track :tags tag[])
+      (loop for type in types
+            for file = (post-var (dm:field type "name"))
+            for path = (attachment-pathname entry type)
+            do (when file
+                 (ensure-directories-exist path)
+                 (uiop:copy-file (first file) path)))
       (output entry "Entry updated"))))
 
 (define-api feedback/entry/tag/new (entry tag) (:access (perm feedback entry edit))

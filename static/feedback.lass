@@ -119,6 +119,12 @@
    :margin 0.2em 1em :padding 0))
  (.attachment
   :margin 0.5em
+  :display flex
+  :flex-wrap wrap
+  (.preview
+   :flex-basis 100%
+   :object-fit contain
+   :object-position center)
   (.full
    :display block
    :max-width 100%
@@ -128,7 +134,8 @@
    :overflow-y auto
    :max-height 50em
    :margin 0
-   :max-width fit-content))
+   :max-width fit-content)
+  (.name :flex-grow 1))
  ((:or .description .comment .log)
   :white-space pre-wrap)
  ((:or .os .cpu .gpu)
