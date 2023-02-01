@@ -182,15 +182,17 @@
             <p class="text" name="text" lquery="(html (feedback::render-comment text))"></p>
           </form>
         </c:splice>
-        <form class="note new" method="post" @action="feedback/api/feedback/note/new">
-          <input type="hidden" name="browser" value="true" />
-          <input type="hidden" name="in-detail" value="true" />
-          <input type="hidden" name="entry" lquery="(val _id)" />
-          <time class="time now" lquery="(time (get-universal-time))">2023.01.25 13:28:12</time>
-          <a class="author user" lquery="(text (user:username (auth:current)))" @href="feedback/user/{0} (user:username (auth:current))">Shinmera</a>
-          <textarea class="text" name="text" placeholder="Note..." required></textarea>
-          <input type="submit" value="Submit">
-        </form>
+        <c:when test="(feedback::accessible-p * :edit)">
+          <form class="note new" method="post" @action="feedback/api/feedback/note/new">
+            <input type="hidden" name="browser" value="true" />
+            <input type="hidden" name="in-detail" value="true" />
+            <input type="hidden" name="entry" lquery="(val _id)" />
+            <time class="time now" lquery="(time (get-universal-time))">2023.01.25 13:28:12</time>
+            <a class="author user" lquery="(text (user:username (feedback::author)))" @href="feedback/user/{0} (user:username (auth:current))">Shinmera</a>
+            <textarea class="text" name="text" placeholder="Note..." required></textarea>
+            <input type="submit" value="Submit">
+          </form>
+        </c:when>
       </div>
     </section>
     <datalist id="members" iterate="(feedback::list-members project)">

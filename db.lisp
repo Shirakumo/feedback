@@ -151,13 +151,6 @@
   (:2d-points 1)
   (:3d-points 2))
 
-(define-mapping (protection id)
-  (:private 0)
-  (:registered-read 1)
-  (:registered-write 2)
-  (:public-read 3)
-  (:public-write 4))
-
 (define-mapping (object-type id)
   (project 0)
   (track 1)
@@ -246,6 +239,30 @@
        (when (member :project-new types :test #'string-equal) (setf (ldb (byte 1 5) int) 1))
        (when (member :snapshot-new types :test #'string-equal) (setf (ldb (byte 1 6) int) 1))
        (when (member :member-new types :test #'string-equal) (setf (ldb (byte 1 7) int) 1))
+       int))))
+
+(defun id->protection (int)
+  (let ((types ()))
+    (when (logbitp 0 int) (push :registered-view types))
+    (when (logbitp 1 int) (push :registered-add types))
+    (when (logbitp 2 int) (push :registered-edit types))
+    (when (logbitp 3 int) (push :anonymous-view types))
+    (when (logbitp 4 int) (push :anonymous-add types))
+    (when (logbitp 5 int) (push :anonymous-edit types))
+    types))
+
+(defun protection->id (types)
+  (etypecase types
+    (integer types)
+    (symbol (protection->id (list types)))
+    (list
+     (let ((int 0))
+       (when (member :registered-view types :test #'string-equal) (setf (ldb (byte 1 0) int) 1))
+       (when (member :registered-add types :test #'string-equal) (setf (ldb (byte 1 1) int) 1))
+       (when (member :registered-edit types :test #'string-equal) (setf (ldb (byte 1 2) int) 1))
+       (when (member :anonymous-view types :test #'string-equal) (setf (ldb (byte 1 3) int) 1))
+       (when (member :anonymous-add types :test #'string-equal) (setf (ldb (byte 1 4) int) 1))
+       (when (member :anonymous-edit types :test #'string-equal) (setf (ldb (byte 1 5) int) 1))
        int))))
 
 (defun project-directory (project)
@@ -418,15 +435,15 @@
   (let ((project (ensure-project project))
         (track (dm:hull 'track)))
     (setf-dm-fields track project name description)
-    (setf (dm:field track "protection") (protection->id (or protection :private)))
+    (setf (dm:field track "protection") (protection->id protection))
     (prog1 (dm:insert track)
       (notify track :track-new project))))
 
-(defun edit-track (track &key name description protection)
+(defun edit-track (track &key name description (protection NIL protection-p))
   (db:with-transaction ()
     (let ((track (ensure-track track)))
       (setf-dm-fields track name description)
-      (when protection
+      (when protection-p
         (setf (dm:field track "protection") (protection->id protection)))
       (dm:save track))))
 
@@ -501,7 +518,7 @@
            (project (project (dm:id ,parent))))))))
 
 (defun make-entry (project &key (time (get-universal-time))
-                                (user-id (user:username (auth:current)))
+                                (user-id (user:username (author)))
                                 track status
                                 os-type os-info
                                 cpu-type cpu-info
@@ -599,7 +616,7 @@
   (dm:get 'note (db:query (:= 'entry (dm:id entry)))
           :skip skip :amount amount :sort '(("time" :asc))))
 
-(defun make-note (entry text &key (author (auth:current)) (time (get-universal-time)))
+(defun make-note (entry text &key (author (author)) (time (get-universal-time)))
   (let ((entry (ensure-entry entry))
         (model (dm:hull 'note)))
     (setf-dm-fields model entry text time)
@@ -668,7 +685,7 @@
     (note (ensure-note id))
     (snapshot (ensure-snapshot id))))
 
-(defun notify (object type &optional (project (ensure-project object)) (author (auth:current)))
+(defun notify (object type &optional (project (ensure-project object)) (author (author)))
   (let* ((type-template
            (ecase type
              (:entry-new (@template "mail-entry-new.ctml"))
@@ -698,7 +715,7 @@
                     (let ((email (user:field "email" (gethash "user" record))))
                       (when email (mail:send email subject body))))))))
 
-(defun set-subscription (object types &optional (user (auth:current)))
+(defun set-subscription (object types &optional (user (author)))
   (let ((existing (dm:get-one 'subscriber (db:query (:and (:= 'object (dm:id object))
                                                           (:= 'object-type (object-type->id (dm:collection object)))
                                                           (:= 'user (user:id user))))))
@@ -762,21 +779,18 @@
 (defun subscription-object (subscription)
   (ensure-object (dm:field subscription "object-type") (dm:field subscription "object")))
 
-(defun accessible-p (object action &optional (user (auth:current "anonymous")))
+(defun accessible-p (object action &optional (user (author)))
   (flet ((project-accessible-p (project)
            (< 0 (db:count 'members (db:query (:and (:= 'project project) (:= 'user (user:id user))))))))
     (ecase (dm:collection object)
       (project
        (project-accessible-p (dm:id object)))
       (track
-       (or (project-accessible-p (dm:field object "project"))
-           (ecase (id->protection (dm:field object "protection"))
-             (:private NIL)
-             (:registered-read (and (eql :read action)
-                                    (not (eq user (user:get "anonymous")))))
-             (:registered-write (not (eq user (user:get "anonymous"))))
-             (:public-read (eql :read action))
-             (:public-write T))))
+       (let ((bit (ecase action (:view 0) (:add 1) (:edit 2))))
+         (when (or (null user) (eq user (user:get "anonymous")))
+           (setf bit (+ bit 3)))
+         (or (logbitp bit (dm:field object "protection"))
+             (project-accessible-p (dm:field object "project")))))
       (entry
        (if (dm:field object "track")
            (accessible-p (ensure-track object) action user)
@@ -784,13 +798,14 @@
       (note
        (let ((entry (ensure-entry object)))
          (ecase action
-           (:read (accessible-p entry action user))
-           (:write (or (= (dm:field object "author") (user:id user))
-                       (project-accessible-p (dm:field entry "project")))))))
+           (:view (accessible-p entry action user))
+           (:edit (or (and (= (dm:field object "author") (user:id user))
+                           (not (eq (user:get "anonymous") user)))
+                      (project-accessible-p (dm:field entry "project")))))))
       (T
        (project-accessible-p (dm:field object "project"))))))
 
-(defun check-accessible (object action &optional (user (auth:current)))
+(defun check-accessible (object action &optional (user (author)))
   (if (accessible-p object action user)
       object
       (error 'request-denied)))

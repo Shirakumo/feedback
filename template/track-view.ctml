@@ -50,9 +50,11 @@
         <span class="collapse"></span>
       </div>
     </div>
-    <c:using value="(dm:hull 'feedback::entry :project (dm:id project) :track (dm:id track) :severity 0 :status 0)">
-      <c:import file='(template-file "entry.ctml" :feedback)'>
-    </c:using>
+    <c:when test="(feedback::accessible-p track :add)">
+      <c:using value="(dm:hull 'feedback::entry :project (dm:id project) :track (dm:id track) :severity 0 :status 0)">
+        <c:import file='(template-file "entry.ctml" :feedback)'>
+      </c:using>
+    </c:when>
     <c:splice iterate="entries">
       <c:import file='(template-file "entry.ctml" :feedback)'>
     </c:splice>

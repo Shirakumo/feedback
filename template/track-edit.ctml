@@ -5,16 +5,36 @@
       <input type="text" name="name" id="name" placeholder="Name" minlength="1" maxlength="32" required
              lquery="(val name)"/>
     </div>
-    <div class="row">
-      <label for="protection">Protection:</label>
-      <select name="protection" id="protection" lquery="(select protection)">
-        <option value="0">Members Only</option>
-        <option value="1">Registered Read</option>
-        <option value="2">Registered Write</option>
-        <option value="3">Public Read</option>
-        <option value="4">Public Write</option>
-      </select>
-    </div>
+    <c:let perms="(feedback::id->protection protection)">
+      <div class="row">
+        <label for="registered">Registered Users:</label>
+        <div class="registered permission">
+          <input type="checkbox" name="permission[]" value="registered-view" id="registered-view"
+                 lquery="(attr :checked (find :registered-view perms))">
+          <label for="registered-view"><i class="fa-solid fa-fw fa-eye"></i></label>
+          <input type="checkbox" name="permission[]" value="registered-add" id="registered-add"
+                 lquery="(attr :checked (find :registered-add perms))">
+          <label for="registered-add"><i class="fa-solid fa-fw fa-circle-plus"></i></label>
+          <input type="checkbox" name="permission[]" value="registered-edit" id="registered-edit"
+                 lquery="(attr :checked (find :registered-edit perms))">
+          <label for="registered-edit"><i class="fa-solid fa-fw fa-pen-to-square"></i></label>
+        </div>
+      </div>
+      <div class="row">
+        <label for="anonymous">Anonymous Users:</label>
+        <div class="anonymous permission">
+          <input type="checkbox" name="permission[]" value="anonymous-view" id="anonymous-view"
+                 lquery="(attr :checked (find :anonymous-view perms))">
+          <label for="anonymous-view"><i class="fa-solid fa-fw fa-eye"></i></label>
+          <input type="checkbox" name="permission[]" value="anonymous-add" id="anonymous-add"
+                 lquery="(attr :checked (find :anonymous-add perms))">
+          <label for="anonymous-add"><i class="fa-solid fa-fw fa-circle-plus"></i></label>
+          <input type="checkbox" name="permission[]" value="anonymous-edit" id="anonymous-edit"
+                 lquery="(attr :checked (find :anonymous-edit perms))">
+          <label for="anonymous-edit"><i class="fa-solid fa-fw fa-pen-to-square"></i></label>
+        </div>
+      </div>
+    </c:let>
     <div class="row">
       <label for="description">Description:</label>
       <textarea name="description" id="description" lquery="(text description)"></textarea>

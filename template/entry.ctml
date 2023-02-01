@@ -34,7 +34,7 @@
       <c:else>
         <input type="hidden" name="project" lquery="(val project)" />
         <input type="hidden" name="track" lquery="(val track)" />
-        <input type="hidden" name="user-id" lquery="(val (user:username (auth:current)))" />
+        <input type="hidden" name="user-id" lquery='(val (user:username (feedback::author)))' />
         <input type="submit" value="Add" class="collapse" @formaction="feedback/api/feedback/entry/new" />
       </c:else>
     </c:if>
@@ -78,14 +78,16 @@
             <p class="text" name="text" lquery="(html (feedback::render-comment text))"></p>
           </form>
         </c:splice>
-        <form class="note new" method="post" @action="feedback/api/feedback/note/new">
-          <input type="hidden" name="browser" value="true" />
-          <input type="hidden" name="entry" lquery="(val _id)" />
-          <div></div>
-          <a class="author user" lquery="(text (user:username (auth:current)))" @href="feedback/user/{0} (user:username (auth:current))">Shinmera</a>
-          <textarea class="text" name="text" placeholder="Note..." required></textarea>
-          <input type="submit" value="Submit">
-        </form>
+        <c:when test="(feedback::accessible-p * :edit)">
+          <form class="note new" method="post" @action="feedback/api/feedback/note/new">
+            <input type="hidden" name="browser" value="true" />
+            <input type="hidden" name="entry" lquery="(val _id)" />
+            <div></div>
+            <a class="author user" lquery='(text (user:username (feedback::author)))' @href="feedback/user/{0} (user:username (feedback::author))">Shinmera</a>
+            <textarea class="text" name="text" placeholder="Note..." required></textarea>
+            <input type="submit" value="Submit">
+          </form>
+        </c:when>
       </div>
       <ul class="relations" iterate="(feedback::list-related *)">
         <li lquery="(add-class (feedback::id->status status))">

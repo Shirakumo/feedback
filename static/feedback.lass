@@ -73,7 +73,11 @@
    :color (hex FFFFFF)
    :background (hex D00000)
    :border 1px solid (hex A00000)
-   :max-width 5em)))
+   :max-width 5em))
+ (.permission
+  ("input[type=checkbox]" :display none)
+  ("input[type=checkbox]+label" :opacity 0.5)
+  ("input[type=checkbox]:checked+label" :opacity 1.0)))
 (form.edit.wide
  :max-width none
  :margin 0

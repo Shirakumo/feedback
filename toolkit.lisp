@@ -1,5 +1,10 @@
 (in-package #:feedback)
 
+(defvar *author* NIL)
+
+(defun author ()
+  (or *author* (auth:current "anonymous")))
+
 (defun ensure-id (id)
   (cond ((id-code-p id) (db:ensure-id (parse-id-code id)))
         ((typep id 'db:id) id)

@@ -2,11 +2,11 @@
   <section class="self">
     <header>
       <nav>
-        <a @href="feedback/user/{0} (user:username (auth:current))">
+        <a @href="feedback/user/{0} (user:username (feedback::author))">
           <i class="fa-solid fa-user"></i>
           My Page
         </a>
-        <a @href="feedback/subscribe/user/{0} (user:username (auth:current))">
+        <a @href="feedback/subscribe/user/{0} (user:username (feedback::author))">
           <i class="fa-solid fa-envelope"></i>
           Subscriptions
         </a>

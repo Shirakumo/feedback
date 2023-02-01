@@ -1,5 +1,10 @@
 (in-package #:feedback)
 
+(defmacro define-page* (name uri options &body body)
+  `(define-page ,name ,uri ,options
+     (let ((*author* (auth:current "anonymous")))
+       ,@body)))
+
 (defun object-url (object &rest args)
   (etypecase object
     (null (apply #'uri-to-url "feedback/" :representation :external args))
@@ -99,7 +104,7 @@
            :content (plump:parse content)
            args)))
 
-(define-page dashboard "feedback/^(?:/(\\d+)?)?$" (:uri-groups (page) :access (perm feedback dashboard view))
+(define-page* dashboard "feedback/^(?:/(\\d+)?)?$" (:uri-groups (page) :access (perm feedback dashboard view))
   (let* ((amount 50)
          (page (parse-integer (or* page "1")))
          (skip (* amount (max 0 (1- page)))))
@@ -108,7 +113,7 @@
                  :page-idx page
                  :entries (list-entries (auth:current) :skip skip :amount amount :query (or* (post/get "query"))))))
 
-(define-page user ("feedback/^user/([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (user page) :access (perm feedback user view))
+(define-page* user ("feedback/^user/([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (user page) :access (perm feedback user view))
   (let* ((user (user:get user :if-does-not-exist :error))
          (amount 50)
          (page (parse-integer (or* page "1")))
@@ -120,25 +125,25 @@
                  :user user
                  :entries (list-entries user :skip skip :amount amount :query (or* (post/get "query"))))))
 
-(define-page project ("feedback/^([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (project page) :access (perm feedback project))
+(define-page* project ("feedback/^([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (project page))
   (let* ((project (find-project project))
          (amount 50)
          (page (parse-integer (or* page "1")))
          (skip (* amount (max 0 (1- page)))))
-    (check-accessible project :read)
+    (check-accessible project :view)
     (render-page (dm:field project "name") (@template "project-view.ctml")
                  :page-idx page
                  :project project
                  :tracks (list-tracks project)
                  :entries (list-entries project :skip skip :amount amount :query (or* (post/get "query"))))))
 
-(define-page project-new ("feedback/^new$" 2) (:access (perm feedback project new))
+(define-page* project-new ("feedback/^new$" 2) (:access (perm feedback project new))
   (render-page "New project" (@template "project-edit.ctml")
                :project (dm:hull 'project)))
 
-(define-page project-edit ("feedback/^([^/]+)/edit$" 2) (:uri-groups (project) :access (perm feedback project edit))
+(define-page* project-edit ("feedback/^([^/]+)/edit$" 2) (:uri-groups (project))
   (let ((project (find-project project)))
-    (check-accessible project :write)
+    (check-accessible project :edit)
     (render-page "Edit" (@template "project-edit.ctml")
                  :up (project-url project)
                  :up-text (dm:field project "name")
@@ -147,21 +152,21 @@
                  :tags (list-tags project)
                  :attachments (list-attachments project))))
 
-(define-page project-import ("feedback/^([^/]+)/import$" 2) (:uri-groups (project) :access (perm feedback project edit))
+(define-page* project-import ("feedback/^([^/]+)/import$" 2) (:uri-groups (project))
   (let ((project (find-project project)))
-    (check-accessible project :write)
+    (check-accessible project :edit)
     (render-page "Import" (@template "project-import.ctml")
                  :up (project-url project)
                  :up-text (dm:field project "name")
                  :project project)))
 
-(define-page track "feedback/^([^/]+)/([^/]+)(?:/(\\d+)?)?$" (:uri-groups (project track page) :access (perm feedback track))
+(define-page* track "feedback/^([^/]+)/([^/]+)(?:/(\\d+)?)?$" (:uri-groups (project track page))
   (let* ((project (find-project project))
          (track (find-track track project))
          (amount 100)
          (page (parse-integer (or* page "1")))
          (skip (* amount (max 0 (1- page)))))
-    (check-accessible track :read)
+    (check-accessible track :view)
     (render-page (dm:field track "name") (@template "track-view.ctml")
                  :up (project-url project)
                  :up-text (dm:field project "name")
@@ -170,29 +175,29 @@
                  :track track
                  :entries (list-entries track :skip skip :amount amount :query (or* (post/get "query"))))))
 
-(define-page track-new ("feedback/^([^/]+)/new$" 2) (:uri-groups (project) :access (perm feedback project edit))
+(define-page* track-new ("feedback/^([^/]+)/new$" 2) (:uri-groups (project))
   (let ((project (find-project project)))
-    (check-accessible project :write)
+    (check-accessible project :edit)
     (render-page "New track" (@template "track-edit.ctml")
                  :up (project-url project)
                  :up-text (dm:field project "name")
                  :project project
                  :track (dm:hull 'track :project (dm:id project)))))
 
-(define-page track-edit ("feedback/^([^/]+)/([^/]+)/edit$" 2) (:uri-groups (project track) :access (perm feedback project edit))
+(define-page* track-edit ("feedback/^([^/]+)/([^/]+)/edit$" 2) (:uri-groups (project track))
   (let* ((project (find-project project))
          (track (find-track track project)))
-    (check-accessible project :write)
+    (check-accessible project :edit)
     (render-page "Edit" (@template "track-edit.ctml")
                  :up (track-url track)
                  :up-text (dm:field track "name")
                  :project project
                  :track track)))
 
-(define-page entry "feedback/^([^/]+)/entry/([^/]+)$" (:uri-groups (project entry) :access (perm feedback entry))
+(define-page* entry "feedback/^([^/]+)/entry/([^/]+)$" (:uri-groups (project entry))
   (let ((project (find-project project))
         (entry (ensure-entry entry)))
-    (check-accessible entry :read)
+    (check-accessible entry :view)
     (render-page (id-code entry) (@template "entry-view.ctml")
                  :up (if (dm:field entry "track")
                          (track-url (dm:field entry "track"))
@@ -205,24 +210,24 @@
                  :notes (list-notes entry)
                  :attachments (list-attachments entry))))
 
-(define-page attachment "feedback/^([^/]+)/entry/([^/]+)/([^/]+)$" (:uri-groups (project entry attachment) :access (perm feedback entry))
+(define-page* attachment "feedback/^([^/]+)/entry/([^/]+)/([^/]+)$" (:uri-groups (project entry attachment))
   (let* ((project (find-project project))
          (type (ensure-attachment project attachment))
          (entry (ensure-entry entry))
          (path (attachment-pathname entry type))
          (filename (format NIL "~a ~a.~(~a~)" (dm:id entry) (dm:field type "name") (id->attachment-type (dm:field type "type"))))
          (content-type (attachment-type-content-type (dm:field type "type"))))
-    (check-accessible project :read)
+    (check-accessible project :view)
     (setf (header "Content-Disposition") (format NIL "~:[attachment~;inline~]; filename=~s" (string= "text/plain" content-type) filename))
     (setf (header "Cache-Control") "private, max-age=31536000")
     (setf (header "Access-Control-Allow-Origin") "*")
     (serve-file path content-type)))
 
-(define-page snapshots ("feedback/^([^/]+)/snapshot/$" 2) (:uri-groups (project) :access (perm feedback snapshot))
+(define-page* snapshots ("feedback/^([^/]+)/snapshot/$" 2) (:uri-groups (project))
   (let* ((project (find-project project))
          (amount 50)
          (skip (* amount (max 0 (1- (parse-integer (or* (post/get "page") "1")))))))
-    (check-accessible project :read)
+    (check-accessible project :view)
     (render-page "Snapshots" (@template "snapshot-list.ctml")
                  :up (project-url project)
                  :up-text (dm:field project "name")
@@ -232,17 +237,17 @@
                                                     :skip skip
                                                     :amount amount))))
 
-(define-page snapshot ("feedback/^([^/]+)/snapshot/([^/]+)$" 2) (:uri-groups (project snapshot) :access (perm feedback snapshot))
+(define-page* snapshot ("feedback/^([^/]+)/snapshot/([^/]+)$" 2) (:uri-groups (project snapshot))
   (let ((project (find-project project))
         (snapshot (ensure-snapshot snapshot)))
-    (check-accessible snapshot :read)
+    (check-accessible snapshot :view)
     (render-page (princ-to-string (dm:id snapshot)) (@template "snapshot-view.ctml")
                  :up (project-url project)
                  :up-text (dm:field project "name")
                  :project project
                  :snapshot snapshot)))
 
-(define-page subscriptions ("feedback/^subscribe/([^/]+)/([^/]+)$" 2) (:uri-groups (type id) :access (perm feedback subscribe))
+(define-page* subscriptions ("feedback/^subscribe/([^/]+)/([^/]+)$" 2) (:uri-groups (type id))
   (if (string-equal type "user")
       (let ((object (user:get id :if-does-not-exist :error)))
         (render-page "Subscriptions" (@template "subscribe.ctml")
@@ -253,7 +258,7 @@
                      :have-entry T))
       (let* ((object (ensure-object type id))
              (subscriptions (list-subscriptions object)))
-        (check-accessible (ensure-project object) :read)
+        (check-accessible (ensure-project object) :view)
         (render-page "Subscriptions" (@template "subscribe.ctml")
                      :up (object-url object)
                      :up-text (or (dm:field object "name")
@@ -264,12 +269,12 @@
                      :have-entry (find (user:id (auth:current)) subscriptions
                                        :key (lambda (sub) (dm:field sub "user")) :test #'equal)))))
 
-(define-page trace-file "feedback/^([^/]+)/snapshot/([^/]+)/trace$" (:uri-groups (project snapshot) :access (perm feedback snapshot))
+(define-page* trace-file "feedback/^([^/]+)/snapshot/([^/]+)/trace$" (:uri-groups (project snapshot))
   (declare (ignore project))
   (let* ((snapshot (ensure-snapshot snapshot))
          (path (make-pathname :name "trace" :type "dat" :defaults (snapshot-directory snapshot)))
          (filename (format NIL "~a.dat" (dm:id snapshot))))
-    (check-accessible snapshot :read)
+    (check-accessible snapshot :view)
     (setf (header "Content-Disposition") (format NIL "inline; filename=~s" filename))
     (setf (header "Cache-Control") "public, max-age=31536000")
     (setf (header "Access-Control-Allow-Origin") "*")

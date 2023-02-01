@@ -36,7 +36,7 @@
         <input type="hidden" name="browser" value="true" />
         <input type="hidden" name="object-type" lquery="(val object-type)" />
         <input type="hidden" name="object-id" lquery="(val object-id)" />
-        <span class="user" lquery="(text (user:username (auth:current)))">USER</span>
+        <span class="user" lquery="(text (user:username (feedback::author)))">USER</span>
         <span class="object"><c:s>object-type</c:s> <c:s>(clip object :name)</c:s></span>
         <input type="checkbox" name="type[]" value="entry-new" checked />
         <input type="checkbox" name="type[]" value="entry-edit"  />
