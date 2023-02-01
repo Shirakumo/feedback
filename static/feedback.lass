@@ -162,7 +162,19 @@
        :color white)
     ((:and a :hover)
      :color white
-     :background black))))
+     :background black)))
+  (ul.members
+   :list-style none
+   :margin 0 :padding 0.2em
+   (a
+    :background (hex 0088EE)
+    :color white
+    :font-weight bold
+    :border-radius 1em
+    :padding 0.2em 0.5em
+    :display inline-flex
+    :align-items center
+    (img :margin-right 0.2em))))
  (section.self
   (.description
    :margin 0
