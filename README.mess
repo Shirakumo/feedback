@@ -3,5 +3,4 @@
 ; TODO: lazy infinite load
 ; TODO: changelog export
 ; TODO: update without page refresh (both push & pull!)
-; TODO: speed up load by caching object fetches
 ; TODO: more reasonable subscriptions view (show only own, better checkbox model)
