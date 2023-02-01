@@ -2,13 +2,22 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8"/>
-    <title><c:splice lquery="(text page)"/> - Feedback</title>
-    <meta name="viewport" content="width=device-width" />
-    <meta name="robots" content="index, follow" />
-    <link rel="stylesheet" type="text/css" href="../static/feedback.css" @href="/static/feedback/feedback.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="api-root" @href="feedback/api/feedback/"/>
-    <meta name="viewport" content="width=device-width"/>
+    <c:let title='(format NIL "~a - Feedback Tracker" page)' description='(feedback::short-text description 64)'>
+      <title lquery="(text title)"></title>
+      <meta name="viewport" content="width=device-width" />
+      <meta name="robots" content="index, follow" />
+      <link rel="stylesheet" type="text/css" href="../static/feedback.css" @href="/static/feedback/feedback.css" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+      <link rel="api-root" @href="feedback/api/feedback/"/>
+      <meta name="viewport" content="width=device-width"/>
+      <meta name="description" lquery='(attr :content description)' />
+      <meta name="twitter:card" content="summary">
+      <meta name="twitter:title" lquery="(attr :content title)">
+      <meta name="twitter:description" lquery="(attr :content description)">
+      <meta property="og:type" content="website">
+      <meta property="og:title" lquery="(attr :content title)">
+      <meta property="og:description" lquery="(attr :content description)">
+    </c:let>
   </head>
   <body>
     <header>

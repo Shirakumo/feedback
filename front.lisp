@@ -133,6 +133,7 @@
          (skip (* amount (max 0 (1- page)))))
     (check-accessible project :view)
     (render-page (dm:field project "name") (@template "project-view.ctml")
+                 :description (dm:field project "description")
                  :page-idx page
                  :project project
                  :tracks (list-tracks project)
@@ -169,6 +170,7 @@
          (skip (* amount (max 0 (1- page)))))
     (check-accessible track :view)
     (render-page (dm:field track "name") (@template "track-view.ctml")
+                 :description (dm:field track "description")
                  :up (project-url project)
                  :up-text (dm:field project "name")
                  :page-idx page
@@ -200,6 +202,7 @@
         (entry (ensure-entry entry)))
     (check-accessible entry :view)
     (render-page (id-code entry) (@template "entry-view.ctml")
+                 :description (dm:field entry "description")
                  :up (if (dm:field entry "track")
                          (track-url (dm:field entry "track"))
                          (project-url project))
