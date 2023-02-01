@@ -1,6 +1,9 @@
+; FIXME: reordering downwards does not place it where expected
+; TODO: update without page refresh (both push & pull!)
 ; TODO: search entries by tag
 ; TODO: bulk actions (retracking, assigning, etc.)
+; TODO: offline mode (schedule changes until back online)
 ; TODO: lazy infinite load
 ; TODO: changelog export
-; TODO: update without page refresh (both push & pull!)
 ; TODO: more reasonable subscriptions view (show only own, better checkbox model)
+; FIXME: the god darn phone layout
