@@ -18,6 +18,8 @@
       <meta property="og:title" lquery="(attr :content title)">
       <meta property="og:description" lquery="(attr :content description)">
     </c:let>
+    <meta name="twitter:image" lquery="(attr :content image-url)">
+    <meta property="og:image" lquery="(attr :content image-url)">
   </head>
   <body>
     <header>

@@ -198,8 +198,9 @@
                  :track track)))
 
 (define-page* entry "feedback/^([^/]+)/entry/([^/]+)$" (:uri-groups (project entry))
-  (let ((project (find-project project))
-        (entry (ensure-entry entry)))
+  (let* ((project (find-project project))
+         (entry (ensure-entry entry))
+         (attachments (list-attachments entry)))
     (check-accessible entry :view)
     (render-page (id-code entry) (@template "entry-view.ctml")
                  :description (dm:field entry "description")
@@ -209,10 +210,15 @@
                  :up-text (if (dm:field entry "track")
                               (dm:field (ensure-track entry) "name")
                               (dm:field project "name"))
+                 :image-url (loop for attachment in attachments
+                                  for path = (attachment-pathname entry attachment)
+                                  do (when (and (attachment-image-p (dm:field attachment "type"))
+                                                (probe-file path))
+                                       (return (attachment-url entry attachment))))
                  :project project
                  :entry entry
                  :notes (list-notes entry)
-                 :attachments (list-attachments entry))))
+                 :attachments attachments)))
 
 (define-page* attachment "feedback/^([^/]+)/entry/([^/]+)/([^/]+)$" (:uri-groups (project entry attachment))
   (let* ((project (find-project project))
