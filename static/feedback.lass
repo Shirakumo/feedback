@@ -164,17 +164,23 @@
      :color white
      :background black)))
   (ul.members
+   :display flex
+   :flex-wrap wrap
    :list-style none
    :margin 0 :padding 0.2em
    (a
-    :background (hex 0088EE)
-    :color white
-    :font-weight bold
+    :background lightgray
+    :color black
     :border-radius 1em
+    :margin 0.2em
     :padding 0.2em 0.5em
     :display inline-flex
     :align-items center
-    (img :margin-right 0.2em))))
+    (img
+     :margin -0.2em 0.2em -0.2em -0.5em
+     :border-radius 1em
+     :width 1.5em
+     :height 1.5em))))
  (section.self
   (.description
    :margin 0
