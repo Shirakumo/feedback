@@ -3,18 +3,20 @@
     <c:using value="track">
       <header>
         <nav>
-          <a @href="feedback/{0}/{1}/edit (clip (** :project) :name) name">
-            <i class="fas fa-edit"></i>
-            Edit
-          </a>
-          <a @href="feedback/{0}/import?track={1} (clip (** :project) :name) _id ">
-            <i class="fas fa-file-import"></i>
-            Import
-          </a>
-          <a @href="feedback/subscribe/track/{0} _id">
-            <i class="fa-solid fa-envelope"></i>
-            Subscriptions
-          </a>
+          <c:when test="(feedback::accessible-p * :edit)">
+            <a @href="feedback/{0}/{1}/edit (clip (** :project) :name) name">
+              <i class="fas fa-edit"></i>
+              Edit
+            </a>
+            <a @href="feedback/{0}/import?track={1} (clip (** :project) :name) _id ">
+              <i class="fas fa-file-import"></i>
+              Import
+            </a>
+            <a @href="feedback/subscribe/track/{0} _id">
+              <i class="fa-solid fa-envelope"></i>
+              Subscriptions
+            </a>
+          </c:when>
         </nav>
       </header>
       <p class="description" lquery='(html (feedback::render-description description))'></p>
