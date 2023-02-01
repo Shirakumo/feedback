@@ -39,11 +39,9 @@
     <div class="row">
       <label for="members">Members:</label>
       <div class="members">
-        <ul id="users" iterate="(** :members)">
+        <ul iterate="(** :members)">
           <li class="member">
-            <select name="member[]" iterate="(user:list)" lquery="(select (user:username *))">
-              <option lquery="(text (user:username *)) (val (user:username *))"/>
-            </select>
+            <input type="text" list="users" name="member[]" lquery="(val (user:username *))">
             <a href="#" class="button delete">
               <i class="fas fa-trash"></i>
             </a>
@@ -87,4 +85,7 @@
       </c:if>
     </div>
   </c:using>
+  <datalist id="users" iterate="(user:list)">
+    <option lquery="(val (user:username *))" />
+  </datalist>
 </form>
