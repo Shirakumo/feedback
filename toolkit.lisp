@@ -101,3 +101,20 @@
 
 (defun print-color (color)
   (format NIL "#~6,'0X" color))
+
+(defvar *ensure-cache* NIL)
+
+(defun cache-ensured (type arg ensure-fun &optional (cache *ensure-cache*))
+  (etypecase cache
+    (null (funcall ensure-fun))
+    (hash-table
+     (or (gethash (cons type arg) cache)
+         (setf (gethash (cons type arg) cache)
+               (funcall ensure-fun))))))
+
+(defmacro define-ensure (name (arg &rest args) &body body)
+  `(defun ,name (,arg ,@args)
+     (flet ((thunk ()
+              ,@body))
+       (declare (dynamic-extent #'thunk))
+       (cache-ensured ',name ,arg #'thunk))))

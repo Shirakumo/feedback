@@ -2,7 +2,8 @@
 
 (defmacro define-page* (name uri options &body body)
   `(define-page ,name ,uri ,options
-     (let ((*author* (auth:current "anonymous")))
+     (let ((*author* (auth:current "anonymous"))
+           (*ensure-cache* (make-hash-table :test 'equal)))
        ,@body)))
 
 (defun object-url (object &rest args)

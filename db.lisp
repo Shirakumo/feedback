@@ -287,7 +287,7 @@
                  :type (string-downcase (id->attachment-type (dm:field type "type")))
                  :defaults (entry-directory entry)))
 
-(defun ensure-project (project-ish)
+(define-ensure ensure-project (project-ish)
   (typecase project-ish
     (dm:data-model
      (ecase (dm:collection project-ish)
@@ -391,7 +391,7 @@
 (defun find-track (name project)
   (dm:get-one 'track (db:query (:and (:= 'name name) (:= 'project (ensure-id project))))))
 
-(defun ensure-track (track-ish)
+(define-ensure ensure-track (track-ish)
   (etypecase track-ish
     (dm:data-model
      (ecase (dm:collection track-ish)
@@ -411,7 +411,7 @@
 (defun find-tag (name project)
   (dm:get-one 'tag (db:query (:and (:= 'name name) (:= 'project (ensure-id project))))))
 
-(defun ensure-tag (tag-ish &optional project)
+(define-ensure ensure-tag (tag-ish &optional project)
   (etypecase tag-ish
     (dm:data-model
      (ecase (dm:collection tag-ish)
@@ -464,12 +464,12 @@
 (defun list-attachments (thing)
   (dm:get 'attachment (db:query (:= 'project (if (typep thing 'db:id) thing (dm:id (ensure-project thing))))) :sort '(("name" :asc))))
 
-(defun ensure-attachment (project name)
+(define-ensure ensure-attachment (project name)
   (or (dm:get-one 'attachment (db:query (:and (:= 'project (ensure-id project))
                                               (:= 'name name))))
       (error 'request-not-found :message "Could not find the requested attachment.")))
 
-(defun ensure-entry (entry-ish)
+(define-ensure ensure-entry (entry-ish)
   (etypecase entry-ish
     (dm:data-model
      (ecase (dm:collection entry-ish)
@@ -624,7 +624,7 @@
     (prog1 (dm:insert model)
       (notify model :note-new))))
 
-(defun ensure-note (note-ish)
+(define-ensure ensure-note (note-ish)
   (etypecase note-ish
     (dm:data-model
      (ecase (dm:collection note-ish)
@@ -644,7 +644,7 @@
     (db:remove 'subscriber (db:query (:and (:= 'object (dm:id note)) (:= 'object-type (object-type->id 'note)))))
     (dm:delete note)))
 
-(defun ensure-snapshot (snapshot-ish)
+(define-ensure ensure-snapshot (snapshot-ish)
   (etypecase snapshot-ish
     (dm:data-model
      (ecase (dm:collection snapshot-ish)
@@ -677,7 +677,7 @@
       (db:remove 'subscriber (db:query (:and (:= 'object (dm:id snapshot)) (:= 'object-type (object-type->id 'snapshot)))))
       (dm:delete snapshot))))
 
-(defun ensure-object (type id)
+(define-ensure ensure-object (type id)
   (ecase (id->object-type (object-type->id type))
     (project (ensure-project id))
     (track (ensure-track id))
