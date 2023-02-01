@@ -243,12 +243,13 @@
 
 (defun id->protection (int)
   (let ((types ()))
-    (when (logbitp 0 int) (push :registered-view types))
-    (when (logbitp 1 int) (push :registered-add types))
-    (when (logbitp 2 int) (push :registered-edit types))
-    (when (logbitp 3 int) (push :anonymous-view types))
-    (when (logbitp 4 int) (push :anonymous-add types))
-    (when (logbitp 5 int) (push :anonymous-edit types))
+    (when int
+      (when (logbitp 0 int) (push :registered-view types))
+      (when (logbitp 1 int) (push :registered-add types))
+      (when (logbitp 2 int) (push :registered-edit types))
+      (when (logbitp 3 int) (push :anonymous-view types))
+      (when (logbitp 4 int) (push :anonymous-add types))
+      (when (logbitp 5 int) (push :anonymous-edit types)))
     types))
 
 (defun protection->id (types)

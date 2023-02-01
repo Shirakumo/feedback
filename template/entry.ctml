@@ -89,12 +89,21 @@
           </form>
         </c:when>
       </div>
-      <ul class="relations" iterate="(feedback::list-related *)">
-        <li lquery="(add-class (feedback::id->status status))">
-          <i class="fa-solid" lquery='(add-class (if (eql :duplicate (feedback::id->status status)) "fa-code-merge" "fa-code-pull-request"))'></i>
-          <a lquery="(attr :href (feedback::entry-url *)) (text (feedback::id-code *))">$1342</a> is
-          <c:s>(if (eql :duplicate (feedback::id->status status)) "a duplicate" "related")</c:s>
-        </li>
+      <ul class="relations">
+        <c:when test="relates-to">
+          <li class="parent" lquery="(add-class (feedback::id->status status))">
+            <i class="fa-solid" lquery='(add-class (if (eql :duplicate (feedback::id->status status)) "fa-code-merge" "fa-code-pull-request"))'></i>
+            <a lquery="(attr :href (feedback::entry-url relates-to)) (text (feedback::id-code relates-to))">$1342</a> is
+            the parent
+          </li>
+        </c:when>
+        <c:splice iterate="(feedback::list-related *)">
+          <li lquery="(add-class (feedback::id->status status))">
+            <i class="fa-solid" lquery='(add-class (if (eql :duplicate (feedback::id->status status)) "fa-code-merge" "fa-code-pull-request"))'></i>
+            <a lquery="(attr :href (feedback::entry-url *)) (text (feedback::id-code *))">$1342</a> is
+            <c:s>(if (eql :duplicate (feedback::id->status status)) "a duplicate" "related")</c:s>
+          </li>
+        </c:splice>
       </ul>
     </div>
   </c:when>
