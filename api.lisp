@@ -141,7 +141,7 @@
                  (uiop:copy-file (first file) path)))
       (output entry "Feedback submitted"))))
 
-(define-api feedback/entry/edit (entry &optional track user-id description status assigned-to severity relates-to order) ()
+(define-api feedback/entry/edit (entry &optional track user-id description status assigned-to severity relates-to order tag[]) ()
   (db:with-transaction ()
     (let* ((entry (ensure-entry entry))
            (types (list-attachments (dm:field entry "project"))))
@@ -149,7 +149,7 @@
       (edit-entry entry :description description :status status :order (cond ((string= "top" order) :top)
                                                                              ((string= "bottom" order) :bottom)
                                                                              ((stringp order) (parse-integer order)))
-                        :user-id user-id :assigned-to assigned-to :severity severity :relates-to relates-to :track track)
+                        :user-id user-id :assigned-to assigned-to :severity severity :relates-to relates-to :track track :tags (if (post/get "tag[]") tag[] :none))
       (loop for type in types
             for file = (post-var (dm:field type "name"))
             for path = (attachment-pathname entry type)

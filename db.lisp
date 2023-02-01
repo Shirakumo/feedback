@@ -576,7 +576,7 @@
         (setf (dm:field entry "assigned-to") (when assigned-to (user:id assigned-to))))
       (when status
         (setf (dm:field entry "status") (status->id status)))
-      (when tags-p
+      (when (and tags-p (listp tags))
         (db:remove 'entry-tag (db:query (:= 'entry (dm:id entry))))
         (dolist (tag tags)
           (db:insert 'entry-tag `(("entry" . ,(dm:id entry)) ("tag" . ,(dm:id (ensure-tag tag (dm:field entry "project"))))))))
