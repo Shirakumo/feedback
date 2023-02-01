@@ -112,6 +112,7 @@
     (render-page "Dashboard" (@template "dashboard.ctml")
                  :projects (list-projects)
                  :page-idx page
+                 :entry-content (plump:parse (template-file "entry.ctml" :feedback))
                  :entries (list-entries (auth:current) :skip skip :amount amount :query (or* (post/get "query"))))))
 
 (define-page* user ("feedback/^user/([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (user page) :access (perm feedback user view))
@@ -124,6 +125,7 @@
                  :up-text "Dashboard"
                  :page-idx page
                  :user user
+                 :entry-content (plump:parse (template-file "entry.ctml" :feedback))
                  :entries (list-entries user :skip skip :amount amount :query (or* (post/get "query"))))))
 
 (define-page* project ("feedback/^([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (project page))
@@ -137,6 +139,7 @@
                  :page-idx page
                  :project project
                  :tracks (list-tracks project)
+                 :entry-content (plump:parse (template-file "entry.ctml" :feedback))
                  :entries (list-entries project :skip skip :amount amount :query (or* (post/get "query"))))))
 
 (define-page* project-new ("feedback/^new$" 2) (:access (perm feedback project new))
@@ -176,6 +179,7 @@
                  :page-idx page
                  :project project
                  :track track
+                 :entry-content (plump:parse (template-file "entry.ctml" :feedback))
                  :entries (list-entries track :skip skip :amount amount :query (or* (post/get "query"))))))
 
 (define-page* track-new ("feedback/^([^/]+)/new$" 2) (:uri-groups (project))

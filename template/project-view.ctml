@@ -74,10 +74,10 @@
         </div>
       </div>
       <c:using value="(dm:hull 'feedback::entry :project (dm:id project) :severity 0 :status 0)">
-        <c:import file='(template-file "entry.ctml" :feedback)'>
+        <c:splice lquery="(html (plump:clone-node (** :entry-content) T))"/>
       </c:using>
       <c:splice iterate="entries">
-        <c:import file='(template-file "entry.ctml" :feedback)'>
+        <c:splice lquery="(html (plump:clone-node (** :entry-content) T))"/>
       </c:splice>
       <c:unless test="entries">
         <div class="empty">There are no entries to show</div>
