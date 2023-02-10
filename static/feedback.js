@@ -290,7 +290,7 @@ class Feedback{
             el.addEventListener("click", (ev)=>{
                 ev.preventDefault();
                 self.queryListed("entry/list", {project: element.dataset.project},
-                                 (e)=>self.formatIdCode(e._id)+" "+self.formatShort(e.description))
+                                 (e)=>self.formatIdCode(e._id)+" "+e.description)
                     .then((entry)=>self.apiCall("entry/edit", {
                         "entry": element.dataset.id,
                         "status": "duplicate",
@@ -304,7 +304,7 @@ class Feedback{
             el.addEventListener("click", (ev)=>{
                 ev.preventDefault();
                 self.queryListed("entry/list", {project: element.dataset.project},
-                                 (e)=>self.formatIdCode(e._id)+" "+self.formatShort(e.description))
+                                 (e)=>self.formatIdCode(e._id)+" "+e.description)
                     .then((entry)=>self.apiCall("entry/edit", {
                         "entry": element.dataset.id,
                         "relates-to": parseEntry(entry)}))
