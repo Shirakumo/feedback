@@ -92,7 +92,9 @@ class Feedback{
                     fail(data);
                 }
             };
-            self.log("Sending request to",endpoint);
+            const formDataObj = [];
+            formData.forEach((value, key) => (formDataObj.push([key, value])));
+            self.log("Sending request to",endpoint,formDataObj);
             request.open("POST", endpoint);
             request.send(formData);
         });
