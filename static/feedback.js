@@ -247,10 +247,17 @@ class Feedback{
             element.addEventListener("dragenter", (ev)=>{
                 ev.preventDefault();
                 element.classList.add("dragover");
+                let sourceID = ev.dataTransfer.getData("text/plain");
+                if(sourceID){
+                    let target = document.querySelector(".entry[data-id=\""+sourceID+"\"]");
+                    element.classList.add((parseInt(element.dataset.order) < parseInt(target.dataset.order))? "up" : "down");
+                }
             });
             element.addEventListener("dragleave", (ev)=>{
                 ev.preventDefault();
                 element.classList.remove("dragover");
+                element.classList.remove("down");
+                element.classList.remove("up");
             });
             element.addEventListener("dragover", (ev)=>{
                 ev.preventDefault();
@@ -259,6 +266,8 @@ class Feedback{
             element.addEventListener("drop", (ev)=>{
                 ev.preventDefault();
                 element.classList.remove("dragover");
+                element.classList.remove("down");
+                element.classList.remove("up");
                 let sourceID = ev.dataTransfer.getData("text/plain");
                 if(sourceID){
                     let target = document.querySelector(".entry[data-id=\""+sourceID+"\"]");

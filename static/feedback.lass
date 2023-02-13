@@ -287,8 +287,11 @@
  ((.entry.deleted .status) :background darkred)
  (.entry.dragover
   :position relative
-  :margin-top 1em
   :z-index 10)
+ (.entry.dragover.down
+  :margin-top 1em)
+ (.entry.dragover.up
+  :margin-bottom 1em)
  ((:and .entry.dragover :after)
   :content ""
   :pointer-events none
