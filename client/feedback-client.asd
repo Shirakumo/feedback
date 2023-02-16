@@ -4,6 +4,6 @@
                (:file "system-info")
                (:file "client"))
   :depends-on (:drakma
-               :yason
+               :com.inuoe.jzon
                :trivial-features
                :north-drakma))
