@@ -94,7 +94,7 @@
           <li class="parent" lquery="(add-class (feedback::id->status status))">
             <i class="fa-solid" lquery='(add-class (if (eql :duplicate (feedback::id->status status)) "fa-code-merge" "fa-code-pull-request"))'></i>
             <a lquery="(attr :href (feedback::entry-url relates-to)) (text (feedback::id-code relates-to))">$1342</a> is
-            the parent
+            the parent by <span lquery="(text user-id)"></span>
           </li>
         </c:when>
         <c:splice iterate="(feedback::list-related *)">
@@ -102,6 +102,7 @@
             <i class="fa-solid" lquery='(add-class (if (eql :duplicate (feedback::id->status status)) "fa-code-merge" "fa-code-pull-request"))'></i>
             <a lquery="(attr :href (feedback::entry-url *)) (text (feedback::id-code *))">$1342</a> is
             <c:s>(if (eql :duplicate (feedback::id->status status)) "a duplicate" "related")</c:s>
+            by <span lquery="(text user-id)"></span>
           </li>
         </c:splice>
       </ul>
