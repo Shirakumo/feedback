@@ -16,7 +16,10 @@
        (track (apply #'track-url object args))
        (entry (apply #'entry-url object args))
        (note (apply #'note-url object args))
-       (snapshot (apply #'snapshot-url object args))))))
+       (snapshot (apply #'snapshot-url object args))
+       (timeline (apply #'timeline-url object args))
+       (event (apply #'event-url object args))
+       (deadline (apply #'deadline-url object args))))))
 
 (defun user-url (user &rest args)
   (apply #'uri-to-url (format NIL "feedback/user/~a/" (user:username user))
@@ -78,6 +81,33 @@
                                 (id-code (dm:id entry)))
            :representation :external
            :fragment (note-tag note)
+           args)))
+
+(defun timeline-url (timeline &rest args)
+  (let ((timeline (ensure-timeline timeline)))
+    (apply #'uri-to-url (format NIL "feedback/~a/tl/~a/"
+                                (dm:field (ensure-project timeline) "name")
+                                (dm:field timeline "name"))
+           :representation :external args)))
+
+(defun event-url (event &rest args)
+  (let* ((event (ensure-event event))
+         (timeline (ensure-timeline event)))
+    (apply #'uri-to-url (format NIL "feedback/~a/tl/~a/"
+                                (dm:field (ensure-project timeline) "name")
+                                (dm:field timeline "name"))
+           :representation :external
+           :fragment (format NIL "ev-~a" (id-code event))
+           args)))
+
+(defun deadline-url (deadline &rest args)
+  (let* ((deadline (ensure-deadline deadline))
+         (timeline (ensure-timeline deadline)))
+    (apply #'uri-to-url (format NIL "feedback/~a/tl/~a/"
+                                (dm:field (ensure-project timeline) "name")
+                                (dm:field timeline "name"))
+           :representation :external
+           :fragment (format NIL "dl-~a" (id-code deadline))
            args)))
 
 (defun note-tag (note)

@@ -1,4 +1,4 @@
-<title>New feedback track <c:s>(clip object :title)</c:s> for the <c:s>(clip project :name)</c:s> project has been created: <c:s>(short-text (clip object :description))</c:s></title>
+<title>New feedback track <c:s>(clip object :name)</c:s> for the <c:s>(clip project :name)</c:s> project has been created: <c:s>(short-text (clip object :description))</c:s></title>
 <body>Hello,
 
 A new feedback track for the <c:s>(clip project :name)</c:s> project has been created.
