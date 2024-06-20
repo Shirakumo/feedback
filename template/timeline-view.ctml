@@ -19,6 +19,30 @@
     </c:using>
   </section>
   <section>
-    
+    <header>
+      <nav>
+        <c:when test="(feedback::accessible-p timeline :edit)">
+          <a href="#" class="add-event">
+            <i class="fas fa-circle-plus"></i>
+            Add Event
+          </a>
+          <a href="#" class="add-deadline">
+            <i class="fa-solid fa-map-pin"></i>
+            Add Deadline
+          </a>
+        </c:when>
+      </nav>
+    </header>
+    <div>
+      <c:splice iterate="events">
+        <a class="event" lquery="(text (feedback::shorten description)) (attr :href (feedback::entry-url *)) (data :id _id :layer layer :start start :end end)"></a>
+      </c:splice>
+      <c:splice iterate="deadlines">
+        <div class="deadline" lquery="(text name) (data :id _id :time time)"></div>
+      </c:splice>
+    </div>
   </section>
+  <datalist id="entries" iterate="entries">
+    <option lquery="(val _id) (attr :href (feedback::object-url *)) (text (feedback::shorten description))" />
+  </datalist>
 </article>
