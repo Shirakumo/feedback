@@ -28,13 +28,13 @@
         <c:when test="up">
           <a lquery="(attr :href up)">
             <i class="fas fa-fw" lquery="(add-class up-icon)"></i> 
-            <c:splice lquery="(text up-text)"/>
+            <c:s>up-text</c:s>
           </a>
         </c:when>
         <c:when test="icon">
           <i class="fas fa-fw" lquery="(add-class icon)"></i> 
         </c:when>
-        <c:splice lquery="(text page)"/>
+        <c:s>page</c:s>
       </h2>
     </header>
     <main>

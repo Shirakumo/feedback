@@ -25,17 +25,26 @@
     </header>
     <ul class="projects" iterate="projects">
       <li>
-        <a class="name" lquery="(text name) (attr :href (feedback::project-url *))"></a>
+        <a class="name" lquery="(attr :href (feedback::project-url *))">
+          <i class="fas fa-fw fa-diagram-project"></i>
+          <c:s>name</c:s>
+        </a>
         <p class="description" lquery="(text description)"></p>
         <ul class="tracks" iterate="(feedback::list-tracks *)">
           <li>
-            <a class="name" lquery="(text name) (attr :href (feedback::track-url *))"></a>
+            <a class="name" lquery="(attr :href (feedback::track-url *))">
+              <i class="fas fa-fw fa-layer-group"></i>
+              <c:s>name</c:s>
+            </a>
             <p class="description" lquery="(text description)"></p>
           </li>
         </ul>
         <ul class="timelines" iterate="(feedback::list-timelines *)">
           <li>
-            <a class="name" lquery="(text name) (attr :href (feedback::timeline-url *))"></a>
+            <a class="name" lquery="(attr :href (feedback::timeline-url *))">
+              <i class="fas fa-fw fa-timeline"></i>
+              <c:s>name</c:s>
+            </a>
             <p class="description" lquery="(text description)"></p>
           </li>
         </ul>

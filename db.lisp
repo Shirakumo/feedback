@@ -911,9 +911,15 @@
      (or (dm:get-one 'event (db:query (:= '_id (ensure-id event-ish))))
          (error 'request-not-found :message "Could not find the requested event.")))))
 
+(defun find-event (timeline entry)
+  (dm:get-one 'event (db:query (:and (:= 'timeline (ensure-id timeline))
+                                     (:= 'entry (ensure-id entry))))))
+
 (defun make-event (timeline entry start end &key (layer 0))
   (let ((timeline (ensure-timeline timeline))
         (event (dm:hull 'event)))
+    (when (find-event timeline entry)
+      (error "Event for entry ~s already exists" (ensure-id entry)))
     (setf-dm-fields event entry start end layer)
     (prog1 (dm:insert event)
       (notify timeline :timeline-edit))))
