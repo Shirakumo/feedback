@@ -195,6 +195,37 @@
                  :up-text (dm:field project "name")
                  :project project)))
 
+(define-page* timeline "feedback/^([^/]+)/tl/([^/]+)(?:/)?$" (:uri-groups (project timeline))
+  (let* ((project (find-project project))
+         (timeline (find-timeline timeline project)))
+    (check-accessible timeline :view)
+    (render-page (dm:field timeline "name") (@template "timeline-view.ctml")
+                 :description (dm:field timeline "description")
+                 :up (project-url project)
+                 :up-text (dm:field project "name")
+                 :project project
+                 :timeline timeline
+                 :entries (list-events timeline))))
+
+(define-page* timeline-new ("feedback/^([^/]+)/tl/new$" 2) (:uri-groups (project))
+  (let ((project (find-project project)))
+    (check-accessible project :edit)
+    (render-page "New timeline" (@template "timeline-edit.ctml")
+                 :up (project-url project)
+                 :up-text (dm:field project "name")
+                 :project project
+                 :timeline (dm:hull 'timeline :project (dm:id project)))))
+
+(define-page* timeline-edit ("feedback/^([^/]+)/tl/([^/]+)/edit$" 2) (:uri-groups (project timeline))
+  (let* ((project (find-project project))
+         (timeline (find-timeline timeline project)))
+    (check-accessible project :edit)
+    (render-page "Edit" (@template "timeline-edit.ctml")
+                 :up (timeline-url timeline)
+                 :up-text (dm:field timeline "name")
+                 :project project
+                 :timeline timeline)))
+
 (define-page* track "feedback/^([^/]+)/([^/]+)(?:/(\\d+)?)?$" (:uri-groups (project track page))
   (let* ((project (find-project project))
          (track (find-track track project))

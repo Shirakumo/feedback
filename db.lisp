@@ -842,6 +842,9 @@
 (defun subscription-object (subscription)
   (ensure-object (dm:field subscription "object-type") (dm:field subscription "object")))
 
+(defun find-timeline (name project)
+  (dm:get-one 'timeline (db:query (:and (:= 'name name) (:= 'project (ensure-id project))))))
+
 (defun list-timelines (project &key (skip 0) (amount 50) query)
   (dm:get 'timeline (if query
                      (db:query (:and (:= 'project (ensure-id project))
@@ -885,9 +888,11 @@
       (db:remove 'subscriber (db:query (:and (:= 'object (dm:id timeline)) (:= 'object-type (object-type->id 'timeline)))))
       (db:remove 'timeline (db:query (:= '_id (dm:id timeline)))))))
 
-(defun list-events (timeline &key (skip 0) (amount 100))
-  (dm:get 'event (db:query (:= 'timeline (ensure-id timeline)))
-          :skip skip :amount amount :sort '(("name" :desc))))
+(defun list-events (timeline &key start end)
+  (dm:get 'event (db:query (:and (:= 'timeline (ensure-id timeline))
+                                 (:> 'end (or start 0))
+                                 (:< 'start (or end most-positive-fixnum))))
+          :sort '(("start" :asc))))
 
 (define-ensure ensure-event (event-ish)
   (etypecase event-ish
@@ -918,12 +923,11 @@
       (prog1 (dm:delete event)
         (notify (ensure-timeline event) :timeline-edit)))))
 
-(defun list-deadlines (timeline &key (skip 0) (amount 100) query)
-  (dm:get 'deadline (if query
-                        (db:query (:and (:= 'timeline (ensure-id timeline))
-                                        (:MATCHES* 'name (cl-ppcre:quote-meta-chars query))))
-                        (db:query (:= 'timeline (ensure-id timeline))))
-          :skip skip :amount amount :sort '(("name" :desc))))
+(defun list-deadlines (timeline &key start end)
+  (dm:get 'deadline (db:query (:and (:= 'timeline (ensure-id timeline))
+                                    (:> 'time (or start 0))
+                                    (:< 'time (or end most-positive-fixnum))))
+          :sort '(("time" :asc))))
 
 (define-ensure ensure-deadline (deadline-ish)
   (etypecase deadline-ish
