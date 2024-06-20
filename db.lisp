@@ -52,7 +52,13 @@
 
   (db:create 'entry-tag
              '((entry (:id entry))
-               (tag (:id tag))))
+               (tag (:id tag)))
+             :indices '(entry))
+
+  (db:create 'dependency
+             '((target (:id entry))
+               (source (:id entry)))
+             :indices '(target source))
   
   (db:create 'snapshot
              '((project (:id project))
@@ -75,10 +81,32 @@
              '((object :id)
                (object-type (:integer 1))
                (user :id)
-               (type (:integer 2)))))
+               (type (:integer 2))))
+
+  (db:create 'timeline
+             '((project (:id project))
+               (name (:varchar 32))
+               (description :text)
+               (protection (:integer 1))
+               (start (:integer 5))
+               (end (:integer 5)))
+             :indices '(project))
+
+  (db:create 'event
+             '((timeline (:id timeline))
+               (entry (:id entry))
+               (start (:integer 5))
+               (end (:integer 5)))
+             :indices '(timeline))
+
+  (db:create 'deadline
+             '((timeline (:id timeline))
+               (name (:varchar 32))
+               (time (:integer 5)))
+             :indices '(timeline)))
 
 (defun check-name (name)
-  (let ((names '("new" "snapshot" "edit" "entry" "user" "subscribe" "import")))
+  (let ((names '("new" "snapshot" "edit" "entry" "user" "subscribe" "import" "timeline" "tl")))
     (when (or (find name names :test #'string-equal)
               (every #'digit-char-p name))
       (error 'api-argument-invalid :argument "name" :message (format NIL "The name cannot be numeric, or one of: ~{~a~^, ~}" names)))))
@@ -114,7 +142,8 @@
   (:amd64 1)
   (:i686 2)
   (:arm64 3)
-  (:armv7l 4))
+  (:armv7l 4)
+  (:riscv 5))
 
 (define-mapping (gpu-type id)
   (:unknown 0)
@@ -122,7 +151,8 @@
   (:nvidia 2)
   (:amd 3)
   (:vmware 4)
-  (:virtualbox 5))
+  (:virtualbox 5)
+  (:virgl 6))
 
 (define-mapping (attachment-type id)
   (:dat 0)
@@ -159,7 +189,10 @@
   (members 4)
   (snapshot 5)
   (attachment 6)
-  (subscriber 7))
+  (subscriber 7)
+  (timeline 8)
+  (event 9)
+  (deadline 10))
 
 (defun os-type-icon (os-type)
   (case os-type
@@ -223,6 +256,8 @@
     (when (logbitp 5 int) (push :project-new types))
     (when (logbitp 6 int) (push :snapshot-new types))
     (when (logbitp 7 int) (push :member-new types))
+    (when (logbitp 8 int) (push :timeline-new types))
+    (when (logbitp 9 int) (push :timeline-edit types))
     types))
 
 (defun subscription-types->id (types)
@@ -239,6 +274,8 @@
        (when (member :project-new types :test #'string-equal) (setf (ldb (byte 1 5) int) 1))
        (when (member :snapshot-new types :test #'string-equal) (setf (ldb (byte 1 6) int) 1))
        (when (member :member-new types :test #'string-equal) (setf (ldb (byte 1 7) int) 1))
+       (when (member :timeline-new types :test #'string-equal) (setf (ldb (byte 1 8) int) 1))
+       (when (member :timeline-edit types :test #'string-equal) (setf (ldb (byte 1 9) int) 1))
        int))))
 
 (defun id->protection (int)
@@ -607,6 +644,7 @@
           (db:update 'entry (db:query (:= 'relates-to (dm:id entry))) `(("relates-to" . NIL))))
       (db:remove 'note (db:query (:= 'entry (dm:id entry))))
       (db:remove 'entry-tag (db:query (:= 'entry (dm:id entry))))
+      (db:remove 'dependency (db:query (:or (:= 'target (dm:id entry)) (:= 'source (dm:id entry)))))
       (db:remove 'subscriber (db:query (:and (:= 'object (dm:id entry)) (:= 'object-type (object-type->id 'entry)))))
       (dm:delete entry))))
 
@@ -644,6 +682,22 @@
   (db:with-transaction ()
     (db:remove 'subscriber (db:query (:and (:= 'object (dm:id note)) (:= 'object-type (object-type->id 'note)))))
     (dm:delete note)))
+
+(defun list-depends-on (entry)
+  (dm:get (rdb:join (dependency target) (entry _id)) (db:query (:= 'source (ensure-id entry)))
+          :sort '(("order" :desc) ("time" :desc))))
+
+(defun list-depended-by (entry)
+  (dm:get (rdb:join (dependency source) (entry _id)) (db:query (:= 'target (ensure-id entry)))
+          :sort '(("order" :desc) ("time" :desc))))
+
+(defun add-dependency (target source)
+  (db:with-transaction ()
+    (when (= 0 (db:count 'dependency (db:query (:and (:= 'source (ensure-id source)) (:= 'target (ensure-id target))))))
+      (db:insert 'dependency `(("source" . ,(ensure-id source)) ("target" . ,(ensure-id target)))))))
+
+(defun remove-dependency (target source)
+  (db:remove 'dependency (db:query (:and (:= 'source (ensure-id source)) (:= 'target (ensure-id target))))))
 
 (define-ensure ensure-snapshot (snapshot-ish)
   (etypecase snapshot-ish
@@ -684,7 +738,10 @@
     (track (ensure-track id))
     (entry (ensure-entry id))
     (note (ensure-note id))
-    (snapshot (ensure-snapshot id))))
+    (snapshot (ensure-snapshot id))
+    (timeline (ensure-timeline id))
+    (event (ensure-event id))
+    (deadline (ensure-deadline id))))
 
 (defun notify (object type &optional (project (ensure-project object)) (author (author)))
   (let* ((type-template
@@ -696,7 +753,9 @@
              (:track-new (@template "mail-track-new.ctml"))
              (:project-new (@template "mail-project-new.ctml"))
              (:snapshot-new (@template "mail-snapshot-new.ctml"))
-             (:member-new (@template "mail-member-new.ctml"))))
+             (:member-new (@template "mail-member-new.ctml"))
+             (:timeline-new (@template "mail-timeline-new.ctml"))
+             (:timeline-edit (@template "mail-timeline-edit.ctml"))))
          (rendered
            (let ((*package* #.*package*))
              (clip:process type-template :project project :object object :author author)))
@@ -772,13 +831,128 @@
           (track
            (filter (:track (equal object (dm:id scope)))
                    (:entry (= 1 (db:count 'entry (db:query (:and (:= 'track (dm:id scope)) (:= '_id object))))))))
+          (timeline
+           (filter (:timeline (equal object (dm:id scope)))))
           (project
            (filter (:project (equal object (dm:id scope)))
                    (:track (= 1 (db:count 'track (db:query (:and (:= 'project (dm:id scope)) (:= '_id object))))))
+                   (:timeline (= 1 (db:count 'timeline (db:query (:and (:= 'project (dm:id scope)) (:= '_id object))))))
                    (:entry (= 1 (db:count 'entry (db:query (:and (:= 'project (dm:id scope)) (:= '_id object)))))))))))))
 
 (defun subscription-object (subscription)
   (ensure-object (dm:field subscription "object-type") (dm:field subscription "object")))
+
+(defun list-timelines (project &key (skip 0) (amount 50) query)
+  (dm:get 'timeline (if query
+                     (db:query (:and (:= 'project (ensure-id project))
+                                     (:MATCHES* 'name (cl-ppcre:quote-meta-chars query))))
+                     (db:query (:= 'project (ensure-id project))))
+          :skip skip :amount amount :sort '(("name" :desc))))
+
+(define-ensure ensure-timeline (timeline-ish)
+  (etypecase timeline-ish
+    (dm:data-model
+     (ecase (dm:collection timeline-ish)
+       (entry
+        (dm:get-one 'timeline (db:query (:= '_id (dm:field timeline-ish "timeline")))))
+       (timeline timeline-ish)))
+    (T
+     (or (dm:get-one 'timeline (db:query (:= '_id (ensure-id timeline-ish))))
+         (error 'request-not-found :message "Could not find the requested timeline.")))))
+
+(defun make-timeline (project name &key description protection start end)
+  (check-name name)
+  (let ((project (ensure-project project))
+        (timeline (dm:hull 'timeline)))
+    (setf-dm-fields timeline project name description start end)
+    (setf (dm:field timeline "protection") (protection->id protection))
+    (prog1 (dm:insert timeline)
+      (notify timeline :timeline-new project))))
+
+(defun edit-timeline (timeline &key name description (protection NIL protection-p) start end)
+  (db:with-transaction ()
+    (let ((timeline (ensure-timeline timeline)))
+      (setf-dm-fields timeline name description start end)
+      (when protection-p
+        (setf (dm:field timeline "protection") (protection->id protection)))
+      (dm:save timeline))))
+
+(defun delete-timeline (timeline)
+  (db:with-transaction ()
+    (let ((timeline (ensure-timeline timeline)))
+      (db:remove 'event (db:query (:= 'timeline (dm:id timeline))))
+      (db:remove 'deadline (db:query (:= 'timeline (dm:id timeline))))
+      (db:remove 'subscriber (db:query (:and (:= 'object (dm:id timeline)) (:= 'object-type (object-type->id 'timeline)))))
+      (db:remove 'timeline (db:query (:= '_id (dm:id timeline)))))))
+
+(defun list-events (timeline &key (skip 0) (amount 100))
+  (dm:get 'event (db:query (:= 'timeline (ensure-id timeline)))
+          :skip skip :amount amount :sort '(("name" :desc))))
+
+(define-ensure ensure-event (event-ish)
+  (etypecase event-ish
+    (dm:data-model
+     (ecase (dm:collection event-ish)
+       (event event-ish)))
+    (T
+     (or (dm:get-one 'event (db:query (:= '_id (ensure-id event-ish))))
+         (error 'request-not-found :message "Could not find the requested event.")))))
+
+(defun make-event (timeline entry start end)
+  (let ((timeline (ensure-timeline timeline))
+        (event (dm:hull 'event)))
+    (setf-dm-fields event entry start end)
+    (prog1 (dm:insert event)
+      (notify timeline :timeline-edit))))
+
+(defun edit-event (event &key name time)
+  (db:with-transaction ()
+    (let ((event (ensure-event event)))
+      (setf-dm-fields event name time)
+      (prog1 (dm:save event)
+        (notify (ensure-timeline event) :timeline-edit)))))
+
+(defun delete-event (event)
+  (db:with-transaction ()
+    (let ((event (ensure-event event)))
+      (prog1 (dm:delete event)
+        (notify (ensure-timeline event) :timeline-edit)))))
+
+(defun list-deadlines (timeline &key (skip 0) (amount 100) query)
+  (dm:get 'deadline (if query
+                        (db:query (:and (:= 'timeline (ensure-id timeline))
+                                        (:MATCHES* 'name (cl-ppcre:quote-meta-chars query))))
+                        (db:query (:= 'timeline (ensure-id timeline))))
+          :skip skip :amount amount :sort '(("name" :desc))))
+
+(define-ensure ensure-deadline (deadline-ish)
+  (etypecase deadline-ish
+    (dm:data-model
+     (ecase (dm:collection deadline-ish)
+       (deadline deadline-ish)))
+    (T
+     (or (dm:get-one 'deadline (db:query (:= '_id (ensure-id deadline-ish))))
+         (error 'request-not-found :message "Could not find the requested deadline.")))))
+
+(defun make-deadline (timeline name time)
+  (let ((timeline (ensure-timeline timeline))
+        (deadline (dm:hull 'deadline)))
+    (setf-dm-fields deadline name time)
+    (prog1 (dm:insert deadline)
+      (notify timeline :timeline-edit))))
+
+(defun edit-deadline (deadline &key name time)
+  (db:with-transaction ()
+    (let ((deadline (ensure-deadline deadline)))
+      (setf-dm-fields deadline name time)
+      (prog1 (dm:save deadline)
+        (notify (ensure-timeline deadline) :timeline-edit)))))
+
+(defun delete-deadline (deadline)
+  (db:with-transaction ()
+    (let ((deadline (ensure-deadline deadline)))
+      (prog1 (dm:delete deadline)
+        (notify (ensure-timeline deadline) :timeline-edit)))))
 
 (defun accessible-p (object action &optional (user (author)))
   (flet ((project-accessible-p (project)
@@ -786,7 +960,7 @@
     (ecase (dm:collection object)
       (project
        (project-accessible-p (dm:id object)))
-      (track
+      ((track timeline)
        (let ((bit (ecase action (:view 0) (:add 1) (:edit 2))))
          (when (or (null user) (eq user (user:get "anonymous")))
            (setf bit (+ bit 3)))
@@ -796,6 +970,8 @@
        (if (dm:field object "track")
            (accessible-p (ensure-track object) action user)
            (project-accessible-p (dm:field object "project"))))
+      ((event deadline)
+       (accessible-p (ensure-timeline object) action user))
       (note
        (let ((entry (ensure-entry object)))
          (ecase action
