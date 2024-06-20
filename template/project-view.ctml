@@ -31,7 +31,7 @@
       </ul>
     </c:using>
   </section>
-  <section>
+  <section class="half">
     <header>
       <h3>Tracks</h3>
       <nav>
@@ -44,6 +44,23 @@
     <ul class="tracks" iterate="tracks">
       <li>
         <a class="name" lquery="(text name) (attr :href (feedback::track-url *))"></a>
+        <p class="description" lquery="(text description)"></p>
+      </li>
+    </ul>
+  </section>
+  <section class="half">
+    <header>
+      <h3>Timelines</h3>
+      <nav>
+        <a href="#" @href="feedback/{0}/tl/new (clip project :name)">
+          <i class="fas fa-plus-circle"></i>
+          New Timeline
+        </a>
+      </nav>
+    </header>
+    <ul class="timelines" iterate="timelines">
+      <li>
+        <a class="name" lquery="(text name) (attr :href (feedback::timeline-url *))"></a>
         <p class="description" lquery="(text description)"></p>
       </li>
     </ul>

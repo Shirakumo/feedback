@@ -1,0 +1,24 @@
+<article class="timeline view">
+  <section class="self">
+    <c:using value="timeline">
+      <header>
+        <nav>
+          <c:when test="(feedback::accessible-p * :edit)">
+            <a @href="feedback/{0}/tl/{1}/edit (clip (** :project) :name) name">
+              <i class="fas fa-edit"></i>
+              Edit
+            </a>
+            <a @href="feedback/subscribe/timeline/{0} _id">
+              <i class="fa-solid fa-envelope"></i>
+              Subscriptions
+            </a>
+          </c:when>
+        </nav>
+      </header>
+      <p class="description" lquery='(html (feedback::render-description description))'></p>
+    </c:using>
+  </section>
+  <section>
+    
+  </section>
+</article>
