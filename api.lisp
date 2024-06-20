@@ -175,6 +175,12 @@
     (delete-entry entry)
     (output NIL "Entry deleted" "feedback/~a/" (dm:field (ensure-project entry) "name"))))
 
+(define-api feedback/note/list (entry &optional skip amount) ()
+  (let ((entry (ensure-entry entry)))
+    (check-accessible entry :view)
+    (api-output (list-notes entry :skip (parse-integer (or* skip "0"))
+                                  :amount (parse-integer (or* amount "100"))))))
+
 (define-api feedback/note/new (entry text) ()
   (let ((entry (ensure-entry entry)))
     (check-accessible entry :edit)
@@ -189,6 +195,49 @@
   (let ((note (ensure-note note)))
     (check-accessible note :edit)
     (output (delete-note note) "Note deleted")))
+
+(define-api feedback/event/list (timeline &optional start end) ()
+  (let ((timeline (ensure-timeline timeline)))
+    (check-accessible timeline :view)
+    (api-output (list-events timeline :start (when start (parse-time start))
+                                      :end (when end (parse-time end))))))
+
+(define-api feedback/event/new (timeline entry start end &optional (layer "0")) ()
+  (let ((entry (ensure-entry entry))
+        (timeline (ensure-timeline timeline)))
+    (check-accessible timeline :edit)
+    (output (make-event timeline entry (parse-time start) (parse-time end) :layer (parse-integer layer)) "Event created")))
+
+(define-api feedback/event/edit (event &optional start end layer) ()
+  (let ((event (ensure-event event)))
+    (check-accessible event :edit)
+    (output (edit-event event :start (when start (parse-time start)) :end (when end (parse-time end)) :layer layer) "Event edited")))
+
+(define-api feedback/event/delete (event) ()
+  (let ((event (ensure-event event)))
+    (check-accessible event :edit)
+    (output (delete-event event) "Event deleted")))
+
+(define-api feedback/deadline/list (timeline &optional start end) ()
+  (let ((timeline (ensure-timeline timeline)))
+    (check-accessible timeline :view)
+    (api-output (list-deadlines timeline :start (when start (parse-time start))
+                                         :end (when end (parse-time end))))))
+
+(define-api feedback/deadline/new (timeline name time) ()
+  (let ((timeline (ensure-timeline timeline)))
+    (check-accessible timeline :edit)
+    (output (make-deadline timeline name (parse-time time)) "Deadline created")))
+
+(define-api feedback/deadline/edit (deadline &optional name time) ()
+  (let ((deadline (ensure-deadline deadline)))
+    (check-accessible deadline :edit)
+    (output (edit-deadline deadline :name name :time (when time (parse-time time))) "Deadline edited")))
+
+(define-api feedback/deadline/delete (deadline) ()
+  (let ((deadline (ensure-deadline deadline)))
+    (check-accessible deadline :edit)
+    (output (delete-deadline deadline) "Deadline deleted")))
 
 (define-api feedback/snapshot/new (project user-id session-id session-duration snapshot-duration &optional version trace) ()
   (db:with-transaction ()

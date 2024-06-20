@@ -33,6 +33,12 @@
             <p class="description" lquery="(text description)"></p>
           </li>
         </ul>
+        <ul class="timelines" iterate="(feedback::list-timelines *)">
+          <li>
+            <a class="name" lquery="(text name) (attr :href (feedback::timeline-url *))"></a>
+            <p class="description" lquery="(text description)"></p>
+          </li>
+        </ul>
       </li>
     </ul>
   </section>

@@ -209,6 +209,7 @@
                  :up-text (dm:field project "name")
                  :project project
                  :timeline timeline
+                 :entries (list-entries timeline :amount NIL)
                  :events (list-events timeline)
                  :deadlines (list-deadlines timeline))))
 

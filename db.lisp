@@ -96,7 +96,8 @@
              '((timeline (:id timeline))
                (entry (:id entry))
                (start (:integer 5))
-               (end (:integer 5)))
+               (end (:integer 5))
+               (layer (:integer 2)))
              :indices '(timeline))
 
   (db:create 'deadline
@@ -688,11 +689,11 @@
     (dm:delete note)))
 
 (defun list-depends-on (entry)
-  (dm:get (rdb:join (dependency target) (entry _id)) (db:query (:= 'source (ensure-id entry)))
+  (dm:get (rdb:join (entry _id) (dependency target)) (db:query (:= 'source (ensure-id entry)))
           :sort '(("order" :desc) ("time" :desc))))
 
 (defun list-depended-by (entry)
-  (dm:get (rdb:join (dependency source) (entry _id)) (db:query (:= 'target (ensure-id entry)))
+  (dm:get (rdb:join (entry _id) (dependency source)) (db:query (:= 'target (ensure-id entry)))
           :sort '(("order" :desc) ("time" :desc))))
 
 (defun add-dependency (target source)
@@ -895,9 +896,10 @@
       (db:remove 'timeline (db:query (:= '_id (dm:id timeline)))))))
 
 (defun list-events (timeline &key start end)
-  (dm:get 'event (db:query (:and (:= 'timeline (ensure-id timeline))
-                                 (:> 'end (or start 0))
-                                 (:< 'start (or end most-positive-fixnum))))
+  (dm:get (rdb:join (entry _id) (event entry))
+          (db:query (:and (:= 'timeline (ensure-id timeline))
+                          (:> 'end (or start 0))
+                          (:< 'start (or end most-positive-fixnum))))
           :sort '(("start" :asc))))
 
 (define-ensure ensure-event (event-ish)
@@ -909,17 +911,17 @@
      (or (dm:get-one 'event (db:query (:= '_id (ensure-id event-ish))))
          (error 'request-not-found :message "Could not find the requested event.")))))
 
-(defun make-event (timeline entry start end)
+(defun make-event (timeline entry start end &key (layer 0))
   (let ((timeline (ensure-timeline timeline))
         (event (dm:hull 'event)))
-    (setf-dm-fields event entry start end)
+    (setf-dm-fields event entry start end layer)
     (prog1 (dm:insert event)
       (notify timeline :timeline-edit))))
 
-(defun edit-event (event &key name time)
+(defun edit-event (event &key name start end layer)
   (db:with-transaction ()
     (let ((event (ensure-event event)))
-      (setf-dm-fields event name time)
+      (setf-dm-fields event name start end layer)
       (prog1 (dm:save event)
         (notify (ensure-timeline event) :timeline-edit)))))
 
