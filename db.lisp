@@ -474,6 +474,8 @@
   (check-name name)
   (let ((project (ensure-project project))
         (track (dm:hull 'track)))
+    (when (find-track name project)
+      (error "Track named ~s already exists" name))
     (setf-dm-fields track project name description)
     (setf (dm:field track "protection") (protection->id protection))
     (prog1 (dm:insert track)
@@ -849,9 +851,9 @@
 
 (defun list-timelines (project &key (skip 0) (amount 50) query)
   (dm:get 'timeline (if query
-                     (db:query (:and (:= 'project (ensure-id project))
-                                     (:MATCHES* 'name (cl-ppcre:quote-meta-chars query))))
-                     (db:query (:= 'project (ensure-id project))))
+                        (db:query (:and (:= 'project (ensure-id project))
+                                        (:MATCHES* 'name (cl-ppcre:quote-meta-chars query))))
+                        (db:query (:= 'project (ensure-id project))))
           :skip skip :amount amount :sort '(("name" :desc))))
 
 (define-ensure ensure-timeline (timeline-ish)
@@ -869,6 +871,8 @@
   (check-name name)
   (let ((project (ensure-project project))
         (timeline (dm:hull 'timeline)))
+    (when (find-timeline name project)
+      (error "Timeline named ~s already exists" name))
     (setf-dm-fields timeline project name description start end)
     (setf (dm:field timeline "protection") (protection->id protection))
     (prog1 (dm:insert timeline)

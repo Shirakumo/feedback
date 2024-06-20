@@ -7,11 +7,11 @@
     </div>
     <div class="row">
       <label for="name">Start:</label>
-      <input type="date" name="start" id="start" lquery="(val (radiance:format-only-date start))"/>
+      <input type="date" name="start" id="start" lquery="(val (when start (radiance:format-only-date start)))"/>
     </div>
     <div class="row">
       <label for="name">End:</label>
-      <input type="date" name="end" id="end" lquery="(val (radiance:format-only-date end))"/>
+      <input type="date" name="end" id="end" lquery="(val (when end (radiance:format-only-date end)))"/>
     </div>
     <c:let perms="(feedback::id->protection protection)">
       <div class="row">

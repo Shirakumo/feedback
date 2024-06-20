@@ -181,6 +181,10 @@
      :border-radius 1em
      :width 1.5em
      :height 1.5em))))
+ (section.half
+  :width (calc (- 50% 3px))
+  :vertical-align top
+  :display inline-block)
  (section.self
   (.description
    :margin 0

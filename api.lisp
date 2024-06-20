@@ -211,6 +211,40 @@
     (delete-snapshot snapshot)
     (output NIL "Snapshot deleted" "feedback/~a/" (dm:field (ensure-project snapshot) "name"))))
 
+(define-api feedback/timeline/list (project &optional query skip amount) (:access (perm feedback timeline list))
+  (let ((project (ensure-project project)))
+    (check-accessible project :view)
+    (api-output (list-timelines project
+                                :query (or* query)
+                                :skip (parse-integer (or* skip "0"))
+                                :amount (parse-integer (or* amount "100"))))))
+
+(define-api feedback/timeline/new (project name &optional description start end permission[]) (:access (perm feedback timeline new))
+  (let ((project (ensure-project project)))
+    (check-accessible project :edit)
+    (output (make-timeline project name :description description
+                                        :protection permission[]
+                                        :start (when start (parse-time start))
+                                        :end (when end (parse-time end)))
+            "Timeline created")))
+
+(define-api feedback/timeline/edit (timeline &optional name description start end permission[]) (:access (perm feedback timeline new))
+  (let ((timeline (ensure-timeline timeline)))
+    (check-accessible (ensure-project timeline) :edit)
+    (output (edit-timeline timeline :name name
+                                    :description description
+                                    :protection permission[]
+                                    :start (when start (parse-time start))
+                                    :end (when end (parse-time end)))
+            "Timeline edited")))
+
+(define-api feedback/timeline/delete (timeline) (:access (perm feedback timeline delete))
+  (let* ((timeline (ensure-timeline timeline))
+         (project (ensure-project timeline)))
+    (check-accessible project :edit)
+    (delete-timeline timeline)
+    (output project "Timeline deleted" "feedback/")))
+
 (define-api feedback/subscription/add (object-type object-id type[]) ()
   (let ((object (ensure-object object-type object-id)))
     (check-accessible (ensure-project object) :edit)

@@ -172,6 +172,7 @@
                  :page-idx page
                  :project project
                  :tracks (list-tracks project)
+                 :timelines (list-timelines project)
                  :entry-content (plump:parse (template-file "entry.ctml" :feedback))
                  :entries (list-entries project :skip skip :amount amount :query (or* (post/get "query"))))))
 
@@ -208,7 +209,8 @@
                  :up-text (dm:field project "name")
                  :project project
                  :timeline timeline
-                 :entries (list-events timeline))))
+                 :events (list-events timeline)
+                 :deadlines (list-deadlines timeline))))
 
 (define-page* timeline-new ("feedback/^([^/]+)/tl/new$" 2) (:uri-groups (project))
   (let ((project (find-project project)))
