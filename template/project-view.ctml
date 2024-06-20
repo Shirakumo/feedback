@@ -33,7 +33,7 @@
   </section>
   <section class="half">
     <header>
-      <h3>Tracks</h3>
+      <h3><i class="fas fa-fw fa-layer-group"></i> Tracks</h3>
       <nav>
         <a href="#" @href="feedback/{0}/new (clip project :name)">
           <i class="fas fa-plus-circle"></i>
@@ -50,7 +50,7 @@
   </section>
   <section class="half">
     <header>
-      <h3>Timelines</h3>
+      <h3><i class="fas fa-fw fa-timeline"></i> Timelines</h3>
       <nav>
         <a href="#" @href="feedback/{0}/tl/new (clip project :name)">
           <i class="fas fa-plus-circle"></i>
@@ -67,7 +67,7 @@
   </section>
   <section>
     <header>
-      <h3>Untracked Entries</h3>
+      <h3><i class="fas fa-fw fa-list-check"></i> Untracked Entries</h3>
       <nav>
         <form class="search" method="get" @action="feedback/{0}/ (clip project :name)">
           <input type="search" name="query" placeholder="Filter..." />

@@ -198,10 +198,10 @@
    :grid-template-columns "fit-content(20em)" 1fr
    (a :padding 0.5em 0)
    (.description :margin 0)
-   (.tracks
+   ((:or .tracks .timelines)
     :grid-column 1 / 2
     :border-left 0.2em solid gray)))
- (ul.tracks
+ ((:or ul.tracks ul.timelines)
   :list-style none
   :margin 0
   :padding 0 1em

@@ -26,7 +26,13 @@
       <h1><a href="#" @href="feedback/">Feedback</a></h1>
       <h2>
         <c:when test="up">
-          <a lquery="(attr :href up) (text up-text)"></a>
+          <a lquery="(attr :href up)">
+            <i class="fas fa-fw" lquery="(add-class up-icon)"></i> 
+            <c:splice lquery="(text up-text)"/>
+          </a>
+        </c:when>
+        <c:when test="icon">
+          <i class="fas fa-fw" lquery="(add-class icon)"></i> 
         </c:when>
         <c:splice lquery="(text page)"/>
       </h2>

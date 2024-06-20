@@ -15,7 +15,7 @@
   </section>
   <section>
     <header>
-      <h3>Projects</h3>
+      <h3><i class="fas fa-fw fa-diagram-project"></i> Projects</h3>
       <nav>
         <a @href="feedback/new">
           <i class="fas fa-plus-circle"></i>
@@ -44,7 +44,7 @@
   </section>
   <section>
     <header>
-      <h3>Assigned Entries</h3>
+      <h3><i class="fas fa-fw fa-list-check"></i> Assigned Entries</h3>
       <nav>
         <form class="search" method="get">
           <input type="search" name="query" placeholder="Filter..." />

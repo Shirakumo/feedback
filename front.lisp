@@ -143,6 +143,7 @@
          (page (parse-integer (or* page "1")))
          (skip (* amount (max 0 (1- page)))))
     (render-page "Dashboard" (@template "dashboard.ctml")
+                 :icon "fa-dashboard"
                  :projects (list-projects)
                  :page-idx page
                  :entry-content (plump:parse (template-file "entry.ctml" :feedback))
@@ -154,8 +155,7 @@
          (page (parse-integer (or* page "1")))
          (skip (* amount (max 0 (1- page)))))
     (render-page (user:username user) (@template "user-view.ctml")
-                 :up (object-url NIL)
-                 :up-text "Dashboard"
+                 :icon "fa-user"
                  :page-idx page
                  :user user
                  :entry-content (plump:parse (template-file "entry.ctml" :feedback))
@@ -168,6 +168,7 @@
          (skip (* amount (max 0 (1- page)))))
     (check-accessible project :view)
     (render-page (dm:field project "name") (@template "project-view.ctml")
+                 :icon "fa-diagram-project"
                  :description (dm:field project "description")
                  :page-idx page
                  :project project
@@ -178,6 +179,7 @@
 
 (define-page* project-new ("feedback/^new$" 2) (:access (perm feedback project new))
   (render-page "New project" (@template "project-edit.ctml")
+               :icon "fa-diagram-project"
                :project (dm:hull 'project)))
 
 (define-page* project-edit ("feedback/^([^/]+)/edit$" 2) (:uri-groups (project))
@@ -185,6 +187,7 @@
     (check-accessible project :edit)
     (render-page "Edit" (@template "project-edit.ctml")
                  :up (project-url project)
+                 :up-icon "fa-diagram-project"
                  :up-text (dm:field project "name")
                  :project project
                  :members (list-members project)
@@ -195,7 +198,9 @@
   (let ((project (find-project project)))
     (check-accessible project :edit)
     (render-page "Import" (@template "project-import.ctml")
+                 :icon "fa-file-import"
                  :up (project-url project)
+                 :up-icon "fa-diagram-project"
                  :up-text (dm:field project "name")
                  :project project)))
 
@@ -204,8 +209,10 @@
          (timeline (find-timeline timeline project)))
     (check-accessible timeline :view)
     (render-page (dm:field timeline "name") (@template "timeline-view.ctml")
+                 :icon "fa-timeline"
                  :description (dm:field timeline "description")
                  :up (project-url project)
+                 :up-icon "fa-diagram-project"
                  :up-text (dm:field project "name")
                  :project project
                  :timeline timeline
@@ -217,7 +224,9 @@
   (let ((project (find-project project)))
     (check-accessible project :edit)
     (render-page "New timeline" (@template "timeline-edit.ctml")
+                 :icon "fa-timeline"
                  :up (project-url project)
+                 :up-icon "fa-diagram-project"
                  :up-text (dm:field project "name")
                  :project project
                  :timeline (dm:hull 'timeline :project (dm:id project)))))
@@ -228,6 +237,7 @@
     (check-accessible project :edit)
     (render-page "Edit" (@template "timeline-edit.ctml")
                  :up (timeline-url timeline)
+                 :up-icon "fa-timeline"
                  :up-text (dm:field timeline "name")
                  :project project
                  :timeline timeline)))
@@ -241,7 +251,9 @@
     (check-accessible track :view)
     (render-page (dm:field track "name") (@template "track-view.ctml")
                  :description (dm:field track "description")
+                 :icon "fa-layer-group"
                  :up (project-url project)
+                 :up-icon "fa-diagram-project"
                  :up-text (dm:field project "name")
                  :page-idx page
                  :project project
@@ -253,7 +265,9 @@
   (let ((project (find-project project)))
     (check-accessible project :edit)
     (render-page "New track" (@template "track-edit.ctml")
+                 :icon "fa-layer-group"
                  :up (project-url project)
+                 :up-icon "fa-diagram-project"
                  :up-text (dm:field project "name")
                  :project project
                  :track (dm:hull 'track :project (dm:id project)))))
@@ -264,6 +278,7 @@
     (check-accessible project :edit)
     (render-page "Edit" (@template "track-edit.ctml")
                  :up (track-url track)
+                 :up-icon "fa-layer-group"
                  :up-text (dm:field track "name")
                  :project project
                  :track track)))
@@ -274,10 +289,12 @@
          (attachments (list-attachments entry)))
     (check-accessible entry :view)
     (render-page (id-code entry) (@template "entry-view.ctml")
+                 :icon "fa-list-check"
                  :description (dm:field entry "description")
                  :up (if (dm:field entry "track")
                          (track-url (dm:field entry "track"))
                          (project-url project))
+                 :up-icon "fa-layer-group"
                  :up-text (if (dm:field entry "track")
                               (dm:field (ensure-track entry) "name")
                               (dm:field project "name"))
@@ -310,7 +327,9 @@
          (skip (* amount (max 0 (1- (parse-integer (or* (post/get "page") "1")))))))
     (check-accessible project :view)
     (render-page "Snapshots" (@template "snapshot-list.ctml")
+                 :icon "fa-camera"
                  :up (project-url project)
+                 :up-icon "fa-diagram-project"
                  :up-text (dm:field project "name")
                  :project project
                  :snapshots (list-snapshots project :user-id (or* (post/get "user"))
@@ -323,7 +342,9 @@
         (snapshot (ensure-snapshot snapshot)))
     (check-accessible snapshot :view)
     (render-page (princ-to-string (dm:id snapshot)) (@template "snapshot-view.ctml")
+                 :icon "fa-camera"
                  :up (project-url project)
+                 :up-icon "fa-diagram-project"
                  :up-text (dm:field project "name")
                  :project project
                  :snapshot snapshot)))
@@ -332,7 +353,9 @@
   (if (string-equal type "user")
       (let ((object (user:get id :if-does-not-exist :error)))
         (render-page "Subscriptions" (@template "subscribe.ctml")
+                     :icon "fa-envelope"
                      :up (object-url object)
+                     :up-icon "fa-user"
                      :up-text (user:username object)
                      :object object
                      :subscriptions (list-subscriptions NIL object)
@@ -341,10 +364,16 @@
              (subscriptions (list-subscriptions object)))
         (check-accessible (ensure-project object) :view)
         (render-page "Subscriptions" (@template "subscribe.ctml")
+                     :icon "fa-envelope"
                      :up (object-url object)
+                     :up-icon (case (dm:collection object)
+                                (project "fa-diagram-project")
+                                (track "fa-layer-group")
+                                (timeline "fa-timeline")
+                                (entry "fa-list-check"))
                      :up-text (or (dm:field object "name")
                                   (dm:field object "title")
-                                  (princ-to-string (dm:id object)))
+                                  (id-code (dm:id object)))
                      :object-type type :object-id id :object object
                      :subscriptions subscriptions
                      :have-entry (find (user:id (auth:current)) subscriptions
