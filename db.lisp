@@ -332,7 +332,9 @@
        (project project-ish)
        (note
         (ensure-project (ensure-entry project-ish)))
-       ((attachment track entry snapshot members)
+       ((event deadline)
+        (ensure-project (ensure-timeline project-ish)))
+       ((attachment track entry snapshot members timeline)
         (dm:get-one 'project (db:query (:= '_id (dm:field project-ish "project")))))))
     (T
      (or (dm:get-one 'project (db:query (:= '_id (ensure-id project-ish))))

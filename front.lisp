@@ -14,10 +14,13 @@
      (ecase (dm:collection object)
        (project (apply #'project-url object args))
        (track (apply #'track-url object args))
+       (trace (apply #'trace-url object args))
        (entry (apply #'entry-url object args))
        (note (apply #'note-url object args))
        (snapshot (apply #'snapshot-url object args))
        (timeline (apply #'timeline-url object args))
+       (tag (apply #'project-url (dm:field object "project") args))
+       (attachment (apply #'entry-url (dm:field object "entry") args))
        (event (apply #'event-url object args))
        (deadline (apply #'deadline-url object args))))))
 
