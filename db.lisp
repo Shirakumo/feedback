@@ -895,6 +895,26 @@
       (db:remove 'subscriber (db:query (:and (:= 'object (dm:id timeline)) (:= 'object-type (object-type->id 'timeline)))))
       (db:remove 'timeline (db:query (:= '_id (dm:id timeline)))))))
 
+(defvar *default-timeline-range* (* 60 60 24 30 4)) ; four months
+(defun timeline-range (timeline)
+  (let* ((timeline (ensure-timeline timeline))
+         (start (dm:field timeline "start"))
+         (end (dm:field timeline "end"))
+         (layers 1))
+    (let ((res (first (rdb:sql "SELECT MIN(\"start\"), MAX(\"end\"), MAX(\"layer\") FROM \"FEEDBACK/EVENT\" WHERE \"timeline\"=?;"
+                               (dm:id timeline)))))
+      (when res
+        (unless start (setf start (gethash "MIN(start)" res)))
+        (unless end (setf end (gethash "MIN(end)" res)))
+        (setf layers (1+ (gethash "MAX(layer)" res 0)))))
+    (unless start
+      (setf start (if end
+                      (- end *default-timeline-range*)
+                      (get-universal-time))))
+    (unless end
+      (setf end (+ start *default-timeline-range*)))
+    (list :start start :end end :layers layers)))
+
 (defun list-events (timeline &key start end)
   (dm:get (rdb:join (entry _id) (event entry))
           (db:query (:and (:= 'timeline (ensure-id timeline))

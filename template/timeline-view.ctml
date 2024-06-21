@@ -33,7 +33,7 @@
         </c:when>
       </nav>
     </header>
-    <div>
+    <div lquery="(data :start (clip range :start) :end (clip range :end) :layers (clip range :layers))">
       <c:splice iterate="events">
         <a class="event" lquery="(text (feedback::shorten description)) (attr :href (feedback::entry-url *)) (data :id _id :layer layer :start start :end end)"></a>
       </c:splice>
