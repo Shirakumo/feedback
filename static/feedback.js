@@ -357,7 +357,7 @@ class Feedback{
 
     registerTime(element){
         var self = this;
-        element.innerText = self.formatTime(new Date(Date.parse(element.getAttribute("datetime")+"Z")));
+        element.innerText = self.formatTime(new Date(Date.parse(element.getAttribute("datetime"))));
         if(element.classList.contains("now"))
            setInterval(()=>{
                element.innerText = self.formatTime();
