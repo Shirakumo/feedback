@@ -175,7 +175,7 @@
                  :tracks (list-tracks project)
                  :timelines (list-timelines project)
                  :entry-content (plump:parse (template-file "entry.ctml" :feedback))
-                 :entries (list-entries project :skip skip :amount amount :query (or* (post/get "query"))))))
+                 :entries (list-untracked-entries project :skip skip :amount amount :query (or* (post/get "query"))))))
 
 (define-page* project-new ("feedback/^new$" 2) (:access (perm feedback project new))
   (render-page "New project" (@template "project-edit.ctml")

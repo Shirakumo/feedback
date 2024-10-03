@@ -540,12 +540,26 @@
                                       (:<= 'status 1))))
                      (dm:data-model
                       (ecase (dm:collection parent)
-                        (project (query (:and (:= 'project (dm:id parent)))))
+                        (project (query (:= 'project (dm:id parent))))
                         (track (query (:= 'track (dm:id parent))))))
                      (db:id
                       (query (:= 'project parent)))
                      (null
                       (query :all)))
+            :skip skip :amount amount :sort '(("order" :desc) ("time" :desc)))))
+
+(defun list-untracked-entries (project &key (skip 0) (amount 50) query)
+  (macrolet ((query (query)
+               `(cond ((null query)
+                       (db:query ,query))
+                      ((id-code-p query)
+                       (db:query (:and ,query
+                                       (:or (:= '_id (parse-id-code query))
+                                            (:matches* 'description (cl-ppcre:quote-meta-chars query))))))
+                      (T
+                       (db:query (:and ,query
+                                       (:matches* 'description (cl-ppcre:quote-meta-chars query))))))))
+    (dm:get 'entry (query (:and (:= 'project (dm:id project)) (:null 'track)))
             :skip skip :amount amount :sort '(("order" :desc) ("time" :desc)))))
 
 (defmacro %entry-query (parent-form &rest query)
