@@ -16,6 +16,17 @@
         (redirect target)
         (api-output object :message message :target target))))
 
+(defun output-changelog (changes)
+  (api-output (loop for change in changes
+                    for table = (make-hash-table :test 'equal)
+                    do (setf (gethash "time" table) (dm:field change "time"))
+                       (setf (gethash "author" table) (when (dm:field change "author")
+                                                        (user:get (dm:field change "author"))))
+                       (setf (gethash "edit-type" table) (string-downcase (id->edit-type (dm:field change "edit-type"))))
+                       (setf (gethash "object" table) (changelog-object change))
+                       (setf (gethash "parent" table) (changelog-parent change))
+                    collect table)))
+
 (define-api feedback/project/list () (:access (perm feedback project list))
   (api-output (list-projects)))
 
@@ -67,6 +78,13 @@
                                                                      (T (error 'api-argument-invalid :argument "tags"))))
       (output (or track project) "Entries imported"))))
 
+(define-api feedback/project/changelog (project &optional start end) ()
+  (let ((object (ensure-project project)))
+    (check-accessible object :view)
+    (output-changelog (list-changes :object object
+                                    :start (when start (parse-time start))
+                                    :end (when end (parse-time end))))))
+
 (define-api feedback/track/list (project &optional query skip amount) (:access (perm feedback track list))
   (let ((project (ensure-project project)))
     (check-accessible project :view)
@@ -95,6 +113,13 @@
     (check-accessible project :edit)
     (delete-track track)
     (output project "Track deleted" "feedback/")))
+
+(define-api feedback/track/changelog (track &optional start end) ()
+  (let ((object (ensure-track track)))
+    (check-accessible object :view)
+    (output-changelog (list-changes :object object
+                                    :start (when start (parse-time start))
+                                    :end (when end (parse-time end))))))
 
 (define-api feedback/entry (entry) ()
   (let ((entry (ensure-entry entry)))
@@ -194,6 +219,13 @@
     (delete-entry entry)
     (output NIL "Entry deleted" "feedback/~a/" (dm:field (ensure-project entry) "name"))))
 
+(define-api feedback/entry/changelog (entry &optional start end) ()
+  (let ((object (ensure-entry entry)))
+    (check-accessible object :view)
+    (output-changelog (list-changes :object object
+                                    :start (when start (parse-time start))
+                                    :end (when end (parse-time end))))))
+
 (define-api feedback/note/list (entry &optional skip amount) ()
   (let ((entry (ensure-entry entry)))
     (check-accessible entry :view)
@@ -236,6 +268,13 @@
   (let ((event (ensure-event event)))
     (check-accessible event :edit)
     (output (delete-event event) "Event deleted")))
+
+(define-api feedback/event/changelog (event &optional start end) ()
+  (let ((object (ensure-event event)))
+    (check-accessible object :view)
+    (output-changelog (list-changes :object object
+                                    :start (when start (parse-time start))
+                                    :end (when end (parse-time end))))))
 
 (define-api feedback/deadline/list (timeline &optional start end) ()
   (let ((timeline (ensure-timeline timeline)))
@@ -330,3 +369,11 @@
     (check-accessible (ensure-project object) :edit)
     (set-subscription object type[])
     (output object "Subscription updated" "feedback/subscribe/~a/~a" object-type object-id)))
+
+(define-api feedback/user/changelog (user &optional start end) ()
+  (let ((object (user:get user :if-does-not-exist :error)))
+    (when (or (eql object (auth:current NIL))
+              (user:check (auth:current) (perm feedback)))
+      (output-changelog (list-changes :author object
+                                      :start (when start (parse-time start))
+                                      :end (when end (parse-time end)))))))

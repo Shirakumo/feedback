@@ -368,19 +368,26 @@
                  ("parent-type" . ,(when parent (object-type->id (dm:collection parent))))
                  ("edit-type" . ,(edit-type->id action))))))
 
-(defun list-changes (&key from to object author)
-  (let ((from (or from 0)) (to (or to most-positive-fixnum)))
+(defun changelog-object (object)
+  (ensure-object (dm:field object "object") (dm:field object "object-type")))
+
+(defun changelog-parent (object)
+  (when (dm:field object "parent")
+    (ensure-object (dm:field object "parent") (dm:field object "parent-type"))))
+
+(defun list-changes (&key start end object author)
+  (let ((start (or start 0)) (end (or end most-positive-fixnum)))
     (db:select 'log (cond (object
-                           (db:query (:and (:>= 'time from) (:< 'time to)
+                           (db:query (:and (:>= 'time start) (:< 'time end)
                                            (:or (:and (:= 'object (dm:id object))
                                                       (:= 'object-type (object-type->id (dm:collection object))))
                                                 (:and (:= 'parent (dm:id object))
                                                       (:= 'parent-type (object-type->id (dm:collection object))))))))
                           (author
-                           (db:query (:and (:>= 'time from) (:< 'time to)
+                           (db:query (:and (:>= 'time start) (:< 'time end)
                                            (:= 'author (user:id author)))))
                           (T
-                           (db:query (:and (:>= 'time from) (:< 'time to))))))))
+                           (db:query (:and (:>= 'time start) (:< 'time end))))))))
 
 (define-ensure ensure-project (project-ish)
   (typecase project-ish
