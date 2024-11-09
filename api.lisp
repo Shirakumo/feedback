@@ -96,6 +96,11 @@
     (delete-track track)
     (output project "Track deleted" "feedback/")))
 
+(define-api feedback/entry (entry) ()
+  (let ((entry (ensure-entry entry)))
+    (check-accessible entry :view)
+    (api-output entry)))
+
 (define-api feedback/entry/list (&optional project track query skip amount) ()
   (let ((object (cond (project (ensure-project project))
                       (track (ensure-track track))
@@ -152,6 +157,20 @@
                  (ensure-directories-exist path)
                  (uiop:copy-file (first file) path)))
       (output entry "Entry updated"))))
+
+(define-api feedback/entry/render (entry[]) ()
+  (setf (content-type *response*) "text/html")
+  (handler-bind ((plump:invalid-xml-character #'abort)
+                 (plump:discouraged-xml-character #'muffle-warning))
+    (let ((plump:*tag-dispatchers* plump:*html-tags*))
+      (plump:serialize
+       (r-clip:process "<c:splice iterate=\"entries\"><c:h>(plump:clone-node (** :entry-content) T)"
+                       :entries (loop for name in entry[]
+                                      for entry = (ensure-entry name)
+                                      do (check-accessible entry :view)
+                                      collect entry)
+                       :entry-content (plump:parse (template-file "entry.ctml" :feedback)))
+       NIL))))
 
 (define-api feedback/entry/tag/new (entry tag) ()
   (let ((entry (ensure-entry entry)))
