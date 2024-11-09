@@ -104,7 +104,17 @@
              '((timeline (:id timeline))
                (name (:varchar 32))
                (time (:integer 5)))
-             :indices '(timeline)))
+             :indices '(timeline))
+
+  (db:create 'changelog
+             '((time (:integer 5))
+               (author :id)
+               (object :id)
+               (object-type (:integer 2))
+               (parent :id)
+               (parent-type (:integer 2))
+               (edit-type (:integer 2)))
+             :indices '(time object object-type parent parent-type)))
 
 (defun check-name (name)
   (let ((names '("new" "snapshot" "edit" "entry" "user" "subscribe" "import" "timeline" "tl")))
@@ -193,7 +203,16 @@
   (subscriber 7)
   (timeline 8)
   (event 9)
-  (deadline 10))
+  (deadline 10)
+  (dependency 11)
+  (changelog 12)
+  (tag 13))
+
+(define-mapping (edit-type id)
+  (:make 0)
+  (:edit 1)
+  (:move 2)
+  (:delete 3))
 
 (defun os-type-icon (os-type)
   (case os-type
@@ -326,6 +345,43 @@
                  :type (string-downcase (id->attachment-type (dm:field type "type")))
                  :defaults (entry-directory entry)))
 
+(define-ensure parent (object)
+  (ecase (dm:collection object)
+    (project)
+    ((attachment track tag snapshot members timeline)
+     (ensure-project object))
+    ((note entry-tag dependency)
+     (ensure-entry object))
+    ((event deadline)
+     (ensure-timeline object))
+    ((log subscriber)
+     (ensure-object (dm:field object "object") (dm:field object "object-type")))))
+
+(defun log-change (object action &key (time (get-universal-time)) (author (author)))
+  (let ((parent (parent object)))
+    (db:insert 'changelog
+               `(("time" . ,time)
+                 ("author" . ,(user:id author))
+                 ("object" . ,(dm:id object))
+                 ("object-type" . ,(object-type->id (dm:collection object)))
+                 ("parent" . ,(when parent (dm:id parent)))
+                 ("parent-type" . ,(when parent (object-type->id (dm:collection parent))))
+                 ("edit-type" . ,(edit-type->id action))))))
+
+(defun list-changes (&key from to object author)
+  (let ((from (or from 0)) (to (or to most-positive-fixnum)))
+    (db:select 'log (cond (object
+                           (db:query (:and (:>= 'time from) (:< 'time to)
+                                           (:or (:and (:= 'object (dm:id object))
+                                                      (:= 'object-type (object-type->id (dm:collection object))))
+                                                (:and (:= 'parent (dm:id object))
+                                                      (:= 'parent-type (object-type->id (dm:collection object))))))))
+                          (author
+                           (db:query (:and (:>= 'time from) (:< 'time to)
+                                           (:= 'author (user:id author)))))
+                          (T
+                           (db:query (:and (:>= 'time from) (:< 'time to))))))))
+
 (define-ensure ensure-project (project-ish)
   (typecase project-ish
     (dm:data-model
@@ -370,6 +426,7 @@
             do (setf-dm-fields sub (model "project") name color)
                (dm:insert sub))
       (db:insert 'members `(("project" . ,(dm:id model)) ("user" . ,(user:id author))))
+      (log-change model :make :author author)
       (notify model :project-new model author)
       model)))
 
@@ -387,13 +444,16 @@
                                                 :test #'string-equal)
                 do (cond (entry
                           (setf (dm:field entry "type") (attachment-type->id type))
+                          (log-change entry :edit)
                           (setf existing (delete entry existing)))
                          ((or* name)
                           (let ((sub (dm:hull 'attachment)))
                             (setf-dm-fields sub project name)
                             (setf (dm:field sub "type") (attachment-type->id type))
-                            (dm:insert sub)))))
+                            (dm:insert sub)
+                            (log-change sub :make)))))
           (dolist (attachment existing)
+            (log-change attachment :delete)
             (dm:delete attachment))))
       (when members
         (db:remove 'members (db:query (:= 'project (dm:id project))))
@@ -408,14 +468,18 @@
                 do (cond (entry
                           (setf (dm:field entry "color") color)
                           (dm:save entry)
+                          (log-change entry :edit)
                           (setf existing (delete entry existing)))
                          ((or* name)
                           (let ((sub (dm:hull 'tag)))
                             (setf-dm-fields sub project name color)
-                            (dm:insert sub)))))
+                            (dm:insert sub)
+                            (log-change sub :make)))))
           (dolist (tag existing)
             (db:remove 'entry-tag (db:query (:= 'tag (dm:id tag))))
+            (log-change tag :delete)
             (dm:delete tag))))
+      (log-change project :edit)
       project)))
 
 (defun delete-project (project)
@@ -426,6 +490,7 @@
       (db:remove 'subscriber (db:query (:and (:= 'object (dm:id project)) (:= 'object-type (object-type->id 'project)))))
       (db:remove 'members (db:query (:= 'project (dm:id project))))
       (db:remove 'tag (db:query (:= 'project (dm:id project))))
+      (log-change project :delete)
       (dm:delete project)
       (delete-directory (project-directory project)))))
 
@@ -480,6 +545,7 @@
     (setf-dm-fields track project name description)
     (setf (dm:field track "protection") (protection->id protection))
     (prog1 (dm:insert track)
+      (log-change track :make)
       (notify track :track-new project))))
 
 (defun edit-track (track &key name description (protection NIL protection-p))
@@ -488,7 +554,8 @@
       (setf-dm-fields track name description)
       (when protection-p
         (setf (dm:field track "protection") (protection->id protection)))
-      (dm:save track))))
+      (dm:save track)
+      (log-change track :edit))))
 
 (defun delete-track (track &key (delete-entries T))
   (db:with-transaction ()
@@ -497,7 +564,8 @@
           (db:remove 'entry (db:query (:= 'track (dm:id track))))
           (db:update 'entry (db:query (:= 'track (dm:id track))) `(("track" . NIL))))
       (db:remove 'subscriber (db:query (:and (:= 'object (dm:id track)) (:= 'object-type (object-type->id 'track)))))
-      (db:remove 'track (db:query (:= '_id (dm:id track)))))))
+      (db:remove 'track (db:query (:= '_id (dm:id track))))
+      (log-change track :delete))))
 
 (defun list-members (project)
   (db:iterate 'members (db:query (:= 'project (ensure-id project)))
@@ -517,8 +585,10 @@
     (dm:data-model
      (ecase (dm:collection entry-ish)
        (entry entry-ish)
-       (note
-        (dm:get-one 'entry (db:query (:= '_id (dm:field entry-ish "entry")))))))
+       ((note entry-tag)
+        (dm:get-one 'entry (db:query (:= '_id (dm:field entry-ish "entry")))))
+       (dependency
+        (dm:get-one 'entry (db:query (:= '_id (dm:field entry-ish "source")))))))
     (T
      (or (dm:get-one 'entry (db:query (:= '_id (ensure-id entry-ish))))
          (error 'request-not-found :message "Could not find the requested entry.")))))
@@ -620,7 +690,8 @@
         (dolist (tag tags)
           (db:insert 'entry-tag `(("entry" . ,(dm:id model)) ("tag" . ,(dm:id (ensure-tag tag project))))))
         (unless (eql status :duplicate)
-          (notify model :entry-new project))))))
+          (notify model :entry-new project))
+        (log-change model :make)))))
 
 (defun edit-entry (entry &key track user-id description status (assigned-to NIL assigned-p) (relates-to NIL relates-to-p) severity order (tags NIL tags-p))
   (db:with-transaction ()
@@ -652,6 +723,7 @@
                        do (db:update 'entry (db:query (:= '_id (gethash "_id" record))) `(("order" . ,(1+ (gethash "order" record))))))))
           (setf (dm:field entry "order") order)))
       (prog1 (dm:save entry)
+        (log-change entry :edit)
         (notify entry :entry-edit)))))
 
 (defun delete-entry (entry &key (delete-related T))
@@ -665,6 +737,7 @@
       (db:remove 'entry-tag (db:query (:= 'entry (dm:id entry))))
       (db:remove 'dependency (db:query (:or (:= 'target (dm:id entry)) (:= 'source (dm:id entry)))))
       (db:remove 'subscriber (db:query (:and (:= 'object (dm:id entry)) (:= 'object-type (object-type->id 'entry)))))
+      (log-change entry :delete)
       (dm:delete entry))))
 
 (defun list-related (entry)
@@ -680,6 +753,7 @@
     (setf-dm-fields model entry text time)
     (setf (dm:field model "author") (user:id author))
     (prog1 (dm:insert model)
+      (log-change model :make)
       (notify model :note-new))))
 
 (define-ensure ensure-note (note-ish)
@@ -695,11 +769,13 @@
   (let ((note (ensure-note note)))
     (setf-dm-fields note text)
     (prog1 (dm:save note)
+      (log-change note :edit)
       (notify note :note-edit))))
 
 (defun delete-note (note)
   (db:with-transaction ()
     (db:remove 'subscriber (db:query (:and (:= 'object (dm:id note)) (:= 'object-type (object-type->id 'note)))))
+    (log-change note :delete)
     (dm:delete note)))
 
 (defun list-depends-on (entry)
@@ -713,10 +789,15 @@
 (defun add-dependency (target source)
   (db:with-transaction ()
     (when (= 0 (db:count 'dependency (db:query (:and (:= 'source (ensure-id source)) (:= 'target (ensure-id target))))))
-      (db:insert 'dependency `(("source" . ,(ensure-id source)) ("target" . ,(ensure-id target)))))))
+      (let ((dependency (dm:hull 'dependency)))
+        (setf-dm-fields dependency source target)
+        (dm:insert dependency)
+        (log-change dependency :make)))))
 
 (defun remove-dependency (target source)
-  (db:remove 'dependency (db:query (:and (:= 'source (ensure-id source)) (:= 'target (ensure-id target))))))
+  (let ((dependency (dm:get-one 'dependency (db:query (:and (:= 'source (ensure-id source)) (:= 'target (ensure-id target)))))))
+    (log-change dependency :delete)
+    (dm:delete dependency)))
 
 (define-ensure ensure-snapshot (snapshot-ish)
   (etypecase snapshot-ish
@@ -742,6 +823,7 @@
         (model (dm:hull 'snapshot)))
     (setf-dm-fields model project time user-id session-id session-duration snapshot-duration version)
     (prog1 (dm:insert model)
+      (log-change model :make)
       (notify model :snapshot-new project))))
 
 (defun delete-snapshot (snapshot)
@@ -749,6 +831,7 @@
     (let ((snapshot (ensure-snapshot snapshot)))
       (delete-directory (snapshot-directory snapshot))
       (db:remove 'subscriber (db:query (:and (:= 'object (dm:id snapshot)) (:= 'object-type (object-type->id 'snapshot)))))
+      (log-change snapshot :delete)
       (dm:delete snapshot))))
 
 (define-ensure ensure-object (type id)
@@ -794,22 +877,30 @@
                     (let ((email (user:field "email" (gethash "user" record))))
                       (when email (mail:send email subject body))))))))
 
-(defun set-subscription (object types &optional (user (author)))
+(defun make-subscription (object types &optional (user (auth:current)))
+  (let ((subscriber (dm:hull 'subscriber)))
+    (setf (dm:field subscriber "object") (dm:id object))
+    (setf (dm:field subscriber "object-type") (object-type->id (dm:collection object)))
+    (setf (dm:field subscriber "user") (user:id user))
+    (setf (dm:field subscriber "type") (subscription-types->id types))
+    (dm:insert subscriber)
+    (log-change subscriber :make :author user)))
+
+(defun set-subscription (object types &optional (user (auth:current)))
   (let ((existing (dm:get-one 'subscriber (db:query (:and (:= 'object (dm:id object))
                                                           (:= 'object-type (object-type->id (dm:collection object)))
                                                           (:= 'user (user:id user))))))
         (types (subscription-types->id types)))
     (cond (existing
            (cond ((= 0 (dm:field existing "type"))
+                  (log-change existing :delete)
                   (dm:delete existing))
                  (T
                   (setf (dm:field existing "type") types)
+                  (log-change existing :edit)
                   (dm:save existing))))
           ((/= 0 types)
-           (db:insert 'subscriber `(("object" . ,(dm:id object))
-                                    ("object-type" . ,(object-type->id (dm:collection object)))
-                                    ("user" . ,(user:id user))
-                                    ("type" . ,(subscription-types->id types))))))))
+           (make-subscription object types user)))))
 
 (defun subscribe-to (object types &optional (user (auth:current)))
   (let ((existing (dm:get-one 'subscriber (db:query (:and (:= 'object (dm:id object))
@@ -817,12 +908,10 @@
                                                           (:= 'user (user:id user)))))))
     (cond (existing
            (setf (dm:field existing "type") (logior (dm:field existing "type") (subscription-types->id types)))
+           (log-change existing :edit)
            (dm:save existing))
           (T
-           (db:insert 'subscriber `(("object" . ,(dm:id object))
-                                    ("object-type" . ,(object-type->id (dm:collection object)))
-                                    ("user" . ,(user:id user))
-                                    ("type" . ,(subscription-types->id types))))))))
+           (make-subscription object types user)))))
 
 (defun unsubscribe-from (object types &optional (user (auth:current)))
   (let ((existing (dm:get-one 'subscriber (db:query (:and (:= 'object (dm:id object))
@@ -830,9 +919,12 @@
                                                           (:= 'user (user:id user)))))))
     (when existing
       (setf (dm:field existing "type") (logand (dm:field existing "type") (lognot (subscription-types->id types))))
-      (if (= 0 (dm:field existing "type"))
-          (dm:delete existing)
-          (dm:save existing)))))
+      (cond ((= 0 (dm:field existing "type"))
+             (log-change existing :delete)
+             (dm:delete existing))
+            (T
+             (log-change existing :edit)
+             (dm:save existing))))))
 
 (defun list-subscriptions (scope &optional (user (auth:current)))
   (let ((subs (dm:get 'subscriber (db:query (:= 'user (user:id user)))
@@ -875,9 +967,9 @@
   (etypecase timeline-ish
     (dm:data-model
      (ecase (dm:collection timeline-ish)
-       (entry
-        (dm:get-one 'timeline (db:query (:= '_id (dm:field timeline-ish "timeline")))))
-       (timeline timeline-ish)))
+       (timeline timeline-ish)
+       ((event deadline)
+        (dm:get-one 'timeline (db:query (:= '_id (dm:field timeline-ish "timeline")))))))
     (T
      (or (dm:get-one 'timeline (db:query (:= '_id (ensure-id timeline-ish))))
          (error 'request-not-found :message "Could not find the requested timeline.")))))
@@ -891,6 +983,7 @@
     (setf-dm-fields timeline project name description start end)
     (setf (dm:field timeline "protection") (protection->id protection))
     (prog1 (dm:insert timeline)
+      (log-change timeline :make)
       (notify timeline :timeline-new project))))
 
 (defun edit-timeline (timeline &key name description (protection NIL protection-p) start end)
@@ -899,6 +992,7 @@
       (setf-dm-fields timeline name description start end)
       (when protection-p
         (setf (dm:field timeline "protection") (protection->id protection)))
+      (log-change timeline :edit)
       (dm:save timeline))))
 
 (defun delete-timeline (timeline)
@@ -907,6 +1001,7 @@
       (db:remove 'event (db:query (:= 'timeline (dm:id timeline))))
       (db:remove 'deadline (db:query (:= 'timeline (dm:id timeline))))
       (db:remove 'subscriber (db:query (:and (:= 'object (dm:id timeline)) (:= 'object-type (object-type->id 'timeline)))))
+      (log-change timeline :delete)
       (db:remove 'timeline (db:query (:= '_id (dm:id timeline)))))))
 
 (defvar *default-timeline-range* (* 60 60 24 30 4)) ; four months
@@ -956,6 +1051,7 @@
       (error "Event for entry ~s already exists" (ensure-id entry)))
     (setf-dm-fields event entry start end layer)
     (prog1 (dm:insert event)
+      (log-change event :make)
       (notify timeline :timeline-edit))))
 
 (defun edit-event (event &key name start end layer)
@@ -963,12 +1059,14 @@
     (let ((event (ensure-event event)))
       (setf-dm-fields event name start end layer)
       (prog1 (dm:save event)
+        (log-change event :edit)
         (notify (ensure-timeline event) :timeline-edit)))))
 
 (defun delete-event (event)
   (db:with-transaction ()
     (let ((event (ensure-event event)))
       (prog1 (dm:delete event)
+        (log-change event :delete)
         (notify (ensure-timeline event) :timeline-edit)))))
 
 (defun list-deadlines (timeline &key start end)
@@ -991,6 +1089,7 @@
         (deadline (dm:hull 'deadline)))
     (setf-dm-fields deadline name time)
     (prog1 (dm:insert deadline)
+      (log-change deadline :make)
       (notify timeline :timeline-edit))))
 
 (defun edit-deadline (deadline &key name time)
@@ -998,13 +1097,15 @@
     (let ((deadline (ensure-deadline deadline)))
       (setf-dm-fields deadline name time)
       (prog1 (dm:save deadline)
-        (notify (ensure-timeline deadline) :timeline-edit)))))
+        (log-change deadline :edit)
+        (notify deadline :timeline-edit)))))
 
 (defun delete-deadline (deadline)
   (db:with-transaction ()
     (let ((deadline (ensure-deadline deadline)))
       (prog1 (dm:delete deadline)
-        (notify (ensure-timeline deadline) :timeline-edit)))))
+        (log-change deadline :delete)
+        (notify deadline :timeline-edit)))))
 
 (defun accessible-p (object action &optional (user (author)))
   (flet ((project-accessible-p (project)
