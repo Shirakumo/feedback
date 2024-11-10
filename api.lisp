@@ -27,6 +27,9 @@
                        (setf (gethash "parent" table) (changelog-parent change))
                     collect table)))
 
+(define-api feedback/project (name) (:access (perm feedback project list))
+  (api-output (ensure-project name)))
+
 (define-api feedback/project/list () (:access (perm feedback project list))
   (api-output (list-projects)))
 
@@ -78,12 +81,17 @@
                                                                      (T (error 'api-argument-invalid :argument "tags"))))
       (output (or track project) "Entries imported"))))
 
-(define-api feedback/project/changelog (project &optional start end) ()
+(define-api feedback/project/changelog (project &optional start end) (:access (perm feedback project edit))
   (let ((object (ensure-project project)))
     (check-accessible object :view)
     (output-changelog (list-changes :object object
                                     :start (when start (parse-time start))
                                     :end (when end (parse-time end))))))
+
+(define-api feedback/track (track) (:access (perm feedback track list))
+  (let ((track (ensure-track track)))
+    (check-accessible track :view)
+    (api-output track)))
 
 (define-api feedback/track/list (project &optional query skip amount) (:access (perm feedback track list))
   (let ((project (ensure-project project)))
@@ -226,6 +234,11 @@
                                     :start (when start (parse-time start))
                                     :end (when end (parse-time end))))))
 
+(define-api feedback/note (note) ()
+  (let ((note (ensure-note note)))
+    (check-accessible note :view)
+    (api-output note)))
+
 (define-api feedback/note/list (entry &optional skip amount) ()
   (let ((entry (ensure-entry entry)))
     (check-accessible entry :view)
@@ -246,6 +259,11 @@
   (let ((note (ensure-note note)))
     (check-accessible note :edit)
     (output (delete-note note) "Note deleted")))
+
+(define-api feedback/event (event) ()
+  (let ((event (ensure-event event)))
+    (check-accessible event :view)
+    (api-output event)))
 
 (define-api feedback/event/list (timeline &optional start end) ()
   (let ((timeline (ensure-timeline timeline)))
@@ -276,6 +294,11 @@
                                     :start (when start (parse-time start))
                                     :end (when end (parse-time end))))))
 
+(define-api feedback/deadline (deadline) ()
+  (let ((deadline (ensure-deadline deadline)))
+    (check-accessible deadline :view)
+    (api-output deadline)))
+
 (define-api feedback/deadline/list (timeline &optional start end) ()
   (let ((timeline (ensure-timeline timeline)))
     (check-accessible timeline :view)
@@ -297,6 +320,11 @@
     (check-accessible deadline :edit)
     (output (delete-deadline deadline) "Deadline deleted")))
 
+(define-api feedback/snapshot (snapshot) ()
+  (let ((snapshot (ensure-snapshot snapshot)))
+    (check-accessible snapshot :view)
+    (api-output snapshot)))
+
 (define-api feedback/snapshot/new (project user-id session-id session-duration snapshot-duration &optional version trace) ()
   (db:with-transaction ()
     (let* ((project (check-accessible (or (find-project project) (ensure-project project)) :edit))
@@ -317,6 +345,11 @@
     (check-accessible snapshot :edit)
     (delete-snapshot snapshot)
     (output NIL "Snapshot deleted" "feedback/~a/" (dm:field (ensure-project snapshot) "name"))))
+
+(define-api feedback/timeline (timeline) ()
+  (let ((timeline (ensure-timeline timeline)))
+    (check-accessible timeline :view)
+    (api-output timeline)))
 
 (define-api feedback/timeline/list (project &optional query skip amount) (:access (perm feedback timeline list))
   (let ((project (ensure-project project)))
