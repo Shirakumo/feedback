@@ -1,0 +1,7 @@
+<article class="change view" lquery="(data :id _id :author author)">
+  <time lquery="(time time)"></time>
+  <a class="author" @href="feedback/user/{0} author" lquery="(text (user:username author))">USER</a>
+  <span class="action" lquery="(text (feedback::edit-type-label edit-type)))">changed</span>
+  <span class="object-type" lquery="(text (string-downcase (feedback::id->object-type object-type)))">THING-ISH</span>
+  <a class="oject" lquery="(text (feedback::object-label (feedback::changelog-object *))) (attr :href (feedback::object-url (feedback::changelog-object *)))">THING</a>
+</article>

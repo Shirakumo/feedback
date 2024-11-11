@@ -214,6 +214,14 @@
   (:move 2)
   (:delete 3))
 
+(defun edit-type-label (edit-type)
+  (case edit-type
+    ((:make 0) "created")
+    ((:edit 1) "edited")
+    ((:move 2) "moved")
+    ((:delete 3) "deleted")
+    (T "changed")))
+
 (defun os-type-icon (os-type)
   (case os-type
     ((:windows 1) "fa-windows")
@@ -379,7 +387,7 @@
   (when (dm:field object "parent")
     (ensure-object (dm:field object "parent") (dm:field object "parent-type"))))
 
-(defun list-changes (&key start end object author)
+(defun list-changes (&key start end object author (skip 0) amount)
   (let ((start (or start 0)) (end (or end most-positive-fixnum)))
     (db:select 'changelog 
                (cond (object
@@ -392,7 +400,8 @@
                       (db:query (:and (:>= 'time start) (:< 'time end)
                                       (:= 'author (user:id author)))))
                      (T
-                      (db:query (:and (:>= 'time start) (:< 'time end))))))))
+                      (db:query (:and (:>= 'time start) (:< 'time end)))))
+               :amount amount :skip skip :sort '(("time" :desc)))))
 
 (define-ensure ensure-project (project-ish)
   (typecase project-ish

@@ -24,6 +24,30 @@
        (event (apply #'event-url object args))
        (deadline (apply #'deadline-url object args))))))
 
+(defun object-label (object)
+  (etypecase object
+    (user:user (user:username object))
+    (dm:data-model
+     (ecase (dm:collection object)
+       ((project attachment tag track timeline deadline)
+        (dm:field object "name"))
+       (entry
+        (id-code object))
+       (note
+        (note-tag object))
+       ((members subscriber)
+        (user:username (dm:field object "user")))
+       (entry-tag
+        (object-label (ensure-tag object)))
+       (dependency
+        (format NIL "~a -> ~a"
+                (id-code (dm:field object "source"))
+                (id-code (dm:field object "target"))))
+       (snapshot
+        (id-code object))
+       (event
+        (object-label (ensure-entry object)))))))
+
 (defun user-url (user &rest args)
   (apply #'uri-to-url (format NIL "feedback/user/~a/" (user:username user))
          :representation :external args))
@@ -159,7 +183,9 @@
                  :page-idx page
                  :user user
                  :entry-content (plump:parse (template-file "entry.ctml" :feedback))
-                 :entries (list-entries user :skip skip :amount amount :query (or* (post/get "query"))))))
+                 :entries (list-entries user :skip skip :amount amount :query (or* (post/get "query")))
+                 :change-content (plump:parse (template-file "change.ctml" :feedback))
+                 :changelog (list-changes :author user :amount 100))))
 
 (define-page* project ("feedback/^([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (project page))
   (let* ((project (find-project project))

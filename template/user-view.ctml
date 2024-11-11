@@ -42,5 +42,19 @@
         <div class="empty">There are no entries to show</div>
       </c:unless>
     </article>
+    <article class="changelog view">
+      <div class="change head">
+        <div class="row">
+          <span class="time">Time</span>
+          <span class="change">Change</span>
+        </div>
+      </div>
+      <c:splice iterate="changelog">
+        <c:splice lquery="(html (plump:clone-node (** :change-content) T))"/>
+      </c:splice>
+      <c:unless test="changelog">
+        <div class="empty">There are no changes to show</div>
+      </c:unless>
+    </article>
   </section>
 </article>
