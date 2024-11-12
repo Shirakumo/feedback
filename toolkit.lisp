@@ -119,3 +119,8 @@
                 ,@body))
          (declare (dynamic-extent #'thunk))
          (cache-ensured ',name (list ,@arg) #'thunk)))))
+
+(defmacro changes-p (object &rest fields)
+  `(or ,@(loop for field in fields
+               collect `(and ,field
+                             (not (equal ,field (dm:field ,object ,(string field))))))))

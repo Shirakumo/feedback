@@ -717,6 +717,10 @@
 (defun edit-entry (entry &key track user-id description status (assigned-to NIL assigned-p) (relates-to NIL relates-to-p) severity order (tags NIL tags-p))
   (db:with-transaction ()
     (let ((entry (ensure-entry entry)))
+      (when (changes-p entry user-id description status assigned-to relates-to severity)
+        (log-change entry :edit))
+      (when (changes-p entry track)
+        (log-change entry :move))
       (setf-dm-fields entry track user-id description severity relates-to)
       (when relates-to-p
         (setf (dm:field entry "assigned-to") (when relates-to (ensure-entry relates-to))))
@@ -725,6 +729,7 @@
       (when status
         (setf (dm:field entry "status") (status->id status)))
       (when (and tags-p (listp tags))
+        ;; FIXME: track tags changes
         (db:remove 'entry-tag (db:query (:= 'entry (dm:id entry))))
         (dolist (tag tags)
           (db:insert 'entry-tag `(("entry" . ,(dm:id entry)) ("tag" . ,(dm:id (ensure-tag tag (dm:field entry "project"))))))))
@@ -744,7 +749,6 @@
                        do (db:update 'entry (db:query (:= '_id (gethash "_id" record))) `(("order" . ,(1+ (gethash "order" record))))))))
           (setf (dm:field entry "order") order)))
       (prog1 (dm:save entry)
-        (log-change entry :edit)
         (notify entry :entry-edit)))))
 
 (defun delete-entry (entry &key (delete-related T))
