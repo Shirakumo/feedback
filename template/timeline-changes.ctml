@@ -1,0 +1,50 @@
+<article class="changelog view">
+  <section class="self">
+    <c:using value="timeline">
+      <header>
+        <nav>
+          <c:when test="(feedback::accessible-p * :edit)">
+            <a @href="feedback/{0}/tl/{1}/edit (clip (** :project) :name) name">
+              <i class="fas fa-edit"></i>
+              Edit
+            </a>
+            <a @href="feedback/subscribe/timeline/{0} _id">
+              <i class="fa-solid fa-envelope"></i>
+              Subscriptions
+            </a>
+          </c:when>
+        </nav>
+      </header>
+      <p class="description" lquery='(html (feedback::render-description description))'></p>
+    </c:using>
+  </section>
+  <section>
+    <header>
+      <h3>Changes</h3>
+      <nav>
+        <a @href="feedback/{0}/{1}/changes/{2} (clip project :name) (clip timeline :name) (1- page-idx)" lquery="(add-class (when (<= page-idx 1) :disabled))">
+          <i class="fas fa-arrow-left"></i>
+          Previous Page
+        </a>
+        <form class="search"></form>
+        <a @href="feedback/{0}/{1}/changes/{2} (clip project :name) (clip timeline :name) (1+ page-idx)" lquery="(add-class (unless changelog :disabled))">
+          <i class="fas fa-arrow-right"></i>
+          Next Page
+        </a>
+      </nav>
+    </header>
+    <div class="change head">
+      <div class="row">
+        <span class="time">Time</span>
+        <span class="author">Author</span>
+        <span class="change">Change</span>
+      </div>
+    </div>
+    <c:splice iterate="changelog">
+      <c:splice lquery="(html (plump:clone-node (** :change-content) T))"/>
+    </c:splice>
+    <c:unless test="changelog">
+      <div class="empty">There are no changes to show</div>
+    </c:unless>
+  </section>
+</article>

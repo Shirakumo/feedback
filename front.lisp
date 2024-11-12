@@ -290,13 +290,31 @@
 (define-page* timeline-edit ("feedback/^([^/]+)/tl/([^/]+)/edit$" 2) (:uri-groups (project timeline))
   (let* ((project (find-project project))
          (timeline (find-timeline timeline project)))
-    (check-accessible project :edit)
+    (check-accessible timeline :edit)
     (render-page "Edit" (@template "timeline-edit.ctml")
                  :up (timeline-url timeline)
                  :up-icon "fa-timeline"
                  :up-text (dm:field timeline "name")
                  :project project
                  :timeline timeline)))
+
+(define-page* timeline-changes ("feedback/^([^/]+)/tl/^([^/]+)/changes(?:/(\\d+)?)?$" 3) (:uri-groups (project timeline page))
+  (let* ((project (find-project project))
+         (timeline (find-timeline timeline project))
+         (amount 100)
+         (page (parse-integer (or* page "1")))
+         (skip (* amount (max 0 (1- page)))))
+    (check-accessible timeline :view)
+    (render-page "Changes" (@template "timeline-changes.ctml")
+                 :icon "fa-clock-rotate-left"
+                 :up (project-url project)
+                 :up-icon "fa-timeline"
+                 :up-text (dm:field timeline "name")
+                 :page-idx page
+                 :project project
+                 :timeline timeline
+                 :change-content (plump:parse (template-file "change.ctml" :feedback))
+                 :changelog (list-changes :object timeline :amount amount :skip skip))))
 
 (define-page* track "feedback/^([^/]+)/([^/]+)(?:/(\\d+)?)?$" (:uri-groups (project track page))
   (let* ((project (find-project project))
@@ -380,7 +398,9 @@
                  :project project
                  :entry entry
                  :notes (list-notes entry)
-                 :attachments attachments)))
+                 :attachments attachments
+                 :change-content (plump:parse (template-file "change.ctml" :feedback))
+                 :changelog (list-changes :object entry))))
 
 (define-page* attachment "feedback/^([^/]+)/entry/([^/]+)/([^/]+)$" (:uri-groups (project entry attachment))
   (let* ((project (find-project project))

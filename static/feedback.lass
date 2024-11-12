@@ -47,6 +47,7 @@
  :color (hex A0A0A0) !important
  :background (rgba 0 0 0 0.2) !important
  :border-color (rgba 0 0 0 0.2) !important)
+(time :font-variant-numeric tabular-nums)
 (form.search
  :display flex
  (input[type=search] :flex-grow 1))
@@ -161,11 +162,34 @@
    :margin 0
    :max-width fit-content)
   (.name :flex-grow 1))
+ (.notes
+  :border-left none)
  ((:or .description .comment .log)
   :white-space pre-wrap)
  ((:or .os .cpu .gpu)
   (.long
-   :font-family monospace)))
+   :font-family monospace))
+ (.changelog
+  (.change
+   :padding-left 1em
+   (.row
+    :display grid
+    :grid-template-columns 10em 8em 1fr
+    :gap 0.2em
+    :padding 0.2em
+    (.author :white-space nowrap :overflow hidden :text-overflow ellipsis)
+    (.description :white-space normal)))
+  ((:and .change :last-child)
+   :border-bottom 1px solid gray)
+  (.change.head
+   :font-weight bold
+   :background black
+   :color white
+   ((.row *) :padding 0.5em))
+  (.empty
+   :padding 2em
+   :text-align center
+   :font-size 1.2em)))
 ((:or .view .list)
  (section
   :margin-bottom 2em
@@ -250,8 +274,6 @@
   :background black
   :color white
   ((.row *) :padding 0.5em))
- (.change.existing
-  (.drag :cursor grab))
  (.empty
   :padding 2em
   :text-align center

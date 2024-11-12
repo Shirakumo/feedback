@@ -12,6 +12,10 @@
               <i class="fa-solid fa-envelope"></i>
               Subscriptions
             </a>
+            <a @href="feedback/{0}/tl/{1}/changes (clip (** :project) :name) name">
+              <i class="fas fa-clock-rotate-left"></i>
+              Changelog
+            </a>
           </c:when>
         </nav>
       </header>

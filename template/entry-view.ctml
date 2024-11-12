@@ -195,6 +195,19 @@
         </c:when>
       </div>
     </section>
+    <section>
+      <header>
+        <h3>Changes</h3>
+      </header>
+      <div class="changelog">
+        <c:splice iterate="(reverse (** :changelog))">
+          <c:splice lquery="(html (plump:clone-node (*** :change-content) T))"/>
+        </c:splice>
+        <c:unless test="(** :changelog)">
+          <div class="empty">There are no changes to show</div>
+        </c:unless>
+      </div>
+    </section>
     <datalist id="members" iterate="(feedback::list-members project)">
       <option lquery="(val (user:username *))" />
     </datalist>
