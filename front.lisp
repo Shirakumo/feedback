@@ -173,7 +173,7 @@
                  :entry-content (plump:parse (template-file "entry.ctml" :feedback))
                  :entries (list-entries (auth:current) :skip skip :amount amount :query (or* (post/get "query"))))))
 
-(define-page* user ("feedback/^user/([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (user page) :access (perm feedback user view))
+(define-page* user ("feedback/^user/([^/]+)(?:/(\\d+)?)?$" 5) (:uri-groups (user page) :access (perm feedback user view))
   (let* ((user (user:get user :if-does-not-exist :error))
          (amount 50)
          (page (parse-integer (or* page "1")))
@@ -183,9 +183,22 @@
                  :page-idx page
                  :user user
                  :entry-content (plump:parse (template-file "entry.ctml" :feedback))
-                 :entries (list-entries user :skip skip :amount amount :query (or* (post/get "query")))
+                 :entries (list-entries user :skip skip :amount amount :query (or* (post/get "query"))))))
+
+(define-page* user-changes ("feedback/^user/([^/]+)/changes(?:/(\\d+)?)?$" 5) (:uri-groups (user page) :access (perm feedback user view))
+  (let* ((user (user:get user :if-does-not-exist :error))
+         (amount 100)
+         (page (parse-integer (or* page "1")))
+         (skip (* amount (max 0 (1- page)))))
+    (render-page "Changes" (@template "user-changes.ctml")
+                 :icon "fa-clock-rotate-left"
+                 :up (user-url user)
+                 :up-icon "fa-user"
+                 :up-text (user:username user)
+                 :page-idx page
+                 :user user
                  :change-content (plump:parse (template-file "change.ctml" :feedback))
-                 :changelog (list-changes :author user :amount 100))))
+                 :changelog (list-changes :author user :amount amount :skip skip))))
 
 (define-page* project ("feedback/^([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (project page))
   (let* ((project (find-project project))
@@ -229,6 +242,22 @@
                  :up-icon "fa-diagram-project"
                  :up-text (dm:field project "name")
                  :project project)))
+
+(define-page* project-changes ("feedback/^([^/]+)/changes(?:/(\\d+)?)?$" 3) (:uri-groups (project page))
+  (let* ((project (find-project project))
+         (amount 100)
+         (page (parse-integer (or* page "1")))
+         (skip (* amount (max 0 (1- page)))))
+    (check-accessible project :view)
+    (render-page "Changes" (@template "project-changes.ctml")
+                 :icon "fa-clock-rotate-left"
+                 :up (project-url project)
+                 :up-icon "fa-diagram-project"
+                 :up-text (dm:field project "name")
+                 :page-idx page
+                 :project project
+                 :change-content (plump:parse (template-file "change.ctml" :feedback))
+                 :changelog (list-changes :object project :amount amount :skip skip))))
 
 (define-page* timeline "feedback/^([^/]+)/tl/([^/]+)(?:/)?$" (:uri-groups (project timeline))
   (let* ((project (find-project project))
@@ -309,6 +338,24 @@
                  :up-text (dm:field track "name")
                  :project project
                  :track track)))
+
+(define-page* track-changes ("feedback/^([^/]+)/([^/]+)/changes(?:/(\\d+)?)?$" 2) (:uri-groups (project track page) :access (perm feedback user view))
+  (let* ((project (find-project project))
+         (track (find-track track project))
+         (amount 100)
+         (page (parse-integer (or* page "1")))
+         (skip (* amount (max 0 (1- page)))))
+    (check-accessible track :view)
+    (render-page "Changes" (@template "track-changes.ctml")
+                 :icon "fa-clock-rotate-left"
+                 :up (track-url track)
+                 :up-icon "fa-layer-group"
+                 :up-text (dm:field track "name")
+                 :page-idx page
+                 :project project
+                 :track track
+                 :change-content (plump:parse (template-file "change.ctml" :feedback))
+                 :changelog (list-changes :object track :amount amount :skip skip))))
 
 (define-page* entry "feedback/^([^/]+)/entry/([^/]+)$" (:uri-groups (project entry))
   (let* ((project (find-project project))

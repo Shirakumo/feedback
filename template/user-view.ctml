@@ -1,6 +1,16 @@
 <article class="user view">
   <section class="self">
     <header>
+      <nav>
+        <a @href="feedback/user/{0}/changes (user:username user)">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          Changelog
+        </a>
+        <a @href="feedback/subscribe/user/{0} (user:username user)">
+          <i class="fa-solid fa-envelope"></i>
+          Subscriptions
+        </a>
+      </nav>
       <img src="#" class="avatar" lquery="(attr :src (profile:avatar user 128))" />
     </header>
   </section>
@@ -8,17 +18,15 @@
     <header>
       <h3>Assigned Entries</h3>
       <nav>
+        <a @href="feedback/user/{0}/{1} (user:username user) (1- page-idx)" lquery="(add-class (when (<= page-idx 1) :disabled))">
+          <i class="fas fa-arrow-left"></i>
+          Previous Page
+        </a>
         <form class="search" method="get" @action="feedback/user/{0}/ (user:username user)">
           <input type="search" name="query" placeholder="Filter..." />
           <input type="submit" value="Go" />
         </form>
-        <c:when test="(< 1 page-idx)">
-          <a @href="feedback/user/{0}/{1} (user:username user) (1- page-idx)">
-            <i class="fas fa-arrow-left"></i>
-            Previous Page
-          </a>
-        </c:when>
-        <a @href="feedback/user/{0}/{1} (user:username user) (1+ page-idx)">
+        <a @href="feedback/user/{0}/{1} (user:username user) (1+ page-idx)" lquery="(add-class (unless entries :disabled))">
           <i class="fas fa-arrow-right"></i>
           Next Page
         </a>
@@ -40,20 +48,6 @@
       </c:splice>
       <c:unless test="entries">
         <div class="empty">There are no entries to show</div>
-      </c:unless>
-    </article>
-    <article class="changelog view">
-      <div class="change head">
-        <div class="row">
-          <span class="time">Time</span>
-          <span class="change">Change</span>
-        </div>
-      </div>
-      <c:splice iterate="changelog">
-        <c:splice lquery="(html (plump:clone-node (** :change-content) T))"/>
-      </c:splice>
-      <c:unless test="changelog">
-        <div class="empty">There are no changes to show</div>
       </c:unless>
     </article>
   </section>

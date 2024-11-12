@@ -1,0 +1,45 @@
+<article class="changelog view">
+  <section class="self">
+    <header>
+      <nav>
+        <a @href="feedback/user/{0} (user:username (feedback::author))">
+          <i class="fa-solid fa-user"></i>
+          User Page
+        </a>
+        <a @href="feedback/subscribe/user/{0} (user:username (feedback::author))">
+          <i class="fa-solid fa-envelope"></i>
+          Subscriptions
+        </a>
+      </nav>
+    </header>
+  </section>
+  <section>
+    <header>
+      <h3>Changes</h3>
+      <nav>
+        <a @href="feedback/user/{0}/changes/{1} (user:username user) (1- page-idx)" lquery="(add-class (when (<= page-idx 1) :disabled))">
+          <i class="fas fa-arrow-left"></i>
+          Previous Page
+        </a>
+        <form class="search"></form>
+        <a @href="feedback/user/{0}/changes/{1} (user:username user) (1+ page-idx)" lquery="(add-class (unless changelog :disabled))">
+          <i class="fas fa-arrow-right"></i>
+          Next Page
+        </a>
+      </nav>
+    </header>
+    <div class="change head">
+      <div class="row">
+        <span class="time">Time</span>
+        <span class="author">Author</span>
+        <span class="description">Change</span>
+      </div>
+    </div>
+    <c:splice iterate="changelog">
+      <c:splice lquery="(html (plump:clone-node (** :change-content) T))"/>
+    </c:splice>
+    <c:unless test="changelog">
+      <div class="empty">There are no changes to show</div>
+    </c:unless>
+  </section>
+</article>

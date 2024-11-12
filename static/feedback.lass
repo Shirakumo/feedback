@@ -230,6 +230,32 @@
    (a :padding 0.5em 0)
    :display grid
    :grid-template-columns "fit-content(20em)" 1fr)))
+(.changelog.view
+ (.change
+  (.row
+   :display grid
+   :grid-template-columns 10em 7em 1fr
+   :gap 0px
+   (>* :border-left 1px solid gray !important
+       :border-top 1px solid gray !important
+       :padding 0.2em)
+   ((:and >* :first-child)
+    :border-left none !important)
+   ((:or .time .author)
+    :text-align center)))
+ ((:and .change :last-child)
+  :border-bottom 1px solid gray)
+ (.change.head
+  :font-weight bold
+  :background black
+  :color white
+  ((.row *) :padding 0.5em))
+ (.change.existing
+  (.drag :cursor grab))
+ (.empty
+  :padding 2em
+  :text-align center
+  :font-size 1.2em))
 (.track.view
  :display flex
  :flex-direction column

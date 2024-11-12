@@ -381,27 +381,27 @@
                  ("edit-type" . ,(edit-type->id action))))))
 
 (defun changelog-object (object)
-  (ensure-object (dm:field object "object") (dm:field object "object-type")))
+  (ensure-object (dm:field object "object-type") (dm:field object "object")))
 
 (defun changelog-parent (object)
   (when (dm:field object "parent")
-    (ensure-object (dm:field object "parent") (dm:field object "parent-type"))))
+    (ensure-object (dm:field object "parent-type") (dm:field object "parent"))))
 
 (defun list-changes (&key start end object author (skip 0) amount)
   (let ((start (or start 0)) (end (or end most-positive-fixnum)))
-    (db:select 'changelog 
-               (cond (object
-                      (db:query (:and (:>= 'time start) (:< 'time end)
-                                      (:or (:and (:= 'object (dm:id object))
-                                                 (:= 'object-type (object-type->id (dm:collection object))))
-                                           (:and (:= 'parent (dm:id object))
-                                                 (:= 'parent-type (object-type->id (dm:collection object))))))))
-                     (author
-                      (db:query (:and (:>= 'time start) (:< 'time end)
-                                      (:= 'author (user:id author)))))
-                     (T
-                      (db:query (:and (:>= 'time start) (:< 'time end)))))
-               :amount amount :skip skip :sort '(("time" :desc)))))
+    (dm:get 'changelog 
+            (cond (object
+                   (db:query (:and (:>= 'time start) (:< 'time end)
+                                   (:or (:and (:= 'object (dm:id object))
+                                              (:= 'object-type (object-type->id (dm:collection object))))
+                                        (:and (:= 'parent (dm:id object))
+                                              (:= 'parent-type (object-type->id (dm:collection object))))))))
+                  (author
+                   (db:query (:and (:>= 'time start) (:< 'time end)
+                                   (:= 'author (user:id author)))))
+                  (T
+                   (db:query (:and (:>= 'time start) (:< 'time end)))))
+            :amount amount :skip skip :sort '(("time" :desc)))))
 
 (define-ensure ensure-project (project-ish)
   (typecase project-ish
