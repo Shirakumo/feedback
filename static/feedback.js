@@ -1,6 +1,7 @@
 class Feedback{
     constructor(){
         var self = this;
+        self.lastCheck = Date();
         self.cache = {};
         self.loading = {};
         if(console.log === undefined)
@@ -17,6 +18,7 @@ class Feedback{
         self.apiRoot = document.querySelector("head link[rel=api-root]").getAttribute("href");
         if(!self.apiRoot){
             self.log("Failed to retrieve API root. WTF?");
+            return;
         }
 
         self.registerElements();
