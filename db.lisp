@@ -855,7 +855,7 @@
       (log-change snapshot :delete)
       (dm:delete snapshot))))
 
-(define-ensure ensure-object (type id)
+(define-ensure ensure-object ((type id))
   (ecase (id->object-type (object-type->id type))
     (project (ensure-project id))
     (track (ensure-track id))
