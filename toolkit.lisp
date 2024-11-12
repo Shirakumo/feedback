@@ -37,7 +37,7 @@
 (defun id-code (entry-ish)
   (etypecase entry-ish
     (integer
-     (format NIL "$~(~4,'0x~)" entry-ish))
+     (format NIL "$~(~36,3,'0r~)" entry-ish))
     (string
      entry-ish)
     (dm:data-model
@@ -45,16 +45,16 @@
 
 (defun id-code-p (entry-ish)
   (and (stringp entry-ish)
-       (<= 5 (length entry-ish))
+       (<= 4 (length entry-ish))
        (char= #\$ (char entry-ish 0))
        (loop for i from 1 below (length entry-ish)
              for char = (char entry-ish i)
              always (or (char<= #\0 char #\9)
-                        (char<= #\a char #\f)
-                        (char<= #\A char #\F)))))
+                        (char<= #\a char #\z)
+                        (char<= #\A char #\Z)))))
 
 (defun parse-id-code (entry-ish)
-  (parse-integer entry-ish :start 1 :radix 16))
+  (parse-integer entry-ish :start 1 :radix 36))
 
 (defun short-text (text &optional (limit 32))
   (if (<= (length text) limit)

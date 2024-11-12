@@ -433,13 +433,13 @@ class Feedback{
     }
 
     formatIdCode(id){
-        let code = id.toString(16);
-        while(code.length < 4) code = "0"+code;
+        let code = id.toString(36);
+        while(code.length < 3) code = "0"+code;
         return "$"+code;
     }
 
     parseIdCode(code){
-        return parseInt(code.substr(1), 16);
+        return parseInt(code.substr(1), 36);
     }
 
     formatShort(text, len){
