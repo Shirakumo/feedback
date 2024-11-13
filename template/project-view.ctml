@@ -28,7 +28,7 @@
       <p class="description" lquery='(html (feedback::render-description description))'></p>
       <ul class="members" iterate="(feedback::list-members *)">
         <li>
-          <a @href="feedback/user/{0} (user:username *)" lquery="(text (user:username *))">
+          <a class="user" @href="feedback/user/{0} (user:username *)" lquery="(text (user:username *))">
             <img src="#" class="avatar" lquery="(attr :src (profile:avatar * 32))" />
           </a>
         </li>
@@ -47,7 +47,10 @@
     </header>
     <ul class="tracks" iterate="tracks">
       <li>
-        <a class="name" lquery="(text name) (attr :href (feedback::track-url *))"></a>
+        <a class="name" lquery="(attr :href (feedback::track-url *))">
+          <i class="fas fa-fw fa-layer-group"></i>
+          <c:s>name</c:s>
+        </a>
         <p class="description" lquery="(text description)"></p>
       </li>
     </ul>
@@ -64,7 +67,10 @@
     </header>
     <ul class="timelines" iterate="timelines">
       <li>
-        <a class="name" lquery="(text name) (attr :href (feedback::timeline-url *))"></a>
+        <a class="name" lquery="(attr :href (feedback::timeline-url *))">
+          <i class="fas fa-fw fa-timeline"></i>
+          <c:s>name</c:s>
+        </a>
         <p class="description" lquery="(text description)"></p>
       </li>
     </ul>

@@ -412,7 +412,7 @@
         (ensure-project (ensure-entry project-ish)))
        ((event deadline)
         (ensure-project (ensure-timeline project-ish)))
-       ((attachment track entry snapshot members timeline)
+       ((attachment track entry snapshot members timeline tag)
         (dm:get-one 'project (db:query (:= '_id (dm:field project-ish "project")))))))
     (T
      (or (dm:get-one 'project (db:query (:= '_id (ensure-id project-ish))))
@@ -575,8 +575,8 @@
       (setf-dm-fields track name description)
       (when protection-p
         (setf (dm:field track "protection") (protection->id protection)))
-      (dm:save track)
-      (log-change track :edit))))
+      (log-change track :edit)
+      (dm:save track))))
 
 (defun delete-track (track &key (delete-entries T))
   (db:with-transaction ()

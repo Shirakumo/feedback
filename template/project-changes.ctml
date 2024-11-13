@@ -21,11 +21,12 @@
           </a>
         </nav>
       </header>
+      <p class="description" lquery='(html (feedback::render-description description))'></p>
     </c:using>
   </section>
   <section>
     <header>
-      <h3>Changes</h3>
+      <h3><i class="fas fa-fw fa-clock-rotate-left"></i> Changes</h3>
       <nav>
         <a @href="feedback/{0}/changes/{1} name (1- page-idx)" lquery="(add-class (when (<= page-idx 1) :disabled))">
           <i class="fas fa-arrow-left"></i>

@@ -2,67 +2,62 @@
  :font-family "sans-serif"
  :font-size 12pt
  :padding 0 :margin 0
- :background (hex F0F0F0)
  (>header
   :display flex
   :align-items center
-  :border-bottom 0.2em solid (hex E0E0E0)
   (h1
-   :margin 0 1em 0 0)
+   :margin 0 1em 0 1em)
   (h2
-   :margin 0)
+   :margin 0
+   ((:and a :after)
+    :margin-left 1em
+    :font-family "\"Font Awesome 6 Free\""
+    :font-weight 900
+    :content "\\f105")
+   (>*
+   :padding 0.1em 0.5em))
   (nav
    :display flex
-   :align-items stretch)
-  (a[href]
-   :padding 0.1em 0.5em))
+   :align-items stretch))
  (>main
-  :background (hex FFFFFF)
   :min-height 100vh)
  (>footer
   :padding 1em 1em
-  :color (hex A0A0A0)
-  :border-top 0.2em solid (hex E0E0E0)
-  :background (hex F0F0F0)
   :text-align center))
 (a[href]
- :color (hex 0088EE)
  :text-decoration none)
-((:and a[href] :hover)
- :color (hex 0055DD))
 (a.button
- :border-radius 2px
  :padding 0.1em 0.3em
  :margin 0.1em 0.3em
- :background (hex F0F0F0)
- :border 1px solid (hex E0E0E0)
- :color (hex 303030)
  :white-space nowrap)
-((:and a.button :hover)
- :color (hex 303030)
- :background (hex E0E0E0)
- :border-color (hex D0D0D0))
 (a.disabled
- :cursor default
- :color (hex A0A0A0) !important
- :background (rgba 0 0 0 0.2) !important
- :border-color (rgba 0 0 0 0.2) !important)
-(time :font-variant-numeric tabular-nums)
+ :cursor default)
+(a.user
+ :margin 0.2em
+ :padding 0.2em 0.5em
+ :display inline-flex
+ :align-items center
+ (img
+  :margin -0.2em 0.2em -0.2em -0.5em
+  :border-radius 1em
+  :width 1.5em
+  :height 1.5em))
+(time
+ :font-variant-numeric tabular-nums)
+((:or input select textarea)
+ :color inherit
+ :border none)
 (form.search
+ :margin 0 0.3em
+ :padding 0.2em 0.5em
  :display flex
- (input[type=search] :flex-grow 1))
+ (input[type=search]
+  :padding 0 0.5em
+  :font-size 1em
+  :flex-grow 1))
 ((nav form.search)
  :flex-grow 1
- (input[type=search]
-  :background (rgba 0 0 0 0.2)
-  :color (hex F0F0F0)
-  :border none)
- ((:and input[type=search] "::placeholder")
-  :color (hex F0F0F0)
-  :opacity 0.8)
  (input[type=submit]
-  :background (hex A0A0A0)
-  :border none
   :cursor pointer))
 (form.edit
  :max-width 500px
@@ -73,8 +68,6 @@
   :margin 0.2em 0
   (label :min-width 10em)
   ((:or input textarea select)
-   :background (hex F0F0F0)
-   :border 1px solid (hex E0E0E0)
    :padding 0.2em
    :flex-grow 1)
   (textarea :min-height 10em))
@@ -84,17 +77,9 @@
   (input[type=submit]
    :flex-grow 1
    :cursor pointer
-   :border 1px solid (hex E0E0E0)
-   :background (hex F0F0F0)
    :text-align center
    :font-size 1.1em)
-  ((:and input [type=submit] :hover)
-   :background (hex E0E0E0)
-   :border 1px solid (hex D0D0D0))
   ("input[value=Delete]"
-   :color (hex FFFFFF)
-   :background (hex D00000)
-   :border 1px solid (hex A00000)
    :max-width 5em))
  (.permission
   ("input[type=checkbox]" :display none)
@@ -102,10 +87,9 @@
   ("input[type=checkbox]:checked+label" :opacity 1.0)))
 (form.edit.wide
  :max-width none
+ :width 100%
  :margin 0
- :padding 0
- ((:or input select textarea)
-  :background (hex F5F5F5)))
+ :padding 0)
 (.project.edit
  ((:or .attachments .members .tags)
   :flex-grow 1
@@ -139,8 +123,7 @@
    :margin 0.2em 1em
    :overflow-y auto
    :padding 0.2em 0.5em
-   :width 100%
-   :border 1px solid (hex E0E0E0))
+   :width 100%)
   (ul.long
    :margin 0.2em 1em :padding 0))
  (.attachment
@@ -179,100 +162,74 @@
     :padding 0.2em
     (.author :white-space nowrap :overflow hidden :text-overflow ellipsis)
     (.description :white-space normal)))
-  ((:and .change :last-child)
-   :border-bottom 1px solid gray)
   (.change.head
    :font-weight bold
-   :background black
-   :color white
    ((.row *) :padding 0.5em))
   (.empty
    :padding 2em
    :text-align center
    :font-size 1.2em)))
 ((:or .view .list)
+ :display flex
+ :flex-wrap wrap
+ :justify-content space-between
  (section
+  :flex-grow 1
+  :width 100%
   :margin-bottom 2em
-  :background (hex F0F0F0)
   (>header
-   (h3
-    :padding 0 1em
-    :margin 0
-    :border-bottom 2px solid gray)
+   :padding 0 0.2em
+   (h3 :margin 0 :padding 0.3em)
    (nav
     :padding 0 1em
     :display flex
-    :background gray
-    (a :padding 0.1em 0.5em
-       :color white)
-    ((:and a :hover)
-     :color white
-     :background black)))
+    (a
+     :margin 0 0.2em
+     :padding 0.1em 0.5em)))
   (ul.members
    :display flex
    :flex-wrap wrap
    :list-style none
-   :margin 0 :padding 0.2em
-   (a
-    :background lightgray
-    :color black
-    :border-radius 1em
-    :margin 0.2em
-    :padding 0.2em 0.5em
-    :display inline-flex
-    :align-items center
-    (img
-     :margin -0.2em 0.2em -0.2em -0.5em
-     :border-radius 1em
-     :width 1.5em
-     :height 1.5em))))
- (section.half
-  :width (calc (- 50% 3px))
-  :vertical-align top
-  :display inline-block)
- (section.self
-  (.description
-   :margin 0
-   :padding 0.5em 1em))
- (ul.projects
+   :margin 0 :padding 0.2em))
+ ((:or ul.projects ul.tracks ul.timelines)
   :list-style none
   :margin 0
   :padding 0 1em
   (>li
-   :display grid
-   :grid-template-columns "fit-content(20em)" 1fr
-   (a :padding 0.5em 0)
-   (.description :margin 0)
+   :display flex
+   :flex-wrap wrap
+   (>.name :width 20em :padding 0.5em 0)
+   (>.description :flex-grow 1 :margin 0 :padding 0.5em)
    ((:or .tracks .timelines)
-    :grid-column 1 / 2
-    :border-left 0.2em solid gray)))
+    :width 100%
+    :margin-left 1em))
+  (i :margin-left 0.5em)
+  ((:and a :hover)
+   :background (hex 404040)))
  ((:or ul.tracks ul.timelines)
-  :list-style none
+  :padding 0 1em 0 0))
+(section.half
+ :flex-grow 0
+ :width (calc (- 50% 3px))
+ :vertical-align top
+ :display inline-block)
+(section.self
+ (.description
   :margin 0
-  :padding 0 1em
-  (>li
-   (a :padding 0.5em 0)
-   :display grid
-   :grid-template-columns "fit-content(20em)" 1fr)))
+  :padding 0.5em 1em))
 (.changelog.view
  (.change
   (.row
    :display grid
    :grid-template-columns 10em 7em 1fr
    :gap 0px
-   (>* :border-left 1px solid gray !important
-       :border-top 1px solid gray !important
-       :padding 0.2em)
+   (>* :padding 0.2em)
    ((:and >* :first-child)
     :border-left none !important)
    ((:or .time .author)
     :text-align center)))
- ((:and .change :last-child)
-  :border-bottom 1px solid gray)
  (.change.head
   :font-weight bold
-  :background black
-  :color white
   ((.row *) :padding 0.5em))
  (.empty
   :padding 2em
@@ -284,8 +241,6 @@
  (textarea
   :font-family inherit
   :font-size inherit)
- ((:and .entry :last-child)
-  :border-bottom 1px solid gray)
  (.entry
   :transition margin-top 0.2s
   (textarea :resize none)
@@ -293,36 +248,16 @@
    :display grid
    :grid-template-columns 1em 5em 6em 1fr 6em 5em 2em
    :gap 0px
-   ((:or input select textarea)
-    :border none)
-   (>* :border-left 1px solid gray !important
-       :border-top 1px solid gray !important)
    ((:and >* :first-child)
     :border-left none !important)
+   (.description
+    :padding 0.2em 0.5em)
    ((:or .assigned .severity .status)
     :text-align center)
-   (.drag
-    :background lightgray)
    ((:or .drag .collapse)
     :display flex
     :justify-content center
     :align-items center))
-  (".severity[data-severity=\"1\"]"
-   :color (rgba 0 0 0 0.5))
-  (".severity[data-severity=\"30\"]"
-   :background (rgba 0 100 0 0.25))
-  (".severity[data-severity=\"50\"]"
-   :background (rgba 255 180 0 0.75))
-  (".severity[data-severity=\"80\"]"
-   :background (rgba 255 0 0 0.75)
-   :color white)
-  (".severity[data-severity=\"100\"]"
-   :background (rgba 255 0 0 1.0)
-   :color white
-   :font-weight bold
-   :box-shadow 0 0 10px red
-   :z-index 1
-   :border-color transparent !important)
   (.tags
    :display flex
    :flex-wrap wrap
@@ -331,33 +266,18 @@
     :min-width 1em
     :height 1em))
   (.extra
-   :border-left 1em solid lightgray
    :height auto
    :transition height 0.2s ease-out
    :overflow hidden
    (.actions
-    :background gray
     (a :display inline-block
-       :padding 0.1em 0.5em
-       :color white)
-    ((:and a :hover)
-     :background black))
+       :padding 0.1em 0.5em))
    (.relations
     :margin 0
     :padding 1em
-    :list-style none
-    :border-left 1px solid gray))
+    :list-style none))
   ((:and .extra .collapsed)
    :height 0px))
- ((:and .entry (:or .resolved .wontfix .invalid .duplicate .deleted))
-  (.row :opacity 0.8 (* :background lightgray)))
- ((.entry.triaged .status) :background lightgray)
- ((.entry.resolved .status) :background green)
- ((.entry.wontfix .status) :background darkgray)
- ((.entry.invalid .status) :background black :color white)
- ((.entry.duplicate .status) :background lightgray)
- ((.entry.unclear .status) :background orange)
- ((.entry.deleted .status) :background darkred)
  (.entry.dragover
   :position relative
   :z-index 10)
@@ -369,12 +289,9 @@
   :content ""
   :pointer-events none
   :position absolute
-  :top 0 :left 0 :right 0 :bottom 0
-  :background (rgba 0 0 0 0.5))
+  :top 0 :left 0 :right 0 :bottom 0)
  (.entry.head
   :font-weight bold
-  :background black
-  :color white
   ((.row *) :padding 0.5em))
  (.entry.existing
   (.drag :cursor grab))
@@ -384,7 +301,6 @@
   :font-size 1.2em))
 (.notes
  :padding-left 1em
- :border-left 1px solid gray
  (.note
   :display grid
   :grid-template-columns 10em 8em 1fr 5em
@@ -395,10 +311,6 @@
    :overflow hidden
    :text-overflow ellipsis)
   (.text
-   :border none
-   :background (hex F5F5F5)
-   :border 1px solid (hex E0E0E0)
-   :border-radius 0.5em
    :padding 0.25em))
  (.note.existing
   (p.text
@@ -415,8 +327,6 @@
   :grid-template-columns 1fr 7em "repeat(8,6em)" 3em)
  (.subscription.head
   :font-weight bold
-  :background black
-  :color white
   :padding 0.5em
   (span :text-align center)
   ((:or .user .object) :text-align left)))
@@ -427,8 +337,6 @@
  :white-space nowrap
  :margin 0.1em
  :padding 0.1em 0.5em
- :color white
- :background black
  :border-radius 0.2em
  :cursor default
  :user-select none)
@@ -444,7 +352,6 @@
  :font-weight bold
  :text-align center
  :padding 0.2em
- :background (hex E0E0E0)
  :z-index 1001)
 ((:and .box ":not(:empty)")
  :bottom 0
@@ -452,29 +359,11 @@
  :animation-delay 2s
  :animation-duration 1s
  :animation-fill-mode forwards)
-(.box.info
- :background (hex 00AA00)
- :color (hex FFFFFF))
-(.box.error
- :background (hex AA0000)
- :color (hex FFFFFF))
 
 (:keyframes box
             (0% :bottom 0)
             (100% :bottom -2.0em))
 
-(.highlight
- :outline 3px solid yellow
- :border-radius 3px
- :animation-name highlight
- :animation-duration 1s
- :animation-iteration-count 2
- :animation-fill-mode forwards)
-
-(:keyframes highlight
-            (0%   :outline-color (rgba 255 255 0 0.0))
-            (50%  :outline-color (rgba 255 255 0 1.0))
-            (100% :outline-color (rgba 255 255 0 0.0)))
 (.popup
  :z-index 1000
  :display none
@@ -487,8 +376,6 @@
   :background (hex F0F0F0)
   (>header
    :padding 0.5em 1em
-   :background lightgray
-   :border-bottom 0.2em solid gray
    (h3 :margin 0))
   (>form
    :display flex

@@ -7,13 +7,21 @@
             <i class="fas fa-edit"></i>
             Edit
           </a>
-          <a @href="feedback/{0}/">
-            <i class="fas fa-list"></i>
-            Entries
+          <a @href="feedback/{0}/import name">
+            <i class="fas fa-file-import"></i>
+            Import
+          </a>
+          <a @href="feedback/subscribe/project/{0} _id">
+            <i class="fa-solid fa-envelope"></i>
+            Subscriptions
+          </a>
+          <a @href="feedback/{0}/changes name">
+            <i class="fas fa-clock-rotate-left"></i>
+            Changelog
           </a>
         </nav>
       </header>
-      <p class="description" lquery='(text (or description "No description provided."))'></p>
+      <p class="description" lquery='(html (feedback::render-description description))'></p>
     </section>
   </c:using>
   <table class="snapshots">

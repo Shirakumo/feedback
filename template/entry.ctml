@@ -1,7 +1,7 @@
-<div class="entry" lquery="(data :id _id :order order :project project :track track) (add-class (if _id :existing :new) (feedback::id->status status)) (attr :id (when _id (feedback::id-code _id)))">
+<div class="entry" lquery="(data :id _id :order order :project project :track track :severity severity) (add-class (if _id :existing :new) (feedback::id->status status)) (attr :id (when _id (feedback::id-code _id)))">
   <form class="row" method="post" @action="feedback/api/feedback/entry/edit">
     <span class="drag"><i class="fa-solid fa-grip-lines"></i></span>
-    <select class="severity" name="severity" lquery="(select severity) (data :severity severity)">
+    <select class="severity" name="severity" lquery="(select severity)">
       <option value="0"></option>
       <option value="1">Irrelevant</option>
       <option value="10">Nice To Have</option>
@@ -73,7 +73,10 @@
             <input type="hidden" name="browser" value="true" />
             <input type="hidden" name="note" lquery="(val _id)" />
             <time class="time" lquery="(time time)">2023.01.25 13:28:12</time>
-            <a class="author user" lquery="(text (user:username author))" @href="feedback/user/{0} (user:username author)" href="#">Shinmera</a>
+            <div>
+              <a class="author user" lquery="(text (user:username author))" @href="feedback/user/{0} (user:username author)" href="#">
+                <img src="#" class="avatar" lquery="(attr :src (profile:avatar author 32))" /></a>
+            </div>
             <textarea class="text" name="text" lquery="(text text)"></textarea>
             <p class="text" name="text" lquery="(html (feedback::render-comment text))"></p>
           </form>
@@ -83,7 +86,10 @@
             <input type="hidden" name="browser" value="true" />
             <input type="hidden" name="entry" lquery="(val _id)" />
             <div></div>
-            <a class="author user" lquery='(text (user:username (feedback::author)))' @href="feedback/user/{0} (user:username (feedback::author))">Shinmera</a>
+            <div>
+              <a class="author user" lquery='(text (user:username (feedback::author)))' @href="feedback/user/{0} (user:username (feedback::author))">
+                <img src="#" class="avatar" lquery="(attr :src (profile:avatar (feedback::author) 32))" /></a>
+            </div>
             <textarea class="text" name="text" placeholder="Note..." required></textarea>
             <input type="submit" value="Submit">
           </form>

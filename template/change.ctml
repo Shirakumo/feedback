@@ -1,14 +1,19 @@
 <div class="change" lquery="(data :id _id :author author)">
   <div class="row">
     <time class="time" lquery="(time time)"></time>
-    <a class="author" lquery="(text (user:username author)) (attr :href (feedback::user-url author))">USER</a>
+    <div>
+      <a class="author user" lquery='(text (user:username author))' @href="feedback/user/{0} (user:username author)">
+        <img src="#" class="avatar" lquery="(attr :src (profile:avatar author 32))" /></a>
+    </div>
     <div class="description">
       <span class="action" lquery="(text (feedback::edit-type-label edit-type)))">changed</span>
       <span class="object-type" lquery="(text (string-downcase (feedback::id->object-type object-type)))">THING-ISH</span>
       <a class="oject" lquery="(text (feedback::object-label (feedback::changelog-object *))) (attr :href (feedback::object-url (feedback::changelog-object *)))">THING</a>
-      in
-      <span class="object-type" lquery="(text (string-downcase (feedback::id->object-type parent-type)))">THING-ISH</span>
-      <a class="oject" lquery="(text (feedback::object-label (feedback::changelog-parent *))) (attr :href (feedback::object-url (feedback::changelog-parent *)))">THING</a>
+      <c:when test="parent">
+        in
+        <span class="object-type" lquery="(text (string-downcase (feedback::id->object-type parent-type)))">THING-ISH</span>
+        <a class="oject" lquery="(text (feedback::object-label (feedback::changelog-parent *))) (attr :href (feedback::object-url (feedback::changelog-parent *)))">THING</a>
+      </c:when>
     </div>
   </div>
 </div>

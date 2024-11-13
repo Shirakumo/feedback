@@ -1,0 +1,193 @@
+(body
+ :background (hex 000000)
+ :color (hex F0F0F0)
+ (>header
+  :background (hex 202020)
+  (h1 (a[href] :linear-gradient 90deg (rgb 110 224 255) 0% (rgb 4 159 213) 100%
+               :background-clip text
+               :color transparent)))
+ (>main
+  :background (hex 101010))
+ (>footer
+  :color (hex 505050)
+  :border-top 0.2em solid (hex 181818)
+  :background (hex 202020)))
+(a[href]
+ :color (hex A0A0A0))
+((:and a[href] :hover)
+ :color (hex FFFFFF))
+(a.disabled
+ :color (hex A0A0A0) !important
+ :background transparent !important)
+((:and a.disabled :hover)
+ :border-color (hex 808080) !important)
+(a.user :background (hex 404040)
+   :border 0.1em solid (hex 282828)
+   :border-radius 1em)
+((:and a.user :hover)
+ :box-shadow 0 0 0.5em (hex FFFFFF)
+ :border-color (hex FFFFFF))
+((select option)
+ :background (hex 282828))
+(section
+ :background (hex 303030)
+ (>header
+  :background (hex 202020)))
+(nav
+ :background (hex 202020)
+ (a[href]
+  :border-top 0.2em solid (hex 282828)
+  :background (hex 303030)
+  :color (hex A0A0A0)
+  (i :margin 0 0.2em))
+ ((:and a[href] :hover)
+  :border-color (hex FFFFFF)
+  :color (hex FFFFFF)
+  :linear-gradient top (hex 505050) 0% (hex 303030) 100%)
+ (form.search
+  :background (hex 303030)
+  (input[type=search]
+   :border none
+   :background (hex 282828)
+   :color (hex F0F0F0))
+  ((:and input[type=search] "::placeholder")
+   :color (hex F0F0F0)
+   :opacity 0.8)
+  (input[type=submit]
+   :background transparent
+   :color (hex F0F0F0)
+   :border none)
+  ((:and input[type=submit] :hover)
+   :background (hex 505050))))
+(form.edit
+ (.row
+  ((:or input textarea select a.button)
+   :background (hex 202020)
+   :border 1px solid (hex 303030))
+  ((:and a.button :hover)
+   :background (hex 505050)
+   :border 1px solid (hex D0D0D0)))
+ (.actions
+  (input[type=submit]
+   :border 1px solid (hex 303030)
+   :background (hex 202020))
+  ((:and input[type=submit] :hover)
+   :background (hex 505050)
+   :border 1px solid (hex D0D0D0))
+  ("input[value=Delete]"
+   :color (hex FFFFFF)
+   :background (hex D00000)
+   :border 1px solid (hex A00000))))
+(form.edit.wide
+ ((:or input select textarea)
+  :background transparent))
+((:or .entry.view .snapshot.view)
+ (.row
+  (.long
+   :border 1px solid (hex E0E0E0))))
+((:or .view .list)
+ (ul.projects
+  (>li
+   ((:or .tracks .timelines)
+    :border-left 0.1em solid gray
+    ((:and li :before)
+     :content ""
+     :border-top 0.1em solid gray
+     :margin-top 1em
+     :width 0.5em
+     :margin-right 1em)))))
+((.changelog .change .row)
+ :align-items center
+ (time :color (hex A0A0A0))
+ (.author
+  :background transparent
+  :border none)
+ (>*
+  :border none))
+(.entry
+ ((:or input select textarea)
+  :background transparent)
+ (.row
+  (>* :border-left 1px solid (hex 383838)
+      :border-top 1px solid (hex 383838))
+  ((:and >* :first-child) :border-left none))
+ (.drag :color (hex 505050))
+ (.extra
+  :background (hex 202020)
+  :border-left 1em solid transparent
+  (.actions
+   :padding-bottom 0.5em
+   :padding-left 0.5em
+   (a[href]
+    :border-top none
+    :border-bottom 0.2em solid (hex 282828))
+   ((:and a[href] :hover)
+    :border-color (hex FFFFFF)
+    :color (hex FFFFFF)
+    :linear-gradient bottom (hex 505050) 0% (hex 303030) 100%)))
+ ((:parent (:or .resolved .wontfix .invalid .duplicate .deleted))
+  (.row (* :background (hex 202020))))
+ ((:parent .new) (.status :background (rgba 0 0 0 0)))
+ ((:parent .triaged) (.status :background (rgba 250 200 0 0.5)))
+ ((:parent .resolved) (.status :background (rgba 100 250 0 0.5)))
+ ((:parent .wontfix) (.status :background (rgba 20 100 0 0.5)))
+ ((:parent .invalid) (.status :background (rgba 250 0 0 0.5)))
+ ((:parent .duplicate) (.status :background (rgba 150 20 100 0.5)))
+ ((:parent .unclear) (.status :background (rgba 100 255 255 0.5)))
+ ((:parent .deleted) (.status :background (rgba 100 100 200 0.5)))
+ ((:parent (:= data-severity 1)) (.severity :color (rgba 255 255 255 0.1)))
+ ((:parent (:= data-severity 10)) (.severity :background (rgba 255 200 0 0.05)))
+ ((:parent (:= data-severity 30)) (.severity :background (rgba 255 200 0 0.25)))
+ ((:parent (:= data-severity 50)) (.severity :background (rgba 255 200 0 0.75)))
+ ((:parent (:= data-severity 80)) (.severity :background (rgba 255 0 0 0.75) :color white))
+ ((:parent (:= data-severity 100)) (.severity :background (rgba 255 0 0 1.0) :color white :font-weight bold))
+ ((:parent .dragover :after) :background (rgba 0 0 0 0.5))
+ ((:parent .head)
+  :background (hex 303030)
+  ((.row >*)
+   :border-color transparent)))
+(.note
+ (time :color (hex A0A0A0))
+ (.author
+  :background transparent
+  :border none)
+ (textarea.text
+  :border 1px solid (hex 505050)
+  :border-radius 0.5em))
+(.subscription.head
+ :background black
+ :color white)
+(.empty
+ :color (hex 505050))
+(span.tag
+ :color white
+ :background black
+ :border-radius 0.2em)
+(.box
+ :background (hex E0E0E0))
+(.box.info
+ :background (hex 00AA00)
+ :color (hex FFFFFF))
+(.box.error
+ :background (hex AA0000)
+ :color (hex FFFFFF))
+(.highlight
+ :outline 3px solid yellow
+ :border-radius 3px
+ :animation-name highlight
+ :animation-duration 1s
+ :animation-iteration-count 2
+ :animation-fill-mode forwards)
+(.popup
+ :background (rgba 0 0 0 0.5)
+ (.frame
+  :background (hex 303030)
+  (>header
+   :background (hex 202020))
+  (input
+   :background (hex 202020))))
+
+(:keyframes highlight
+            (0%   :outline-color (rgba 255 255 0 0.0))
+            (50%  :outline-color (rgba 255 255 0 1.0))
+            (100% :outline-color (rgba 255 255 0 0.0)))

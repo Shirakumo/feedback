@@ -7,6 +7,7 @@
       <meta name="viewport" content="width=device-width" />
       <meta name="robots" content="index, follow" />
       <link rel="stylesheet" type="text/css" href="../static/feedback.css" @href="/static/feedback/feedback.css" />
+      <link rel="stylesheet" type="text/css" href="../static/dark.css" @href="/static/feedback/dark.css" />
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
       <link rel="api-root" @href="feedback/api/feedback/"/>
       <meta name="viewport" content="width=device-width"/>
@@ -31,10 +32,12 @@
             <c:s>up-text</c:s>
           </a>
         </c:when>
-        <c:when test="icon">
-          <i class="fas fa-fw" lquery="(add-class icon)"></i> 
-        </c:when>
-        <c:s>page</c:s>
+        <span>
+          <c:when test="icon">
+            <i class="fas fa-fw" lquery="(add-class icon)"></i> 
+          </c:when>
+          <c:s>page</c:s>
+        </span>
       </h2>
     </header>
     <main>

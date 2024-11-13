@@ -11,8 +11,8 @@
           Subscriptions
         </a>
       </nav>
-      <img src="#" class="avatar" lquery="(attr :src (profile:avatar user 128))" />
     </header>
+    <img src="#" class="avatar" lquery="(attr :src (profile:avatar user 128))" />
   </section>
   <section>
     <header>

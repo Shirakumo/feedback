@@ -1,4 +1,5 @@
 <form class="project edit">
+  <form>
   <c:using value="project">
     <div class="row">
       <label for="name">Name:</label>
