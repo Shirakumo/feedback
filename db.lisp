@@ -862,6 +862,7 @@
 (define-ensure ensure-object ((type id))
   (ecase (id->object-type (object-type->id type))
     (project (ensure-project id))
+    (tag (ensure-tag id))
     (track (ensure-track id))
     (entry (ensure-entry id))
     (note (ensure-note id))

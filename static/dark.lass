@@ -172,12 +172,22 @@
  :background (hex AA0000)
  :color (hex FFFFFF))
 (.highlight
- :outline 3px solid yellow
+ :position relative
+ :outline 3px solid (rgb 4 159 213)
+ :z-index 2
  :border-radius 3px
  :animation-name highlight
  :animation-duration 1s
- :animation-iteration-count 2
- :animation-fill-mode forwards)
+ :animation-fill-mode forwards
+ ((:parent :after)
+  :content ""
+  :position absolute
+  :left 0 :right 0 :top 0 :bottom 0
+  :background (rgba 4 159 213 0.1)
+  :pointer-events none
+  :animation-name highlight-bg
+  :animation-duration 1s
+  :animation-fill-mode forwards))
 (.popup
  :background (rgba 0 0 0 0.5)
  (.frame
@@ -188,6 +198,10 @@
    :background (hex 202020))))
 
 (:keyframes highlight
-            (0%   :outline-color (rgba 255 255 0 0.0))
-            (50%  :outline-color (rgba 255 255 0 1.0))
-            (100% :outline-color (rgba 255 255 0 0.0)))
+            (0%   :outline-color (rgba 4 159 213 0.0))
+            (50%  :outline-color (rgba 4 159 213 1.0))
+            (100% :outline-color (rgba 4 159 213 0.0)))
+(:keyframes highlight-bg
+            (0%   :background (rgba 4 159 213 0.1))
+            (50%  :background (rgba 4 159 213 0.5))
+            (100% :background (rgba 4 159 213 0.1)))
