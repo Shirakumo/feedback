@@ -187,6 +187,7 @@
             for file = (post-var (dm:field type "name"))
             for path = (attachment-pathname entry type)
             do (when file
+                 (log-change entry :edit)
                  (ensure-directories-exist path)
                  (uiop:copy-file (first file) path)))
       (output entry "Entry updated"))))
