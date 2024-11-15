@@ -1,0 +1,4 @@
+<article class="subscribe view">
+  <c:h>(template-file "user-self.ctml" :feedback))</c:h>
+  <c:h>(template-file "subscribe.ctml" :feedback))</c:h>
+</article>

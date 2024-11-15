@@ -94,8 +94,7 @@
            args)))
 
 (defun snapshot-url (snapshot &rest args)
-  (apply #'uri-to-url (format NIL "feedback/~a/snapshot/~a"
-                              (dm:field (ensure-project snapshot) "name")
+  (apply #'uri-to-url (format NIL "feedback/snapshot/~a"
                               (ensure-id snapshot))
          :representation :external
          args))
@@ -170,6 +169,7 @@
                  :icon "fa-dashboard"
                  :projects (list-projects)
                  :page-idx page
+                 :user (auth:current)
                  :entry-content (plump:parse (template-file "entry.ctml" :feedback))
                  :entries (list-entries (auth:current) :skip skip :amount amount :query (or* (post/get "query"))))))
 
@@ -199,6 +199,18 @@
                  :user user
                  :change-content (plump:parse (template-file "change.ctml" :feedback))
                  :changelog (list-changes :author user :amount amount :skip skip))))
+
+(define-page* user-subscriptions ("feedback/^user/([^/]+)/subscribe$" 5) (:uri-groups (user) :access (perm feedback user view))
+  (let ((object (user:get user :if-does-not-exist :error)))
+    (render-page "Subscriptions" (@template "user-subscribe.ctml")
+                 :icon "fa-envelope"
+                 :up (object-url object)
+                 :up-icon "fa-user"
+                 :up-text (user:username object)
+                 :object object
+                 :user object
+                 :subscriptions (list-subscriptions NIL object)
+                 :have-entry T)))
 
 (define-page* project ("feedback/^([^/]+)(?:/(\\d+)?)?$" 1) (:uri-groups (project page))
   (let* ((project (find-project project))
@@ -258,6 +270,51 @@
                  :project project
                  :change-content (plump:parse (template-file "change.ctml" :feedback))
                  :changelog (list-changes :object project :amount amount :skip skip))))
+
+(define-page* project-subscribe ("feedback/^([^/]+)/subscribe$" 5) (:uri-groups (project))
+  (let* ((project (find-project project))
+         (subscriptions (list-subscriptions project)))
+    (check-accessible project :view)
+    (render-page "Subscriptions" (@template "project-subscribe.ctml")
+                 :icon "fa-envelope"
+                 :up (project-url project)
+                 :up-icon "fa-diagram-project"
+                 :up-text (dm:field project "name")
+                 :object-type 'project :object-id (dm:id project)
+                 :project project
+                 :subscriptions subscriptions
+                 :have-entry (find (user:id (auth:current)) subscriptions
+                                   :key (lambda (sub) (dm:field sub "user")) :test #'equal))))
+
+(define-page* project-snapshots ("feedback/^([^/]+)/snapshots(?:/(\\d+)?)?$" 2) (:uri-groups (project page))
+  (let* ((project (find-project project))
+         (amount 50)
+         (page (parse-integer (or* page "1")))
+         (skip (* amount (max 0 (1- page)))))
+    (check-accessible project :view)
+    (render-page "Snapshots" (@template "snapshot-list.ctml")
+                 :icon "fa-camera"
+                 :up (project-url project)
+                 :up-icon "fa-diagram-project"
+                 :up-text (dm:field project "name")
+                 :page-idx page
+                 :project project
+                 :snapshots (list-snapshots project :user-id (or* (post/get "user"))
+                                                    :session-id (or* (post/get "session"))
+                                                    :skip skip
+                                                    :amount amount))))
+
+(define-page* snapshot-view ("feedback/^snapshot/([^/]+)$" 5) (:uri-groups (snapshot))
+  (let* ((snapshot (ensure-snapshot snapshot))
+         (project (ensure-project snapshot)))
+    (check-accessible snapshot :view)
+    (render-page (princ-to-string (dm:id snapshot)) (@template "snapshot-view.ctml")
+                 :icon "fa-camera"
+                 :up (project-url project)
+                 :up-icon "fa-diagram-project"
+                 :up-text (dm:field project "name")
+                 :project project
+                 :snapshot snapshot)))
 
 (define-page* timeline "feedback/^([^/]+)/tl/([^/]+)(?:/)?$" (:uri-groups (project timeline))
   (let* ((project (find-project project))
@@ -375,6 +432,35 @@
                  :change-content (plump:parse (template-file "change.ctml" :feedback))
                  :changelog (list-changes :object track :amount amount :skip skip))))
 
+(define-page* track-import ("feedback/^([^/]+)/([^/]+)/import$" 2) (:uri-groups (project track))
+  (let* ((project (find-project project))
+         (track (find-track track project)))
+    (check-accessible track :edit)
+    (render-page "Import" (@template "track-import.ctml")
+                 :icon "fa-file-import"
+                 :up (track-url track)
+                 :up-icon "fa-layer-group"
+                 :up-text (dm:field track "name")
+                 :project project
+                 :track track)))
+
+(define-page* track-subscribe ("feedback/^([^/]+)/([^/]+)/subscribe$" 2) (:uri-groups (project track))
+  (let* ((project (find-project project))
+         (track (find-track track project))
+         (subscriptions (list-subscriptions track)))
+    (check-accessible track :edit)
+    (render-page "Subscriptions" (@template "track-subscribe.ctml")
+                 :icon "fa-envelope"
+                 :up (track-url track)
+                 :up-icon "fa-layer-group"
+                 :up-text (dm:field track "name")
+                 :object-type 'track :object-id (dm:id track)
+                 :project project
+                 :track track
+                 :subscriptions subscriptions
+                 :have-entry (find (user:id (auth:current)) subscriptions
+                                   :key (lambda (sub) (dm:field sub "user")) :test #'equal))))
+
 (define-page* entry "feedback/^([^/]+)/entry/([^/]+)$" (:uri-groups (project entry))
   (let* ((project (find-project project))
          (entry (ensure-entry entry))
@@ -414,64 +500,6 @@
     (setf (header "Cache-Control") "private, max-age=31536000")
     (setf (header "Access-Control-Allow-Origin") "*")
     (serve-file path content-type)))
-
-(define-page* snapshots ("feedback/^([^/]+)/snapshot/$" 2) (:uri-groups (project))
-  (let* ((project (find-project project))
-         (amount 50)
-         (skip (* amount (max 0 (1- (parse-integer (or* (post/get "page") "1")))))))
-    (check-accessible project :view)
-    (render-page "Snapshots" (@template "snapshot-list.ctml")
-                 :icon "fa-camera"
-                 :up (project-url project)
-                 :up-icon "fa-diagram-project"
-                 :up-text (dm:field project "name")
-                 :project project
-                 :snapshots (list-snapshots project :user-id (or* (post/get "user"))
-                                                    :session-id (or* (post/get "session"))
-                                                    :skip skip
-                                                    :amount amount))))
-
-(define-page* snapshot ("feedback/^([^/]+)/snapshot/([^/]+)$" 2) (:uri-groups (project snapshot))
-  (let ((project (find-project project))
-        (snapshot (ensure-snapshot snapshot)))
-    (check-accessible snapshot :view)
-    (render-page (princ-to-string (dm:id snapshot)) (@template "snapshot-view.ctml")
-                 :icon "fa-camera"
-                 :up (project-url project)
-                 :up-icon "fa-diagram-project"
-                 :up-text (dm:field project "name")
-                 :project project
-                 :snapshot snapshot)))
-
-(define-page* subscriptions ("feedback/^subscribe/([^/]+)/([^/]+)$" 2) (:uri-groups (type id))
-  (if (string-equal type "user")
-      (let ((object (user:get id :if-does-not-exist :error)))
-        (render-page "Subscriptions" (@template "subscribe.ctml")
-                     :icon "fa-envelope"
-                     :up (object-url object)
-                     :up-icon "fa-user"
-                     :up-text (user:username object)
-                     :object object
-                     :subscriptions (list-subscriptions NIL object)
-                     :have-entry T))
-      (let* ((object (ensure-object type id))
-             (subscriptions (list-subscriptions object)))
-        (check-accessible (ensure-project object) :view)
-        (render-page "Subscriptions" (@template "subscribe.ctml")
-                     :icon "fa-envelope"
-                     :up (object-url object)
-                     :up-icon (case (dm:collection object)
-                                (project "fa-diagram-project")
-                                (track "fa-layer-group")
-                                (timeline "fa-timeline")
-                                (entry "fa-list-check"))
-                     :up-text (or (dm:field object "name")
-                                  (dm:field object "title")
-                                  (id-code (dm:id object)))
-                     :object-type type :object-id id :object object
-                     :subscriptions subscriptions
-                     :have-entry (find (user:id (auth:current)) subscriptions
-                                       :key (lambda (sub) (dm:field sub "user")) :test #'equal)))))
 
 (define-page* trace-file "feedback/^([^/]+)/snapshot/([^/]+)/trace$" (:uri-groups (project snapshot))
   (declare (ignore project))

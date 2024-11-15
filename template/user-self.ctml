@@ -1,0 +1,18 @@
+<section class="self">
+  <header>
+    <nav>
+      <a @href="feedback/user/{0} (user:username (feedback::author))">
+        <i class="fa-solid fa-user"></i>
+        User Page
+      </a>
+      <a @href="feedback/user/{0}/subscribe (user:username (feedback::author))">
+        <i class="fa-solid fa-envelope"></i>
+        Subscriptions
+      </a>
+      <a @href="feedback/user/{0}/changes (user:username user)">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        Changelog
+      </a>
+    </nav>
+  </header>
+</section>

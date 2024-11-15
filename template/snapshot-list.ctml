@@ -1,52 +1,48 @@
 <article class="snapshot list">
-  <c:using value="project">
-    <section class="self">
-      <header>
-        <nav>
-          <a @href="feedback/{0}/edit name">
-            <i class="fas fa-edit"></i>
-            Edit
-          </a>
-          <a @href="feedback/{0}/import name">
-            <i class="fas fa-file-import"></i>
-            Import
-          </a>
-          <a @href="feedback/subscribe/project/{0} _id">
-            <i class="fa-solid fa-envelope"></i>
-            Subscriptions
-          </a>
-          <a @href="feedback/{0}/changes name">
-            <i class="fas fa-clock-rotate-left"></i>
-            Changelog
-          </a>
-        </nav>
-      </header>
-      <p class="description" lquery='(html (feedback::render-description description))'></p>
-    </section>
-  </c:using>
-  <table class="snapshots">
-    <thead>
-      <tr>
-        <th class="id">Id</th>
-        <th class="user">User</th>
-        <th class="session">Session</th>
-        <th class="time">Time</th>
-        <th class="actions">Actions</th>
-      </tr>
-    </thead>
-    <tbody iterate="snapshots">
-      <tr>
-        <td class="id"><a lquery="(text _id) (attr :href (feedback::snapshot-url *))"></a></td>
-        <td class="user"><a lquery='(text user-id) (attr :href (format NIL "?user=~a" user-id))'></a></td>
-        <td class="session"><a lquery='(text session-id) (attr :href (format NIL "?session=~a" session-id))'></a></td>
-        <td class="time"><time lquery="(time time)"></time></td>
-        <td class="actions">
+  <c:h>(template-file "project-self.ctml" :feedback))</c:h>
+  <section>
+    <header>
+      <h3><i class="fas fa-fw fa-camera"></i> Snapshots</h3>
+      <nav>
+        <a @href="feedback/{0}/snapshots/{1} (clip project :name) (1- page-idx)" lquery="(add-class (when (<= page-idx 1) :disabled))">
+          <i class="fas fa-arrow-left"></i>
+          Previous Page
+        </a>
+        <form class="search" method="get" @action="feedback/{0}/snapshots/ (clip project :name)">
+          <input type="search" name="query" placeholder="Filter..." />
+          <input type="submit" value="Go" />
+        </form>
+        <a @href="feedback/{0}/snapshots/{1} (clip project :name) (1+ page-idx)" lquery="(add-class (unless snapshots :disabled))">
+          <i class="fas fa-arrow-right"></i>
+          Next Page
+        </a>
+      </nav>
+    </header>
+    <div class="snapshot head">
+      <div class="row">
+        <span class="time">Time</span>
+        <span class="id">Id</span>
+        <span class="user">User</span>
+        <span class="session">Session</span>
+        <span class="actions">Actions</span>
+      </div>
+    </div>
+    <c:splice iterate="snapshots">
+      <div class="snapshot">
+        <time lquery="(time time)"></time>
+        <a class="id" lquery="(text _id) (attr :href (feedback::snapshot-url *))"></a>
+        <a class="user" lquery='(text user-id) (attr :href (format NIL "?user=~a" user-id))'></a>
+        <a class="session" lquery='(text session-id) (attr :href (format NIL "?session=~a" session-id))'></a>
+        <nav class="actions">
           <a @href="feedback/api/feedback/snapshot/delete?entry={0}&browser=true _id" class="button"
              title="Delete">
             <i class="fas fa-trash"></i>
           </a>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+        </nav>
+      </div>
+    </c:splice>
+    <c:unless test="snapshots">
+      <div class="empty">There are no snapshots to show</div>
+    </c:unless>
+  </section>
 </article>

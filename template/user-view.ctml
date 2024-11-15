@@ -1,19 +1,5 @@
 <article class="user view">
-  <section class="self">
-    <header>
-      <nav>
-        <a @href="feedback/user/{0}/changes (user:username user)">
-          <i class="fa-solid fa-clock-rotate-left"></i>
-          Changelog
-        </a>
-        <a @href="feedback/subscribe/user/{0} (user:username user)">
-          <i class="fa-solid fa-envelope"></i>
-          Subscriptions
-        </a>
-      </nav>
-    </header>
-    <img src="#" class="avatar" lquery="(attr :src (profile:avatar user 128))" />
-  </section>
+  <c:h>(template-file "user-self.ctml" :feedback))</c:h>
   <section>
     <header>
       <h3>Assigned Entries</h3>

@@ -1,6 +1,6 @@
 <c:using value="entry">
-  <article class="entry view" lquery="(data :id _id :project project :track track)">
-    <form class="edit wide" method="post" @action="feedback/api/feedback/entry/edit">
+  <article class="entry edit" lquery="(data :id _id :project project :track track)">
+    <form class="wide" method="post" @action="feedback/api/feedback/entry/edit">
       <input type="hidden" name="browser" value="true" />
       <input type="hidden" name="in-detail" value="true" />
       <input type="hidden" name="entry" lquery="(val _id)" />
@@ -137,6 +137,7 @@
       </header>
       <div class="attachments" iterate="(** :attachments)">
         <form class="attachment existing" method="post" enctype="multipart/form-data" @action="feedback/api/feedback/entry/edit">
+          <span class="collapse"><i class="fa-solid fa-chevron-up"></i></span>
           <input type="hidden" name="browser" value="true" />
           <input type="hidden" name="in-detail" value="true" />
           <input type="hidden" name="entry" lquery="(val (** :_id))" />
@@ -147,12 +148,21 @@
                 <a class="name" lquery="(text name) (attr :href url)"></a>
                 <input type="file" lquery="(attr :name name)" required />
                 <input type="submit" value="Upload" />
-                <c:case value="(feedback::id->attachment-type (** :type))">
-                  <v values=":jpg :png :svg :gif">
-                    <img alt="image" class="preview full" lquery="(attr :src url)"/>
+                <c:case value="(feedback::attachment-type-kind (** :type))">
+                  <v values=":image">
+                    <img class="preview collapsed" alt="image" lquery="(attr :src url)"/>
                   </v>
-                  <v values=":txt :log">
-                    <div class="preview long log" lquery="(text (alexandria:read-file-into-string path))"></div>
+                  <v values=":audio">
+                    <audio class="preview collapsed" controls lquery="(attr :src url)"></audio>
+                  </v>
+                  <v values=":video">
+                    <video class="preview collapsed" controls lquery="(attr :src url)"></video>
+                  </v>
+                  <v values=":text">
+                    <div class="preview log collapsed" lquery="(text (alexandria:read-file-into-string path))"></div>
+                  </v>
+                  <v values=":code">
+                    <code class="preview log collapsed" lquery="(text (alexandria:read-file-into-string path))"></code>
                   </v>
                 </c:case>
               </c:then>
@@ -219,3 +229,9 @@
     </datalist>
   </article>
 </c:using>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai-sublime.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/ini.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>

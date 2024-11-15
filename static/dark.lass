@@ -59,28 +59,29 @@
    :border none)
   ((:and input[type=submit] :hover)
    :background (hex 505050))))
-(form.edit
- (.row
-  ((:or input textarea select a.button)
-   :background (hex 202020)
-   :border 1px solid (hex 303030))
-  ((:and a.button :hover)
-   :background (hex 505050)
-   :border 1px solid (hex D0D0D0)))
- (.actions
-  (input[type=submit]
-   :border 1px solid (hex 303030)
-   :background (hex 202020))
-  ((:and input[type=submit] :hover)
-   :background (hex 505050)
-   :border 1px solid (hex D0D0D0))
-  ("input[value=Delete]"
-   :color (hex FFFFFF)
-   :background (hex D00000)
-   :border 1px solid (hex A00000))))
-(form.edit.wide
- ((:or input select textarea)
-  :background transparent))
+(.edit
+ (>form
+  (.row
+   ((:or input textarea select a.button)
+    :background (hex 202020)
+    :border 1px solid (hex 303030))
+   ((:and a.button :hover)
+    :background (hex 505050)
+    :border 1px solid (hex D0D0D0)))
+  (.actions
+   (input[type=submit]
+    :border 1px solid (hex 303030)
+    :background (hex 202020))
+   ((:and input[type=submit] :hover)
+    :background (hex 505050)
+    :border 1px solid (hex D0D0D0))
+   ("input[value=Delete]"
+    :color (hex FFFFFF)
+    :background (hex D00000)
+    :border 1px solid (hex A00000))))
+ (>form.wide
+  ((:or input select textarea)
+   :background transparent)))
 ((:or .entry.view .snapshot.view)
  (.row
   (.long
@@ -146,6 +147,12 @@
   :background (hex 303030)
   ((.row >*)
    :border-color transparent)))
+(.entry.edit
+ (.row
+  (label :border none)
+  ((:or input select textarea)
+   :border 1px solid (hex 505050)
+   :border-radius 0.5em)))
 (.note
  (time :color (hex A0A0A0))
  (.author
@@ -154,9 +161,6 @@
  (textarea.text
   :border 1px solid (hex 505050)
   :border-radius 0.5em))
-(.subscription.head
- :background black
- :color white)
 (.empty
  :color (hex 505050))
 (span.tag

@@ -1,53 +1,59 @@
-<article class="subscribe view">
-  <section class="subscriptions">
-    <div class="subscription head">
-      <span class="user">User</span>
-      <span class="object">Object</span>
-      <span>Entry</span>
-      <span>Entry Edit</span>
-      <span>Note</span>
-      <span>Note Edit</span>
-      <span>Track</span>
-      <span>Project</span>
-      <span>Snapshot</span>
-      <span>Member</span>
-      <span></span>
-    </div>
-    <c:splice iterate="subscriptions">
-      <form class="subscription existing" method="post" @action="feedback/api/feedback/subscription/edit">
-        <input type="hidden" name="browser" value="true" />
-        <input type="hidden" name="object-type" lquery="(val object-type)" />
-        <input type="hidden" name="object-id" lquery="(val object)" />
-        <span class="user" lquery="(text (user:username user))">USER</span>
-        <span class="object"><c:s>(feedback::id->object-type object-type)</c:s> <c:s>(clip (feedback::subscription-object *) :name)</c:s></span>
-        <input type="checkbox" name="type[]" value="entry-new" lquery="(attr :checked (logbitp 0 type))" />
-        <input type="checkbox" name="type[]" value="entry-edit" lquery="(attr :checked (logbitp 1 type))" />
-        <input type="checkbox" name="type[]" value="note-new" lquery="(attr :checked (logbitp 2 type))" />
-        <input type="checkbox" name="type[]" value="note-edit" lquery="(attr :checked (logbitp 3 type))" />
-        <input type="checkbox" name="type[]" value="track-new" lquery="(attr :checked (logbitp 4 type))" />
-        <input type="checkbox" name="type[]" value="project-new" lquery="(attr :checked (logbitp 5 type))" />
-        <input type="checkbox" name="type[]" value="snapshot-new" lquery="(attr :checked (logbitp 6 type))" />
-        <input type="checkbox" name="type[]" value="member-new" lquery="(attr :checked (logbitp 7 type))" />
-        <input type="submit" value="Save" />
-      </form>
-    </c:splice>
-    <c:unless test="have-entry">
-      <form class="subscription new" method="post" @action="feedback/api/feedback/subscription/add">
-        <input type="hidden" name="browser" value="true" />
-        <input type="hidden" name="object-type" lquery="(val object-type)" />
-        <input type="hidden" name="object-id" lquery="(val object-id)" />
-        <span class="user" lquery="(text (user:username (feedback::author)))">USER</span>
-        <span class="object"><c:s>object-type</c:s> <c:s>(clip object :name)</c:s></span>
-        <input type="checkbox" name="type[]" value="entry-new" checked />
-        <input type="checkbox" name="type[]" value="entry-edit"  />
-        <input type="checkbox" name="type[]" value="note-new"  />
-        <input type="checkbox" name="type[]" value="note-edit"  />
-        <input type="checkbox" name="type[]" value="track-new" checked />
-        <input type="checkbox" name="type[]" value="project-new" checked />
-        <input type="checkbox" name="type[]" value="snapshot-new"  />
-        <input type="checkbox" name="type[]" value="member-new" checked />
-        <input type="submit" value="Add" />
-      </form>
-    </c:unless>
-  </section>
-</article>
+<section class="subscriptions">
+  <header>
+    <h3><i class="fas fa-fw fa-envelope"></i> Subscriptions</h3>
+    <nav>
+    </nav>
+  </header>
+  <div class="subscription head">
+    <span class="user">User</span>
+    <span class="object">Object</span>
+    <span>Entry</span>
+    <span>Entry Edit</span>
+    <span>Note</span>
+    <span>Note Edit</span>
+    <span>Track</span>
+    <span>Project</span>
+    <span>Snapshot</span>
+    <span>Member</span>
+    <span></span>
+  </div>
+  <c:splice iterate="subscriptions">
+    <form class="subscription existing" method="post" @action="feedback/api/feedback/subscription/edit">
+      <input type="hidden" name="browser" value="true" />
+      <input type="hidden" name="object-type" lquery="(val object-type)" />
+      <input type="hidden" name="object-id" lquery="(val object)" />
+      <span class="user" lquery="(text (user:username user))">USER</span>
+      <span class="object"><c:s>(feedback::id->object-type object-type)</c:s> <c:s>(clip (feedback::subscription-object *) :name)</c:s></span>
+      <input type="checkbox" name="type[]" value="entry-new" lquery="(attr :checked (logbitp 0 type))" />
+      <input type="checkbox" name="type[]" value="entry-edit" lquery="(attr :checked (logbitp 1 type))" />
+      <input type="checkbox" name="type[]" value="note-new" lquery="(attr :checked (logbitp 2 type))" />
+      <input type="checkbox" name="type[]" value="note-edit" lquery="(attr :checked (logbitp 3 type))" />
+      <input type="checkbox" name="type[]" value="track-new" lquery="(attr :checked (logbitp 4 type))" />
+      <input type="checkbox" name="type[]" value="project-new" lquery="(attr :checked (logbitp 5 type))" />
+      <input type="checkbox" name="type[]" value="snapshot-new" lquery="(attr :checked (logbitp 6 type))" />
+      <input type="checkbox" name="type[]" value="member-new" lquery="(attr :checked (logbitp 7 type))" />
+      <input type="submit" value="Save" />
+    </form>
+  </c:splice>
+  <c:unless test="have-entry">
+    <form class="subscription new" method="post" @action="feedback/api/feedback/subscription/add">
+      <input type="hidden" name="browser" value="true" />
+      <input type="hidden" name="object-type" lquery="(val object-type)" />
+      <input type="hidden" name="object-id" lquery="(val object-id)" />
+      <span class="user" lquery="(text (user:username (feedback::author)))">USER</span>
+      <span class="object"><c:s>object-type</c:s> <c:s>(clip object :name)</c:s></span>
+      <input type="checkbox" name="type[]" value="entry-new" checked />
+      <input type="checkbox" name="type[]" value="entry-edit"  />
+      <input type="checkbox" name="type[]" value="note-new"  />
+      <input type="checkbox" name="type[]" value="note-edit"  />
+      <input type="checkbox" name="type[]" value="track-new" checked />
+      <input type="checkbox" name="type[]" value="project-new" checked />
+      <input type="checkbox" name="type[]" value="snapshot-new"  />
+      <input type="checkbox" name="type[]" value="member-new" checked />
+      <input type="submit" value="Add" />
+    </form>
+  </c:unless>
+  <c:unless test="subscriptions">
+    <div class="empty">There are no subscriptions to show</div>
+  </c:unless>
+</section>

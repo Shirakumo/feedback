@@ -1,29 +1,5 @@
 <article class="changelog view">
-  <section class="self">
-    <c:using value="project">
-      <header>
-        <nav>
-          <a @href="feedback/{0}/edit name">
-            <i class="fas fa-edit"></i>
-            Edit
-          </a>
-          <a @href="feedback/{0}/import name">
-            <i class="fas fa-file-import"></i>
-            Import
-          </a>
-          <a @href="feedback/subscribe/project/{0} _id">
-            <i class="fa-solid fa-envelope"></i>
-            Subscriptions
-          </a>
-          <a @href="feedback/{0}/snapshot/ name">
-            <i class="fas fa-camera"></i>
-            Snapshots
-          </a>
-        </nav>
-      </header>
-      <p class="description" lquery='(html (feedback::render-description description))'></p>
-    </c:using>
-  </section>
+  <c:h>(template-file "project-self.ctml" :feedback))</c:h>
   <section>
     <header>
       <h3><i class="fas fa-fw fa-clock-rotate-left"></i> Changes</h3>

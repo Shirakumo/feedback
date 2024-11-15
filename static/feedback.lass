@@ -59,37 +59,38 @@
  :flex-grow 1
  (input[type=submit]
   :cursor pointer))
-(form.edit
- :max-width 500px
- :margin 0 auto
- :padding 1em
- (.row
-  :display flex
-  :margin 0.2em 0
-  (label :min-width 10em)
-  ((:or input textarea select)
-   :padding 0.2em
-   :flex-grow 1)
-  (textarea :min-height 10em))
- (.actions
-  :display flex
-  :margin 1em 0
-  (input[type=submit]
-   :flex-grow 1
-   :cursor pointer
-   :text-align center
-   :font-size 1.1em)
-  ("input[value=Delete]"
-   :max-width 5em))
- (.permission
-  ("input[type=checkbox]" :display none)
-  ("input[type=checkbox]+label" :opacity 0.5)
-  ("input[type=checkbox]:checked+label" :opacity 1.0)))
-(form.edit.wide
- :max-width none
- :width 100%
- :margin 0
- :padding 0)
+(.edit
+ (>form
+  :max-width 500px
+  :margin 0 auto
+  :padding 1em
+  (.row
+   :display flex
+   :margin 0.2em 0
+   (label :min-width 10em)
+   ((:or input textarea select)
+    :padding 0.2em
+    :flex-grow 1)
+   (textarea :min-height 10em))
+  (.actions
+   :display flex
+   :margin 1em 0
+   (input[type=submit]
+    :flex-grow 1
+    :cursor pointer
+    :text-align center
+    :font-size 1.1em)
+   ("input[value=Delete]"
+    :max-width 5em))
+  (.permission
+   ("input[type=checkbox]" :display none)
+   ("input[type=checkbox]+label" :opacity 0.5)
+   ("input[type=checkbox]:checked+label" :opacity 1.0)))
+ (>form.wide
+  :max-width none
+  :width 100%
+  :margin 0
+  :padding 0))
 (.project.edit
  ((:or .attachments .members .tags)
   :flex-grow 1
@@ -106,7 +107,7 @@
  (.trace
   :width 100%
   :min-height 30em))
-((:or .entry.view .snapshot.view)
+((:or .entry.edit .snapshot.edit)
  (.row
   :display flex
   :flex-wrap wrap
@@ -130,18 +131,20 @@
   :margin 0.5em
   :display flex
   :flex-wrap wrap
+  (.name :flex-grow 1)
   (.preview
    :flex-basis 100%
-   :object-fit contain
-   :object-position center)
-  (.full
    :display block
+   :max-height 100vh
    :max-width 100%
-   :max-height 50vh)
+   :object-fit contain
+   :object-position center
+   :transition max-height 0.5s)
+  (.collapsed
+   :max-height 0px)
   (.log
    :font-family monospace
    :overflow-y auto
-   :max-height 50em
    :margin 0
    :max-width fit-content)
   (.name :flex-grow 1))
@@ -161,15 +164,21 @@
     :gap 0.2em
     :padding 0.2em
     (.author :white-space nowrap :overflow hidden :text-overflow ellipsis)
-    (.description :white-space normal)))
-  (.change.head
-   :font-weight bold
-   ((.row *) :padding 0.5em))
-  (.empty
-   :padding 2em
-   :text-align center
-   :font-size 1.2em)))
-((:or .view .list)
+    (.description :white-space normal)))))
+(.snapshot
+ (.row
+  :display grid
+  :grid-template-columns 8em 8em 8em 10em 1fr
+  :gap 0.2em
+  :padding 0.2em))
+(.head
+ :font-weight bold
+ ((.row *) :padding 0.5em))
+(.empty
+ :padding 2em
+ :text-align center
+ :font-size 1.2em)
+(article
  :display flex
  :flex-wrap wrap
  :justify-content space-between
@@ -227,14 +236,7 @@
    ((:and >* :first-child)
     :border-left none !important)
    ((:or .time .author)
-    :text-align center)))
- (.change.head
-  :font-weight bold
-  ((.row *) :padding 0.5em))
- (.empty
-  :padding 2em
-  :text-align center
-  :font-size 1.2em))
+    :text-align center))))
 (.track.view
  :display flex
  :flex-direction column
@@ -290,15 +292,8 @@
   :pointer-events none
   :position absolute
   :top 0 :left 0 :right 0 :bottom 0)
- (.entry.head
-  :font-weight bold
-  ((.row *) :padding 0.5em))
  (.entry.existing
-  (.drag :cursor grab))
- (.empty
-  :padding 2em
-  :text-align center
-  :font-size 1.2em))
+  (.drag :cursor grab)))
 (.notes
  :padding-left 1em
  (.note
@@ -324,12 +319,7 @@
   :display grid
   :padding 0.5em
   :align-items center
-  :grid-template-columns 1fr 7em "repeat(8,6em)" 3em)
- (.subscription.head
-  :font-weight bold
-  :padding 0.5em
-  (span :text-align center)
-  ((:or .user .object) :text-align left)))
+  :grid-template-columns 1fr 7em "repeat(8,6em)" 3em))
 (span.tag
  :overflow hidden
  :text-overflow ellipsis

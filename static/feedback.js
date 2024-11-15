@@ -41,7 +41,7 @@ class Feedback{
         self.registerAll(element, ".project.edit", self.registerProjectEdit);
         self.registerAll(element, ".trace", self.registerTrace);
         self.registerAll(element, ".track", self.registerTrack);
-        self.registerAll(element, ".entry.view", self.registerEntry);
+        self.registerAll(element, ".entry.edit", self.registerEntry);
         self.registerAll(element, ".confirm", self.registerConfirm);
         self.registerAll(element, "time", self.registerTime);
     }
@@ -336,6 +336,15 @@ class Feedback{
         });
 
         self.registerAll(element, ".tags", self.registerTags);
+
+        self.registerAll(element, ".attachment", (el)=>{
+            el.querySelector(".collapse").addEventListener("click", (ev)=>{
+                el.querySelector("i").classList.toggle("fa-chevron-up");
+                el.querySelector("i").classList.toggle("fa-chevron-down");
+                el.querySelector(".preview").classList.toggle("collapsed");
+            });
+            self.registerAll(element, "code", (el)=>hljs.highlightElement(el));
+        });
     }
 
     registerNote(element){

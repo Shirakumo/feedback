@@ -1,92 +1,94 @@
-<form class="project edit">
+<article class="project edit">
+  <c:h>(template-file "project-self.ctml" :feedback))</c:h>
   <form>
-  <c:using value="project">
-    <div class="row">
-      <label for="name">Name:</label>
-      <input type="text" name="name" id="name" placeholder="Name" minlength="1" maxlength="32" required
-             lquery="(val name)"/>
-    </div>
-    <div class="row">
-      <label for="description">Description:</label>
-      <textarea name="description" id="description" lquery="(text description)"></textarea>
-    </div>
-    <div class="row">
-      <label for="trace-data-type">Trace data type:</label>
-      <select name="trace-data-type" id="trace-data-type" iterate="(feedback::trace-data-types)" lquery="(select (feedback::id->trace-data-type (or trace-data-type 0)))">
-        <option lquery="(text *) (attr :value *)"/>
-      </select>
-    </div>
-    <div class="row">
-      <label for="attachments">Attachments:</label>
-      <div class="attachments">
-        <ul id="attachments" iterate="(list* NIL (** :attachments))">
-          <li class="attachment">
-            <input type="text" name="attachment-name[]" placeholder="name" minlength="1" maxlength="32"
-                   lquery="(val name) (attr :readonly (not (null name)))"/>
-            <select name="attachment-type[]" iterate="(feedback::attachment-types)" lquery="(select (feedback::id->attachment-type (or type 0)))">
-              <option lquery="(text *) (attr :value *)"/>
-            </select>
-            <a href="#" class="button delete">
-              <i class="fas fa-trash"></i>
-            </a>
-          </li>
-        </ul>
-        <a href="#" class="button add">
-          <i class="fas fa-plus-circle"></i>
-          Add Attachment
-        </a>
+    <c:using value="project">
+      <div class="row">
+        <label for="name">Name:</label>
+        <input type="text" name="name" id="name" placeholder="Name" minlength="1" maxlength="32" required
+               lquery="(val name)"/>
       </div>
-    </div>
-    <div class="row">
-      <label for="members">Members:</label>
-      <div class="members">
-        <ul iterate="(** :members)">
-          <li class="member">
-            <input type="text" list="users" name="member[]" lquery="(val (user:username *))">
-            <a href="#" class="button delete">
-              <i class="fas fa-trash"></i>
-            </a>
-          </li>
-        </ul>
-        <a href="#" class="button add">
-          <i class="fas fa-plus-circle"></i>
-          Add Member
-        </a>
+      <div class="row">
+        <label for="description">Description:</label>
+        <textarea name="description" id="description" lquery="(text description)"></textarea>
       </div>
-    </div>
-    <div class="row">
-      <label for="tags">Tags:</label>
-      <div class="tags">
-        <ul id="tags" iterate="(list* NIL (** :tags))">
-          <li class="tag">
-            <input type="text" name="tag[]" lquery="(val name)">
-            <input type="color" name="tag-color[]" lquery="(val (feedback::print-color color))">
-            <a href="#" class="button delete">
-              <i class="fas fa-trash"></i>
-            </a>
-          </li>
-        </ul>
-        <a href="#" class="button add">
-          <i class="fas fa-plus-circle"></i>
-          Add Tag
-        </a>
+      <div class="row">
+        <label for="trace-data-type">Trace data type:</label>
+        <select name="trace-data-type" id="trace-data-type" iterate="(feedback::trace-data-types)" lquery="(select (feedback::id->trace-data-type (or trace-data-type 0)))">
+          <option lquery="(text *) (attr :value *)"/>
+        </select>
       </div>
-    </div>
-    <div class="actions">
-      <input type="hidden" name="browser" value="true" />
-      <c:if test="_id">
-        <c:then>
-          <input type="hidden" name="project" lquery="(val _id)"/>
-          <input type="submit" value="Edit" @formaction="feedback/api/feedback/project/edit"/>
-          <input type="submit" value="Delete" @formaction="feedback/api/feedback/project/delete"/>
-        </c:then>
-        <c:else>
-          <input type="submit" value="Create" @formaction="feedback/api/feedback/project/new"/>
-        </c:else>
-      </c:if>
-    </div>
-  </c:using>
-  <datalist id="users" iterate="(user:list)">
-    <option lquery="(val (user:username *))" />
-  </datalist>
-</form>
+      <div class="row">
+        <label for="attachments">Attachments:</label>
+        <div class="attachments">
+          <ul id="attachments" iterate="(list* NIL (** :attachments))">
+            <li class="attachment">
+              <input type="text" name="attachment-name[]" placeholder="name" minlength="1" maxlength="32"
+                     lquery="(val name) (attr :readonly (not (null name)))"/>
+              <select name="attachment-type[]" iterate="(feedback::attachment-types)" lquery="(select (feedback::id->attachment-type (or type 0)))">
+                <option lquery="(text *) (attr :value *)"/>
+              </select>
+              <a href="#" class="button delete">
+                <i class="fas fa-trash"></i>
+              </a>
+            </li>
+          </ul>
+          <a href="#" class="button add">
+            <i class="fas fa-plus-circle"></i>
+            Add Attachment
+          </a>
+        </div>
+      </div>
+      <div class="row">
+        <label for="members">Members:</label>
+        <div class="members">
+          <ul iterate="(** :members)">
+            <li class="member">
+              <input type="text" list="users" name="member[]" lquery="(val (user:username *))">
+              <a href="#" class="button delete">
+                <i class="fas fa-trash"></i>
+              </a>
+            </li>
+          </ul>
+          <a href="#" class="button add">
+            <i class="fas fa-plus-circle"></i>
+            Add Member
+          </a>
+        </div>
+      </div>
+      <div class="row">
+        <label for="tags">Tags:</label>
+        <div class="tags">
+          <ul id="tags" iterate="(list* NIL (** :tags))">
+            <li class="tag">
+              <input type="text" name="tag[]" lquery="(val name)">
+              <input type="color" name="tag-color[]" lquery="(val (feedback::print-color color))">
+              <a href="#" class="button delete">
+                <i class="fas fa-trash"></i>
+              </a>
+            </li>
+          </ul>
+          <a href="#" class="button add">
+            <i class="fas fa-plus-circle"></i>
+            Add Tag
+          </a>
+        </div>
+      </div>
+      <div class="actions">
+        <input type="hidden" name="browser" value="true" />
+        <c:if test="_id">
+          <c:then>
+            <input type="hidden" name="project" lquery="(val _id)"/>
+            <input type="submit" value="Edit" @formaction="feedback/api/feedback/project/edit"/>
+            <input type="submit" value="Delete" @formaction="feedback/api/feedback/project/delete"/>
+          </c:then>
+          <c:else>
+            <input type="submit" value="Create" @formaction="feedback/api/feedback/project/new"/>
+          </c:else>
+        </c:if>
+      </div>
+    </c:using>
+    <datalist id="users" iterate="(user:list)">
+      <option lquery="(val (user:username *))" />
+    </datalist>
+  </form>
+</article>

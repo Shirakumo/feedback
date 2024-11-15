@@ -175,7 +175,13 @@
   (:sig 6)
   (:csv 7)
   (:json 8)
-  (:xml 9))
+  (:xml 9)
+  (:yaml 10)
+  (:toml 11)
+  (:mp4 12)
+  (:ogv 13)
+  (:mp3 14)
+  (:wav 15))
 
 (define-mapping (status id)
   (:new 0)
@@ -250,7 +256,9 @@
     ((:zip 5) "fa-file-zipper")
     ((:sig 6) "fa-file-signature")
     ((:csv 7) "fa-file-csv")
-    ((:json 8 :xml 9) "fa-file-code")
+    ((:json 8 :xml 9 :yaml 10 :toml 11) "fa-file-code")
+    ((:mp4 12 :ogv 13) "fa-file-video")
+    ((:mp3 14 :wav 15) "fa-file-audio")
     (T "fa-file")))
 
 (defun attachment-type-content-type (attachment-type)
@@ -264,6 +272,12 @@
     ((:csv 7) "text/csv")
     ((:json 8) "application/json")
     ((:xml 9) "application/xml")
+    ((:yaml 10) "text/vnd.yaml")
+    ((:toml 11) "application/toml")
+    ((:mp4 12) "video/mp4")
+    ((:ogv 13) "video/ogv")
+    ((:mp3 14) "audio/mp3")
+    ((:wav 15) "audio/wav")
     (T "application/octet-stream")))
 
 (defun attachment-image-p (attachment-type)
@@ -273,6 +287,27 @@
 (defun attachment-text-p (attachment-type)
   (case attachment-type
     ((:txt 3 :log 4) T)))
+
+(defun attachment-code-p (attachment-type)
+  (case attachment-type
+    ((:csv 7 :json 8 :xml 9 :yaml 10 :toml 11) T)))
+
+(defun attachment-video-p (attachment-type)
+  (case attachment-type
+    ((:mp4 12 :ogv 13) T)))
+
+(defun attachment-audio-p (attachment-type)
+  (case attachment-type
+    ((:mp3 14 :wav 15) T)))
+
+(defun attachment-type-kind (attachment-type)
+  (case attachment-type
+    ((:png 1 :jpg 2) :image)
+    ((:txt 3 :log 4) :text)
+    ((:csv 7 :json 8 :xml 9 :yaml 10 :toml 11) :code)
+    ((:mp4 12 :ogv 13) :video)
+    ((:mp3 14 :wav 15) :audio)
+    (T :data)))
 
 (defun id->subscription-types (int)
   (let ((types ()))
@@ -862,14 +897,19 @@
 (define-ensure ensure-object ((type id))
   (ecase (id->object-type (object-type->id type))
     (project (ensure-project id))
-    (tag (ensure-tag id))
     (track (ensure-track id))
     (entry (ensure-entry id))
     (note (ensure-note id))
+    (members (dm:get-one 'members (db:query (:= '_id id))))
     (snapshot (ensure-snapshot id))
+    (attachment (dm:get-one 'attachment (db:query (:= '_id id))))
+    (subscriber (dm:get-one 'subscriber (db:query (:= '_id id))))
     (timeline (ensure-timeline id))
     (event (ensure-event id))
-    (deadline (ensure-deadline id))))
+    (deadline (ensure-deadline id))
+    (dependency (dm:get-one 'dependency (db:query (:= '_id id))))
+    (changelog (dm:get-one 'changelog (db:query (:= '_id id))))
+    (tag (ensure-tag id))))
 
 (defun notify (object type &optional (project (ensure-project object)) (author (author)))
   (let* ((type-template
