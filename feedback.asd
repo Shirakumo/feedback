@@ -21,4 +21,11 @@
                :cl-markless-plump
                :cl-ppcre
                :cl-csv
-               :local-time))
+               :local-time)
+  :build-operation "deploy-op"
+  :build-pathname
+  #+linux "feedback.run"
+  #+darwin "feedback.app"
+  #+(or windows win32) "feedback"
+  #-(or linux darwin win32 windows) "feedback.o"
+  :entry-point "org.shirakumo.radiance.core::startup-binary")
