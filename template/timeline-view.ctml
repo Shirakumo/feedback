@@ -28,7 +28,4 @@
       </c:unless>
     </div>
   </section>
-  <datalist id="entries" iterate="entries">
-    <option lquery="(val _id) (attr :href (feedback::object-url *)) (text (feedback::shorten description))" />
-  </datalist>
 </article>

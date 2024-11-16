@@ -329,7 +329,6 @@
                  :project project
                  :timeline timeline
                  :range (timeline-range timeline)
-                 :entries (list-entries project :amount NIL)
                  :events (list-events timeline)
                  :deadlines (list-deadlines timeline))))
 
