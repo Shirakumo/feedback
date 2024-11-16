@@ -61,7 +61,7 @@
   :cursor pointer))
 (.edit
  (>form
-  :max-width 500px
+  :width 500px
   :margin 0 auto
   :padding 1em
   (.row

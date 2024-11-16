@@ -20,7 +20,7 @@
        (snapshot (apply #'snapshot-url object args))
        (timeline (apply #'timeline-url object args))
        (tag (apply #'project-url (dm:field object "project") args))
-       (attachment (apply #'entry-url (dm:field object "entry") args))
+       (attachment (apply #'project-url (dm:field object "project") args))
        (event (apply #'event-url object args))
        (deadline (apply #'deadline-url object args))))))
 
@@ -487,6 +487,23 @@
                  :attachments attachments
                  :change-content (plump:parse (template-file "change.ctml" :feedback))
                  :changelog (list-changes :object entry))))
+
+(define-page* entry-subscribe "feedback/^([^/]+)/entry/([^/]+)/subscribe$" (:uri-groups (project entry))
+  (let* ((project (find-project project))
+         (entry (ensure-entry entry))
+         (subscriptions (list-subscriptions entry)))
+    (check-accessible entry :edit)
+    (render-page "Subscriptions" (@template "entry-subscribe.ctml")
+                 :icon "fa-envelope"
+                 :up (entry-url entry)
+                 :up-icon "fa-list-check"
+                 :up-text (id-code (dm:id entry))
+                 :object-type 'entry :object-id (dm:id entry)
+                 :project project
+                 :entry entry
+                 :subscriptions subscriptions
+                 :have-entry (find (user:id (auth:current)) subscriptions
+                                   :key (lambda (sub) (dm:field sub "user")) :test #'equal))))
 
 (define-page* attachment "feedback/^([^/]+)/entry/([^/]+)/([^/]+)$" (:uri-groups (project entry attachment))
   (let* ((project (find-project project))

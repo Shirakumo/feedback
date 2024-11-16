@@ -1,0 +1,42 @@
+<c:unless test="(dm:hull-p entry)">
+  <section class="self">
+    <c:using value="entry">
+      <header>
+        <nav>
+          <a href="#" class="in-track" lquery="(attr :href (feedback::track-entry-url *))">
+            <i class="fa-solid fa-code-commit"></i>
+            In Track
+          </a>
+          <a href="#" class="front" @href="feedback/api/feedback/entry/edit?entry={0}&order=top&browser=true _id">
+            <i class="fa-solid fa-caret-up"></i>
+            To Front
+          </a>
+          <a href="#" class="back" @href="feedback/api/feedback/entry/edit?entry={0}&order=bottom&browser=true _id">
+            <i class="fa-solid fa-caret-down"></i>
+            To Back
+          </a>
+          <a href="#" class="duplicate">
+            <i class="fa-solid fa-code-merge"></i>
+            Mark as Duplicate
+          </a>
+          <a href="#" class="related">
+            <i class="fa-solid fa-code-pull-request"></i>
+            Relate To
+          </a>
+          <a href="#" class="retrack">
+            <i class="fa-solid fa-shuffle"></i>
+            Retrack
+          </a>
+          <a @href="feedback/{0}/entry/{1}/subscribe (clip (** :project) :name) (feedback::id-code _id)">
+            <i class="fa-solid fa-envelope"></i>
+            Subscriptions
+          </a>
+          <a href="#" class="delete confirm" @href="feedback/api/feedback/entry/delete?entry={0}&browser=true _id">
+            <i class="fa-solid fa-trash"></i>
+            Delete
+          </a>
+        </nav>
+      </header>
+    </c:using>
+  </section>
+</c:unless>

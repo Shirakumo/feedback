@@ -1,6 +1,6 @@
 <article class="project edit">
   <c:h>(template-file "project-self.ctml" :feedback))</c:h>
-  <form>
+  <form method="post">
     <c:using value="project">
       <div class="row">
         <label for="name">Name:</label>
