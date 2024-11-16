@@ -1,65 +1,68 @@
-<form class="timeline edit">
-  <c:using value="timeline">
-    <div class="row">
-      <label for="name">Name:</label>
-      <input type="text" name="name" id="name" placeholder="Name" minlength="1" maxlength="32" required
-             lquery="(val name)"/>
-    </div>
-    <div class="row">
-      <label for="name">Start:</label>
-      <input type="date" name="start" id="start" lquery="(val (when start (radiance:format-only-date start)))"/>
-    </div>
-    <div class="row">
-      <label for="name">End:</label>
-      <input type="date" name="end" id="end" lquery="(val (when end (radiance:format-only-date end)))"/>
-    </div>
-    <c:let perms="(feedback::id->protection protection)">
+<article class="timeline edit">
+  <c:h>(template-file "timeline-self.ctml" :feedback))</c:h>
+  <form method="post">
+    <c:using value="timeline">
       <div class="row">
-        <label for="registered">Registered Users:</label>
-        <div class="registered permission">
-          <input type="checkbox" name="permission[]" value="registered-view" id="registered-view"
-                 lquery="(attr :checked (find :registered-view perms))">
-          <label for="registered-view"><i class="fa-solid fa-fw fa-eye"></i></label>
-          <input type="checkbox" name="permission[]" value="registered-add" id="registered-add"
-                 lquery="(attr :checked (find :registered-add perms))">
-          <label for="registered-add"><i class="fa-solid fa-fw fa-circle-plus"></i></label>
-          <input type="checkbox" name="permission[]" value="registered-edit" id="registered-edit"
-                 lquery="(attr :checked (find :registered-edit perms))">
-          <label for="registered-edit"><i class="fa-solid fa-fw fa-pen-to-square"></i></label>
-        </div>
+        <label for="name">Name:</label>
+        <input type="text" name="name" id="name" placeholder="Name" minlength="1" maxlength="32" required
+               lquery="(val name)"/>
       </div>
       <div class="row">
-        <label for="anonymous">Anonymous Users:</label>
-        <div class="anonymous permission">
-          <input type="checkbox" name="permission[]" value="anonymous-view" id="anonymous-view"
-                 lquery="(attr :checked (find :anonymous-view perms))">
-          <label for="anonymous-view"><i class="fa-solid fa-fw fa-eye"></i></label>
-          <input type="checkbox" name="permission[]" value="anonymous-add" id="anonymous-add"
-                 lquery="(attr :checked (find :anonymous-add perms))">
-          <label for="anonymous-add"><i class="fa-solid fa-fw fa-circle-plus"></i></label>
-          <input type="checkbox" name="permission[]" value="anonymous-edit" id="anonymous-edit"
-                 lquery="(attr :checked (find :anonymous-edit perms))">
-          <label for="anonymous-edit"><i class="fa-solid fa-fw fa-pen-to-square"></i></label>
-        </div>
+        <label for="name">Start:</label>
+        <input type="date" name="start" id="start" lquery="(val (when start (radiance:format-only-date start)))"/>
       </div>
-    </c:let>
-    <div class="row">
-      <label for="description">Description:</label>
-      <textarea name="description" id="description" lquery="(text description)"></textarea>
-    </div>
-    <div class="actions">
-      <input type="hidden" name="project" lquery="(val project)" />
-      <input type="hidden" name="browser" value="true" />
-      <c:if test="_id">
-        <c:then>
-          <input type="hidden" name="timeline" lquery="(val _id)"/>
-          <input type="submit" value="Edit" @formaction="feedback/api/feedback/timeline/edit"/>
-          <input type="submit" value="Delete" @formaction="feedback/api/feedback/timeline/delete"/>
-        </c:then>
-        <c:else>
-          <input type="submit" value="Create" @formaction="feedback/api/feedback/timeline/new"/>
-        </c:else>
-      </c:if>
-    </div>
-  </c:using>
-</form>
+      <div class="row">
+        <label for="name">End:</label>
+        <input type="date" name="end" id="end" lquery="(val (when end (radiance:format-only-date end)))"/>
+      </div>
+      <c:let perms="(feedback::id->protection protection)">
+        <div class="row">
+          <label for="registered">Registered Users:</label>
+          <div class="registered permission">
+            <input type="checkbox" name="permission[]" value="registered-view" id="registered-view"
+                   lquery="(attr :checked (find :registered-view perms))">
+            <label for="registered-view"><i class="fa-solid fa-fw fa-eye"></i></label>
+            <input type="checkbox" name="permission[]" value="registered-add" id="registered-add"
+                   lquery="(attr :checked (find :registered-add perms))">
+            <label for="registered-add"><i class="fa-solid fa-fw fa-circle-plus"></i></label>
+            <input type="checkbox" name="permission[]" value="registered-edit" id="registered-edit"
+                   lquery="(attr :checked (find :registered-edit perms))">
+            <label for="registered-edit"><i class="fa-solid fa-fw fa-pen-to-square"></i></label>
+          </div>
+        </div>
+        <div class="row">
+          <label for="anonymous">Anonymous Users:</label>
+          <div class="anonymous permission">
+            <input type="checkbox" name="permission[]" value="anonymous-view" id="anonymous-view"
+                   lquery="(attr :checked (find :anonymous-view perms))">
+            <label for="anonymous-view"><i class="fa-solid fa-fw fa-eye"></i></label>
+            <input type="checkbox" name="permission[]" value="anonymous-add" id="anonymous-add"
+                   lquery="(attr :checked (find :anonymous-add perms))">
+            <label for="anonymous-add"><i class="fa-solid fa-fw fa-circle-plus"></i></label>
+            <input type="checkbox" name="permission[]" value="anonymous-edit" id="anonymous-edit"
+                   lquery="(attr :checked (find :anonymous-edit perms))">
+            <label for="anonymous-edit"><i class="fa-solid fa-fw fa-pen-to-square"></i></label>
+          </div>
+        </div>
+      </c:let>
+      <div class="row">
+        <label for="description">Description:</label>
+        <textarea name="description" id="description" lquery="(text description)"></textarea>
+      </div>
+      <div class="actions">
+        <input type="hidden" name="project" lquery="(val project)" />
+        <input type="hidden" name="browser" value="true" />
+        <c:if test="_id">
+          <c:then>
+            <input type="hidden" name="timeline" lquery="(val _id)"/>
+            <input type="submit" value="Edit" @formaction="feedback/api/feedback/timeline/edit"/>
+            <input type="submit" value="Delete" @formaction="feedback/api/feedback/timeline/delete"/>
+          </c:then>
+          <c:else>
+            <input type="submit" value="Create" @formaction="feedback/api/feedback/timeline/new"/>
+          </c:else>
+        </c:if>
+      </div>
+    </c:using>
+  </form>
+</article>

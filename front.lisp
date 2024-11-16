@@ -355,7 +355,7 @@
                  :project project
                  :timeline timeline)))
 
-(define-page* timeline-changes ("feedback/^([^/]+)/tl/^([^/]+)/changes(?:/(\\d+)?)?$" 3) (:uri-groups (project timeline page))
+(define-page* timeline-changes ("feedback/^([^/]+)/tl/([^/]+)/changes(?:/(\\d+)?)?$" 8) (:uri-groups (project timeline page))
   (let* ((project (find-project project))
          (timeline (find-timeline timeline project))
          (amount 100)
@@ -372,6 +372,23 @@
                  :timeline timeline
                  :change-content (plump:parse (template-file "change.ctml" :feedback))
                  :changelog (list-changes :object timeline :amount amount :skip skip))))
+
+(define-page* timeline-subscribe ("feedback/^([^/]+)/tl/([^/]+)/subscribe$" 2) (:uri-groups (project timeline))
+  (let* ((project (find-project project))
+         (timeline (find-timeline timeline project))
+         (subscriptions (list-subscriptions timeline)))
+    (check-accessible timeline :edit)
+    (render-page "Subscriptions" (@template "timeline-subscribe.ctml")
+                 :icon "fa-envelope"
+                 :up (timeline-url timeline)
+                 :up-icon "fa-layer-group"
+                 :up-text (dm:field timeline "name")
+                 :object-type 'timeline :object-id (dm:id timeline)
+                 :project project
+                 :timeline timeline
+                 :subscriptions subscriptions
+                 :have-entry (find (user:id (auth:current)) subscriptions
+                                   :key (lambda (sub) (dm:field sub "user")) :test #'equal))))
 
 (define-page* track "feedback/^([^/]+)/([^/]+)(?:/(\\d+)?)?$" (:uri-groups (project track page))
   (let* ((project (find-project project))
