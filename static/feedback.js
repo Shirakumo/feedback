@@ -497,9 +497,9 @@ class Feedback{
                 popup.removeEventListener("click", close);
                 popup.style.display = null;
                 datalist.innerHTML = "";
-                input.value = "";
             };
             popup.style.display = "block";
+            input.value = "";
             requestAnimationFrame(()=>popup.querySelector("input").focus());
             popup.addEventListener("click", (ev)=>{
                 if(ev.target == popup){close();fail();}});
