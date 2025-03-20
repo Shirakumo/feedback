@@ -296,7 +296,11 @@ class Feedback{
             });
         });
 
-        let parseEntry = (entry)=>self.parseIdCode(entry.substr(0, entry.indexOf(" ")));
+        let parseEntry = (entry)=>{
+            let groups = /(\$[a-zA-Z0-9]+)/.exec(entry);
+            if(!groups) throw new Error("Cannot parse entry to id: "+entry);
+            return self.parseIdCode(groups[1]);
+        };
         self.registerAll(element, "a.duplicate", (el)=>{
             el.addEventListener("click", (ev)=>{
                 ev.preventDefault();
@@ -450,7 +454,8 @@ class Feedback{
     }
 
     parseIdCode(code){
-        return parseInt(code.substr(1), 36);
+        let id = parseInt(code.substr(1), 36);
+        return isNaN(id)? null : id;
     }
 
     formatShort(text, len){
