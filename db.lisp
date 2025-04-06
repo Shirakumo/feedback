@@ -749,6 +749,11 @@
           (notify model :entry-new project))
         (log-change model :make)))))
 
+(defun status-category (status)
+  (case (id->status (status->id status))
+    ((:resolved :wontfix :invalid :duplicate :unclear :deleted) :resolved)
+    (T :new)))
+
 (defun edit-entry (entry &key track user-id description status (assigned-to NIL assigned-p) (relates-to NIL relates-to-p) severity order (tags NIL tags-p))
   (db:with-transaction ()
     (let ((entry (ensure-entry entry)))
@@ -756,6 +761,12 @@
         (log-change entry :edit))
       (when (changes-p entry track)
         (log-change entry :move))
+      ;; Unless an explicit move is requested, if the status changes major category, move the entry
+      ;; to the top or bottom automatically.
+      (when (and status (null order) (not (eq (status-category status) (status-category (dm:field entry "status")))))
+        (case (status-category status)
+          (:resolved (setf order :bottom))
+          (:new (setf order :top))))
       (setf-dm-fields entry track user-id description severity relates-to)
       (when relates-to-p
         (setf (dm:field entry "assigned-to") (when relates-to (ensure-entry relates-to))))
