@@ -27,7 +27,8 @@
              '((project (:id project))
                (name (:varchar 32))
                (description :text)
-               (protection (:integer 1)))
+               (protection (:integer 1))
+               (min-report-version (:varchar 64)))
              :indices '(project))
 
   (db:create 'entry
@@ -592,22 +593,22 @@
                      (db:query (:= 'project (ensure-id project))))
           :skip skip :amount amount :sort '(("name" :desc))))
 
-(defun make-track (project name &key description protection)
+(defun make-track (project name &key description protection min-report-version)
   (check-name name)
   (let ((project (ensure-project project))
         (track (dm:hull 'track)))
     (when (find-track name project)
       (error "Track named ~s already exists" name))
-    (setf-dm-fields track project name description)
+    (setf-dm-fields track project name description min-report-version)
     (setf (dm:field track "protection") (protection->id protection))
     (prog1 (dm:insert track)
       (log-change track :make)
       (notify track :track-new project))))
 
-(defun edit-track (track &key name description (protection NIL protection-p))
+(defun edit-track (track &key name description (protection NIL protection-p) min-report-version)
   (db:with-transaction ()
     (let ((track (ensure-track track)))
-      (setf-dm-fields track name description)
+      (setf-dm-fields track name description min-report-version)
       (when protection-p
         (setf (dm:field track "protection") (protection->id protection)))
       (log-change track :edit)

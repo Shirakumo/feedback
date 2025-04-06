@@ -101,17 +101,20 @@
                              :skip (parse-integer (or* skip "0"))
                              :amount (parse-integer (or* amount "100"))))))
 
-(define-api feedback/track/new (project name &optional description permission[]) (:access (perm feedback track new))
+(define-api feedback/track/new (project name &optional description min-report-version permission[]) (:access (perm feedback track new))
   (let ((project (ensure-project project)))
     (check-accessible project :edit)
-    (output (make-track project name :description description :protection permission[])
+    (output (make-track project name :description description
+                                     :min-report-version (or* min-report-version)
+                                     :protection permission[])
             "Track created")))
 
-(define-api feedback/track/edit (track &optional name description permission[]) (:access (perm feedback track new))
+(define-api feedback/track/edit (track &optional name description min-report-version permission[]) (:access (perm feedback track new))
   (let ((track (ensure-track track)))
     (check-accessible (ensure-project track) :edit)
     (output (edit-track track :name name
                               :description description
+                              :min-report-version (or* min-report-version)
                               :protection permission[])
             "Track edited")))
 
@@ -149,30 +152,34 @@
     (let* ((project (or (find-project project)
                         (ensure-project project)))
            (track (when track (or (find-track track project) (ensure-track track))))
-           (types (list-attachments project))
-           (entry (make-entry project :track track
-                                      :status status
-                                      :version version
-                                      :user-id user-id
-                                      :os-type os-type
-                                      :os-info os-info
-                                      :cpu-type cpu-type
-                                      :cpu-info cpu-info
-                                      :gpu-type gpu-type
-                                      :gpu-info gpu-info
-                                      :description description
-                                      :assigned-to assigned-to
-                                      :relates-to relates-to
-                                      :severity severity
-                                      :tags tag[])))
+           (types (list-attachments project)))
       (check-accessible (or track project) :add)
-      (loop for type in types
-            for file = (post-var (dm:field type "name"))
-            for path = (attachment-pathname entry type)
-            do (when file
-                 (ensure-directories-exist path)
-                 (uiop:copy-file (first file) path)))
-      (output entry "Feedback submitted"))))
+      (when (and track version (dm:field track "min-report-version")
+                 (version< version (dm:field track "min-report-version")))
+        (error 'api-argument-invalid :argument "version" :message (format NIL "Reports for version ~a, which is below the minimum version ~a, are not accepted."
+                                                                          version (dm:field track "min-report-version"))))
+      (let ((entry (make-entry project :track track
+                                       :status status
+                                       :version version
+                                       :user-id user-id
+                                       :os-type os-type
+                                       :os-info os-info
+                                       :cpu-type cpu-type
+                                       :cpu-info cpu-info
+                                       :gpu-type gpu-type
+                                       :gpu-info gpu-info
+                                       :description description
+                                       :assigned-to assigned-to
+                                       :relates-to relates-to
+                                       :severity severity
+                                       :tags tag[])))
+        (loop for type in types
+              for file = (post-var (dm:field type "name"))
+              for path = (attachment-pathname entry type)
+              do (when file
+                   (ensure-directories-exist path)
+                   (uiop:copy-file (first file) path)))
+        (output entry "Feedback submitted")))))
 
 (define-api feedback/entry/edit (entry &optional track user-id description status assigned-to severity relates-to order tag[]) ()
   (db:with-transaction ()

@@ -41,6 +41,10 @@
         <label for="description">Description:</label>
         <textarea name="description" id="description" lquery="(text description)"></textarea>
       </div>
+      <div class="row">
+        <label for="min-report-version">Min Report Version:</label>
+        <input type="text" name="min-report-version" id="min-report-version" lquery="(text min-report-version)">
+      </div>
       <div class="actions">
         <input type="hidden" name="project" lquery="(val project)" />
         <input type="hidden" name="browser" value="true" />

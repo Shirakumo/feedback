@@ -124,3 +124,17 @@
   `(or ,@(loop for field in fields
                collect `(and ,field
                              (not (equal ,field (dm:field ,object ,(string field))))))))
+
+(defun destructure-version (version)
+  (cl-ppcre:register-groups-bind (pairs) ("([0-9./-]+)" version)
+    (mapcar #'parse-integer (cl-ppcre:split "[./-]+" pairs))))
+
+(defun version< (a b)
+  (let ((a (destructure-version a))
+        (b (destructure-version b)))
+    (loop for ap = (pop a)
+          for bp = (pop b)
+          do (cond ((null bp) (return NIL))
+                   ((null ap) (return T))
+                   ((< ap bp) (return T))
+                   ((< bp ap) (return NIL))))))
