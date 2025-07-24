@@ -13,7 +13,7 @@
                                  (track-entry-url object :query `(("message" . ,message)))))
                       (T (object-url object :query `(("message" . ,message))))))))
     (if (string= "true" (post/get "browser"))
-        (redirect target)
+        (api-redirect target)
         (api-output object :message message :target target))))
 
 (defun output-changelog (changes)
